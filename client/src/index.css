@@ -4,56 +4,38 @@
 
 :root {
   --background: 0 0% 100%;
-  --foreground: 222 84% 4.9%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 46.9%;
+  --foreground: 221 39% 11%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 84% 4.9%;
+  --popover-foreground: 221 39% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 222 84% 4.9%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --primary: 207 90% 54%;
+  --card-foreground: 221 39% 11%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --primary: 221 83% 53%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 84% 4.9%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 84% 4.9%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 221 39% 11%;
+  --accent: 221 83% 53%;
+  --accent-foreground: 210 40% 98%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --ring: 207 90% 54%;
-  --radius: 0.5rem;
+  --ring: 221 83% 53%;
+  --radius: 0.75rem;
   
-  /* Custom colors for portfolio */
-  --primary-blue: 207 90% 54%;
-  --accent-orange: 28 100% 50%;
-  --success-green: 142 76% 36%;
-  --slate-50: 210 40% 98%;
-  --slate-100: 210 40% 96%;
-  --slate-800: 217 33% 17%;
-  --slate-900: 222 84% 4.9%;
-}
-
-.dark {
-  --background: 222 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --muted: 217 33% 17%;
-  --muted-foreground: 215 20% 65%;
-  --popover: 222 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --card: 222 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --border: 217 33% 17%;
-  --input: 217 33% 17%;
-  --primary: 207 90% 54%;
-  --primary-foreground: 222 84% 4.9%;
-  --secondary: 217 33% 17%;
-  --secondary-foreground: 210 40% 98%;
-  --accent: 217 33% 17%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62% 30%;
-  --destructive-foreground: 210 40% 98%;
-  --ring: 207 90% 54%;
+  /* Professional blue palette */
+  --blue-50: 219 100% 97%;
+  --blue-100: 218 100% 95%;
+  --blue-200: 221 91% 91%;
+  --blue-300: 221 83% 84%;
+  --blue-400: 221 83% 65%;
+  --blue-500: 221 83% 53%;
+  --blue-600: 221 83% 45%;
+  --blue-700: 221 83% 36%;
+  --blue-800: 221 83% 27%;
+  --blue-900: 221 83% 18%;
+  --blue-950: 221 39% 11%;
 }
 
 @layer base {
@@ -73,19 +55,27 @@
 
 @layer components {
   .skill-card {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-all duration-500 ease-out;
   }
   
   .skill-card:hover {
-    @apply transform -translate-y-1 shadow-lg;
+    @apply transform -translate-y-2 shadow-2xl;
   }
   
   .project-card {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-all duration-500 ease-out;
   }
   
   .project-card:hover {
-    @apply transform -translate-y-2 shadow-xl;
+    @apply transform -translate-y-3 shadow-2xl;
+  }
+  
+  .glass-effect {
+    @apply backdrop-blur-xl bg-white/80 border border-white/20;
+  }
+  
+  .gradient-text {
+    @apply bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent;
   }
   
   .scroll-indicator {
@@ -93,8 +83,8 @@
     top: 0;
     left: 0;
     width: 0%;
-    height: 4px;
-    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent-orange)));
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--blue-500)), hsl(var(--blue-700)));
     z-index: 9999;
     transition: width 0.1s ease-out;
   }

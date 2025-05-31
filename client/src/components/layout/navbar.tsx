@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTheme } from '@/components/ui/theme-provider';
 import { useScrollProgress } from '@/hooks/use-scroll-progress';
 
 const navLinks = [
@@ -15,12 +14,11 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { theme, setTheme } = useTheme();
   const scrollProgress = useScrollProgress();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
+      setIsScrolled(window.scrollY > 50);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -35,30 +33,26 @@ export function Navbar() {
     }
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
   return (
     <>
       {/* Scroll Progress Indicator */}
       <div 
-        className="fixed top-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-orange-500 z-[60] transition-all duration-100"
+        className="fixed top-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 z-[60] transition-all duration-100"
         style={{ width: `${scrollProgress}%` }}
       />
       
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
         isScrolled 
-          ? 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg' 
-          : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md'
-      } border-b border-slate-200 dark:border-slate-700`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          ? 'glass-effect shadow-xl' 
+          : 'bg-white/60 backdrop-blur-md'
+      } border-b border-blue-100`}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
             {/* Logo */}
             <div className="flex-shrink-0">
               <button
                 onClick={() => scrollToSection('#hero')}
-                className="text-xl font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200"
+                className="text-2xl font-bold gradient-text hover:scale-105 transition-transform duration-200"
               >
                 Chidi Ogara
               </button>
@@ -66,44 +60,32 @@ export function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-8">
+              <div className="flex items-center space-x-12">
                 {navLinks.map((link) => (
                   <button
                     key={link.href}
                     onClick={() => scrollToSection(link.href)}
-                    className="text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 font-medium"
+                    className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-medium text-lg relative group"
                   >
                     {link.label}
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 group-hover:w-full transition-all duration-300"></span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Theme Toggle & Mobile Menu */}
-            <div className="flex items-center space-x-4">
+            {/* Mobile Menu */}
+            <div className="md:hidden">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={toggleTheme}
-                className="rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
-              >
-                {theme === 'dark' ? (
-                  <Sun className="h-5 w-5 text-orange-500" />
-                ) : (
-                  <Moon className="h-5 w-5 text-slate-700" />
-                )}
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
+                className="rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
                 onClick={() => setIsOpen(!isOpen)}
               >
                 {isOpen ? (
-                  <X className="h-5 w-5" />
+                  <X className="h-6 w-6 text-blue-600" />
                 ) : (
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-6 w-6 text-blue-600" />
                 )}
               </Button>
             </div>
@@ -111,13 +93,13 @@ export function Navbar() {
 
           {/* Mobile Navigation */}
           {isOpen && (
-            <div className="md:hidden border-t border-slate-200 dark:border-slate-700">
-              <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+            <div className="md:hidden border-t border-blue-100 bg-white/95 backdrop-blur-md">
+              <div className="px-4 pt-4 pb-6 space-y-3">
                 {navLinks.map((link) => (
                   <button
                     key={link.href}
                     onClick={() => scrollToSection(link.href)}
-                    className="block w-full text-left px-3 py-2 rounded-md text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                    className="block w-full text-left px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 font-medium text-lg"
                   >
                     {link.label}
                   </button>
