@@ -23,50 +23,50 @@ export function Hero() {
           {/* Content */}
           <div className="text-center lg:text-left animate-slide-up">
             <div className="mb-6">
-              <p className="text-blue-600 font-semibold text-lg mb-2 tracking-wide">WELCOME TO MY PORTFOLIO</p>
+              <p className="text-blue-600 font-semibold text-lg mb-2 tracking-wide">FULLSTACK WEB DEVELOPER</p>
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-4 leading-tight">
                 Hi, I'm <span className="gradient-text">Chidi Ogara</span>
               </h1>
             </div>
             <h2 className="text-2xl sm:text-3xl text-gray-600 mb-8 font-light">
-              Senior Fullstack Developer & Engineer
+              I Build Modern Web Applications That Drive Business Growth
             </h2>
             <p className="text-xl text-gray-600 mb-12 leading-relaxed max-w-2xl">
-              Building scalable solutions that drive business growth through innovative software and engineering excellence. 
-              Specializing in solar systems, microgrids, and embedded systems with 5+ years of experience.
+              Specialized in React, Node.js, and modern web technologies. I create scalable, high-performance web applications 
+              and SaaS platforms that help businesses succeed in the digital world.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start mb-12">
               <Button 
                 size="lg"
-                onClick={() => scrollToSection('#projects')}
+                onClick={() => scrollToSection('#services')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-1"
               >
-                View My Work
+                View Services
               </Button>
               <Button 
                 variant="outline"
                 size="lg"
-                onClick={() => scrollToSection('#contact')}
+                onClick={() => scrollToSection('#booking')}
                 className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-10 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-1"
               >
                 <Mail className="w-5 h-5 mr-2" />
-                Let's Connect
+                Book Consultation
               </Button>
             </div>
             
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-8 text-center lg:text-left">
               <div>
-                <div className="text-3xl font-bold text-blue-600">5+</div>
+                <div className="text-3xl font-bold text-blue-600">7+</div>
                 <div className="text-gray-600 text-sm">Years Experience</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-blue-600">50+</div>
-                <div className="text-gray-600 text-sm">Projects Completed</div>
+                <div className="text-3xl font-bold text-blue-600">100+</div>
+                <div className="text-gray-600 text-sm">Web Apps Built</div>
               </div>
               <div>
-                <div className="text-3xl font-bold text-blue-600">99%</div>
+                <div className="text-3xl font-bold text-blue-600">98%</div>
                 <div className="text-gray-600 text-sm">Client Satisfaction</div>
               </div>
             </div>

@@ -1,71 +1,74 @@
-import { Skill, Project, Experience } from './types';
+import { Skill, Project, Experience, Service } from './types';
 
 export const skills: Skill[] = [
   // Frontend
-  { name: 'React', level: 90, icon: 'Code', category: 'frontend' },
-  { name: 'JavaScript', level: 95, icon: 'Code2', category: 'frontend' },
-  { name: 'TypeScript', level: 85, icon: 'FileCode', category: 'frontend' },
-  { name: 'HTML/CSS', level: 92, icon: 'Globe', category: 'frontend' },
+  { name: 'React', level: 95, icon: 'Code', category: 'frontend' },
+  { name: 'Next.js', level: 92, icon: 'Globe', category: 'frontend' },
+  { name: 'Vue.js', level: 88, icon: 'Code2', category: 'frontend' },
+  { name: 'TypeScript', level: 90, icon: 'FileCode', category: 'frontend' },
+  { name: 'Tailwind CSS', level: 95, icon: 'Palette', category: 'frontend' },
+  { name: 'JavaScript', level: 98, icon: 'Code', category: 'frontend' },
   
   // Backend
+  { name: 'Node.js', level: 92, icon: 'Server', category: 'backend' },
+  { name: 'Express.js', level: 90, icon: 'Zap', category: 'backend' },
   { name: 'PHP', level: 85, icon: 'Server', category: 'backend' },
-  { name: 'Laravel', level: 80, icon: 'Layers', category: 'backend' },
-  { name: 'Node.js', level: 85, icon: 'Terminal', category: 'backend' },
-  { name: 'Express.js', level: 82, icon: 'Zap', category: 'backend' },
+  { name: 'Laravel', level: 82, icon: 'Layers', category: 'backend' },
+  { name: 'Python', level: 80, icon: 'Code2', category: 'backend' },
+  { name: 'REST APIs', level: 95, icon: 'Link', category: 'backend' },
   
   // Database
+  { name: 'PostgreSQL', level: 90, icon: 'Database', category: 'database' },
   { name: 'MySQL', level: 88, icon: 'Database', category: 'database' },
-  { name: 'PostgreSQL', level: 80, icon: 'HardDrive', category: 'database' },
+  { name: 'MongoDB', level: 85, icon: 'HardDrive', category: 'database' },
+  { name: 'Redis', level: 78, icon: 'Zap', category: 'database' },
   
-  // Tools
-  { name: 'Git', level: 92, icon: 'GitBranch', category: 'tools' },
-  { name: 'Docker', level: 75, icon: 'Container', category: 'tools' },
-  { name: 'AWS', level: 70, icon: 'Cloud', category: 'tools' },
-  
-  // Engineering
-  { name: 'Solar Systems', level: 88, icon: 'Sun', category: 'engineering' },
-  { name: 'Microgrids', level: 82, icon: 'Zap', category: 'engineering' },
-  { name: 'Embedded Systems', level: 75, icon: 'Cpu', category: 'engineering' },
+  // Tools & DevOps
+  { name: 'Git', level: 95, icon: 'GitBranch', category: 'tools' },
+  { name: 'Docker', level: 85, icon: 'Container', category: 'tools' },
+  { name: 'AWS', level: 80, icon: 'Cloud', category: 'tools' },
+  { name: 'Vercel', level: 90, icon: 'Globe', category: 'tools' },
+  { name: 'GitHub Actions', level: 85, icon: 'GitBranch', category: 'tools' },
 ];
 
 export const projects: Project[] = [
   {
-    id: 'biometric-voting',
-    title: 'Automated Biometric Voting Machine',
-    description: 'Pioneered the development of a secure, automated voting system using biometric authentication to ensure election integrity and eliminate voter fraud. Successfully piloted in 2016 with comprehensive security protocols.',
-    image: 'https://images.unsplash.com/photo-1633265486064-086b219458ec?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600',
-    technologies: ['Embedded C', 'Biometric SDK', 'Security Protocols', 'Hardware Integration'],
+    id: 'saas-platform',
+    title: 'Enterprise SaaS Platform',
+    description: 'Complete SaaS solution with multi-tenancy, subscription management, and advanced analytics. Built for scalability with microservices architecture.',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600',
+    technologies: ['React', 'Node.js', 'PostgreSQL', 'Stripe', 'AWS'],
     featured: true,
     metrics: [
-      { label: 'Accuracy Rate', value: '99.8%' },
-      { label: 'Security Breaches', value: '0' },
-      { label: 'Voters Processed', value: '1000+' }
+      { label: 'Active Users', value: '10K+' },
+      { label: 'Uptime', value: '99.9%' },
+      { label: 'Performance Score', value: '95+' }
     ]
   },
   {
-    id: 'solar-monitoring',
-    title: 'Solar Monitoring Dashboard',
-    description: 'Real-time monitoring system for solar installations with predictive maintenance alerts and performance optimization.',
-    image: 'https://images.unsplash.com/photo-1466611653911-95081537e5b7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400',
-    technologies: ['React', 'Node.js', 'IoT', 'Real-time Analytics'],
-    demoUrl: '#',
-    githubUrl: '#'
-  },
-  {
-    id: 'smart-grid',
-    title: 'Smart Grid Controller',
-    description: 'Intelligent control system for microgrid management with automated load balancing and energy optimization.',
-    image: 'https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400',
-    technologies: ['C++', 'Arduino', 'MQTT', 'IoT'],
-    demoUrl: '#',
-    githubUrl: '#'
-  },
-  {
     id: 'ecommerce-platform',
-    title: 'Enterprise E-commerce',
-    description: 'Full-stack e-commerce solution with advanced inventory management, payment processing, and analytics dashboard.',
+    title: 'Full-Stack E-commerce Platform',
+    description: 'Modern e-commerce solution with real-time inventory, payment processing, admin dashboard, and mobile-responsive design.',
     image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400',
-    technologies: ['Laravel', 'Vue.js', 'MySQL', 'Stripe API'],
+    technologies: ['Next.js', 'Express.js', 'MongoDB', 'Stripe API'],
+    demoUrl: '#',
+    githubUrl: '#'
+  },
+  {
+    id: 'social-media-app',
+    title: 'Social Media Application',
+    description: 'Real-time social platform with chat, notifications, content management, and advanced user engagement features.',
+    image: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400',
+    technologies: ['React', 'Socket.io', 'Node.js', 'Redis'],
+    demoUrl: '#',
+    githubUrl: '#'
+  },
+  {
+    id: 'fintech-dashboard',
+    title: 'FinTech Analytics Dashboard',
+    description: 'Comprehensive financial dashboard with real-time data visualization, reporting, and secure transaction processing.',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400',
+    technologies: ['Vue.js', 'Laravel', 'PostgreSQL', 'Chart.js'],
     demoUrl: '#',
     githubUrl: '#'
   }
@@ -75,41 +78,80 @@ export const experiences: Experience[] = [
   {
     id: 'senior-fullstack',
     title: 'Senior Fullstack Developer',
-    company: 'Technology Solutions Inc.',
-    period: '2020 - Present',
-    description: 'Leading development of enterprise web applications and solar energy management systems. Architected scalable solutions serving 10,000+ users with 99.9% uptime.',
-    technologies: ['React', 'Node.js', 'AWS', 'PostgreSQL'],
+    company: 'TechFlow Solutions',
+    period: '2021 - Present',
+    description: 'Leading development of enterprise web applications and SaaS platforms. Architected scalable solutions serving 50,000+ users with 99.9% uptime.',
+    technologies: ['React', 'Node.js', 'AWS', 'PostgreSQL', 'TypeScript'],
     achievements: [
-      'Increased system performance by 40%',
-      'Led team of 5 developers',
-      'Implemented CI/CD pipelines'
+      'Increased application performance by 60%',
+      'Led team of 8 developers',
+      'Implemented microservices architecture'
     ]
   },
   {
-    id: 'software-engineer',
-    title: 'Software & Systems Engineer',
-    company: 'Green Energy Solutions',
-    period: '2018 - 2020',
-    description: 'Developed embedded systems for solar panel monitoring and microgrid control. Implemented IoT solutions that improved system efficiency by 25%.',
-    technologies: ['C++', 'Arduino', 'IoT', 'Python'],
+    id: 'fullstack-developer',
+    title: 'Fullstack Developer',
+    company: 'Digital Innovation Labs',
+    period: '2019 - 2021',
+    description: 'Developed modern web applications using React, Vue.js, and Node.js. Built e-commerce platforms and real-time applications with advanced features.',
+    technologies: ['Vue.js', 'Express.js', 'MongoDB', 'Socket.io'],
     achievements: [
-      'Improved energy efficiency by 25%',
-      'Deployed 50+ IoT devices',
-      'Reduced maintenance costs by 30%'
+      'Delivered 15+ successful projects',
+      'Reduced load times by 45%',
+      'Implemented real-time features'
     ]
   },
   {
-    id: 'junior-developer',
-    title: 'Junior Developer',
-    company: 'Democratic Systems Corp',
-    period: '2016 - 2018',
-    description: 'Pioneered biometric voting machine development. Led the 2016 pilot project that processed 1000+ votes with 99.8% accuracy and zero security breaches.',
-    technologies: ['Embedded C', 'Security', 'Biometrics', 'Hardware'],
+    id: 'web-developer',
+    title: 'Web Developer',
+    company: 'StartupTech Inc',
+    period: '2017 - 2019',
+    description: 'Built responsive web applications and REST APIs. Focused on user experience optimization and modern web development practices.',
+    technologies: ['JavaScript', 'PHP', 'MySQL', 'Laravel'],
     achievements: [
-      '99.8% accuracy rate achieved',
-      'Zero security incidents',
-      'Successfully piloted voting system'
+      'Improved user engagement by 35%',
+      'Built 20+ responsive websites',
+      'Optimized SEO performance'
     ]
+  }
+];
+
+export const services: Service[] = [
+  {
+    id: 'web-app-development',
+    title: 'Web Application Development',
+    description: 'Custom web applications built with modern technologies for optimal performance and user experience.',
+    icon: 'Globe',
+    features: ['React/Vue.js Frontend', 'Node.js/Express Backend', 'Database Design', 'API Integration', 'Responsive Design'],
+    price: 'Starting at $5,000',
+    duration: '4-8 weeks'
+  },
+  {
+    id: 'ecommerce-solutions',
+    title: 'E-commerce Solutions',
+    description: 'Complete e-commerce platforms with payment processing, inventory management, and admin dashboards.',
+    icon: 'ShoppingCart',
+    features: ['Payment Integration', 'Inventory Management', 'Admin Dashboard', 'Mobile Responsive', 'SEO Optimization'],
+    price: 'Starting at $8,000',
+    duration: '6-12 weeks'
+  },
+  {
+    id: 'saas-development',
+    title: 'SaaS Platform Development',
+    description: 'Scalable SaaS solutions with subscription management, multi-tenancy, and advanced analytics.',
+    icon: 'Cloud',
+    features: ['Multi-tenant Architecture', 'Subscription Management', 'Analytics Dashboard', 'API Development', 'Cloud Deployment'],
+    price: 'Starting at $15,000',
+    duration: '12-20 weeks'
+  },
+  {
+    id: 'api-development',
+    title: 'API Development & Integration',
+    description: 'RESTful APIs and third-party integrations to connect your applications with external services.',
+    icon: 'Link',
+    features: ['REST API Design', 'Third-party Integrations', 'Documentation', 'Authentication', 'Rate Limiting'],
+    price: 'Starting at $3,000',
+    duration: '2-4 weeks'
   }
 ];
 

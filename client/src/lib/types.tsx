@@ -2,7 +2,7 @@ export interface Skill {
   name: string;
   level: number;
   icon: string;
-  category: 'frontend' | 'backend' | 'database' | 'tools' | 'engineering';
+  category: 'frontend' | 'backend' | 'database' | 'tools';
 }
 
 export interface Project {
@@ -30,10 +30,31 @@ export interface Experience {
   achievements?: string[];
 }
 
+export interface Service {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  features: string[];
+  price: string;
+  duration: string;
+}
+
 export interface ContactForm {
   firstName: string;
   lastName: string;
   email: string;
   subject: string;
+  message: string;
+}
+
+export interface BookingForm {
+  name: string;
+  email: string;
+  phone: string;
+  service: string;
+  projectType: string;
+  budget: string;
+  timeline: string;
   message: string;
 }
