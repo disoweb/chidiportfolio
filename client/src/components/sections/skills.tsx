@@ -69,7 +69,7 @@ export function Skills() {
     <section 
       ref={elementRef}
       id="skills" 
-      className={`py-20 bg-slate-50 dark:bg-slate-900 transition-all duration-1000 ${
+      className={`py-10 bg-slate-50 dark:bg-slate-900 transition-all duration-1000 ${
         isIntersecting ? 'animate-fade-in' : 'opacity-0'
       }`}
     >

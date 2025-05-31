@@ -106,13 +106,13 @@ export function Contact() {
     <section 
       ref={elementRef}
       id="contact" 
-      className={`py-20 bg-white dark:bg-slate-800 transition-all duration-1000 ${
+      className={`py-10 bg-white dark:bg-slate-800 transition-all duration-1000 ${
         isIntersecting ? 'animate-fade-in' : 'opacity-0'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
+          <h2 className="text-3xl sm:text-4xl font-bold text-b dark:text-white mb-4">
             Let's Work Together
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
@@ -150,7 +150,7 @@ export function Contact() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-slate-900 dark:text-white">Phone</h4>
-                  <p className="text-slate-600 dark:text-slate-400">+1 (555) 123-4567</p>
+                  <p className="text-slate-600 dark:text-slate-400">+234 (0) 8035653465</p>
                 </div>
               </div>
 
@@ -160,7 +160,7 @@ export function Contact() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-slate-900 dark:text-white">Location</h4>
-                  <p className="text-slate-600 dark:text-slate-400">Available for remote work</p>
+                  <p className="text-slate-600 dark:text-slate-400">34 Calabar Road, Uyo</p>
                 </div>
               </div>
 

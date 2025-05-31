@@ -32,7 +32,7 @@ export function Footer() {
           <div>
             <h3 className="text-2xl font-bold text-blue-400 mb-4">Chidi Ogara</h3>
             <p className="text-slate-400 mb-4">
-              Senior Fullstack Developer & Engineer building innovative solutions 
+              Fullstack Developer & Engineer building innovative solutions 
               for a sustainable future.
             </p>
             <div className="flex space-x-4">
@@ -102,10 +102,8 @@ export function Footer() {
 
         <div className="border-t border-slate-800 mt-8 pt-8 text-center">
           <p className="text-slate-400 flex flex-col sm:flex-row items-center justify-center gap-2">
-            <span>© 2024 Chidi Ogara. All rights reserved.</span>
-            <span className="flex items-center gap-2">
-              Built with <Heart className="w-4 h-4 text-red-500" /> and cutting-edge technology.
-            </span>
+            <span>© 2025 Chidi Ogara. All Rights Reserved.</span>
+
           </p>
         </div>
       </div>

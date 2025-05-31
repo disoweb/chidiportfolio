@@ -24,13 +24,13 @@ export function Services() {
     <section 
       ref={elementRef}
       id="services" 
-      className={`py-24 bg-white transition-all duration-1000 ${
+      className={`py-5 bg-white transition-all duration-1000 ${
         isIntersecting ? 'animate-fade-in' : 'opacity-0'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="text-center mb-20">
-          <p className="text-blue-600 font-semibold text-lg mb-4 tracking-wide">SERVICES</p>
+          <p className="text-blue-600 font-semibold text-lg mb-4 tracking-wide"></p>
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
             What I Can <span className="gradient-text">Build For You</span>
           </h2>

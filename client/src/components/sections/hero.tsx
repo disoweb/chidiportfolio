@@ -19,7 +19,7 @@ export function Hero() {
                 <Zap className="w-4 h-4 mr-2" />
                 Available for New Projects
               </div>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
                 <span className="block">Fullstack</span>
                 <span className="block text-blue-600">Web Developer</span>
               </h1>
@@ -72,14 +72,14 @@ export function Hero() {
                 <div className="mb-6">
                   <Code className="w-12 h-12 text-blue-200 mb-4" />
                   <h3 className="text-2xl font-bold mb-2">Chidi Ogara</h3>
-                  <p className="text-blue-200">Senior Fullstack Developer</p>
+                  <p className="text-blue-200">Fullstack Developer</p>
                 </div>
                 
                 <div className="space-y-4">
                   <div className="bg-white/10 backdrop-blur rounded-lg p-4">
                     <h4 className="font-semibold mb-2">Frontend Expertise</h4>
                     <div className="flex flex-wrap gap-2">
-                      {['React', 'TypeScript', 'Next.js', 'Tailwind'].map((tech) => (
+                      {['React', 'TypeScript', 'Next.js', 'boostrap', 'html5', 'Tailwind'].map((tech) => (
                         <span key={tech} className="bg-white/20 px-2 py-1 rounded text-xs">{tech}</span>
                       ))}
                     </div>
@@ -88,7 +88,7 @@ export function Hero() {
                   <div className="bg-white/10 backdrop-blur rounded-lg p-4">
                     <h4 className="font-semibold mb-2">Backend Expertise</h4>
                     <div className="flex flex-wrap gap-2">
-                      {['Node.js', 'PHP', 'Laravel', 'PostgreSQL'].map((tech) => (
+                      {['Node.js', 'PHP', 'Laravel', 'PHP', 'Express.js', 'PostgreSQL'].map((tech) => (
                         <span key={tech} className="bg-white/20 px-2 py-1 rounded text-xs">{tech}</span>
                       ))}
                     </div>
@@ -97,7 +97,7 @@ export function Hero() {
                   <div className="bg-white/10 backdrop-blur rounded-lg p-4">
                     <h4 className="font-semibold mb-2">Specializations</h4>
                     <div className="flex flex-wrap gap-2">
-                      {['E-commerce', 'SaaS', 'APIs', 'Performance'].map((spec) => (
+                      {['E-commerce', 'SaaS', 'APIs', 'Custom App', 'Security', 'Performance'].map((spec) => (
                         <span key={spec} className="bg-white/20 px-2 py-1 rounded text-xs">{spec}</span>
                       ))}
                     </div>
@@ -107,7 +107,7 @@ export function Hero() {
             </div>
 
             {/* Floating Cards */}
-            <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
+            <div className="absolute -top-6 -right-1 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
               <div className="flex items-center space-x-3">
                 <div className="bg-green-100 p-2 rounded-lg">
                   <CheckCircle className="w-5 h-5 text-green-600" />
@@ -119,7 +119,7 @@ export function Hero() {
               </div>
             </div>
 
-            <div className="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
+            <div className="absolute -bottom-4 -left-1 bg-white rounded-2xl shadow-xl p-2 border border-blue-100">
               <div className="flex items-center space-x-3">
                 <div className="bg-blue-100 p-2 rounded-lg">
                   <Zap className="w-5 h-5 text-blue-600" />

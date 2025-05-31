@@ -46,7 +46,7 @@ export function AIChatbot() {
       });
 
       if (response.ok) {
-        const data = await await response.json();
+        const data = await response.json();
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
           text: data.response || 'I apologize, but I encountered an issue processing your request.',
@@ -118,46 +118,49 @@ export function AIChatbot() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-3 md:p-4 overflow-y-auto space-y-3 md:space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`flex items-start space-x-2 max-w-[85%] ${
-                  message.isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'
-                }`}>
-                  <div className={`p-2 rounded-full flex-shrink-0 ${
-                    message.isUser ? 'bg-blue-600' : 'bg-gradient-to-r from-blue-500 to-purple-600'
+          <ScrollArea className="flex-1 p-3 md:p-4 overflow-y-auto">
+            <div className="space-y-3 md:space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`flex items-start space-x-2 max-w-[85%] ${
+                    message.isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'
                   }`}>
-                    {message.isUser ? (
-                      <User className="w-4 h-4 text-white" />
-                    ) : (
-                      <Bot className="w-4 h-4 text-white" />
-                    )}
-                  </div>
-                  <div className={`rounded-2xl min-w-0 ${
-                    message.isUser 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
-                  }`}>
-                    <div className="p-3">
-                      <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                        {message.text}
-                      </div>
-                    </div>
-                    <div className={`px-3 pb-2 text-xs ${
-                      message.isUser ? 'text-blue-200' : 'text-gray-500'
+                    <div className={`p-2 rounded-full flex-shrink-0 ${
+                      message.isUser ? 'bg-blue-600' : 'bg-gradient-to-r from-blue-500 to-purple-600'
                     }`}>
-                      {message.timestamp.toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
+                      {message.isUser ? (
+                        <User className="w-4 h-4 text-white" />
+                      ) : (
+                        <Bot className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                    <div className={`rounded-2xl min-w-0 ${
+                      message.isUser 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
+                    }`}>
+                      <div className="p-3">
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                          {message.text}
+                        </div>
+                      </div>
+                      <div className={`px-3 pb-2 text-xs ${
+                        message.isUser ? 'text-blue-200' : 'text-gray-500'
+                      }`}>
+                        {message.timestamp.toLocaleTimeString([], { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}</div>
+              ))}
+            </div>
+          </ScrollArea>
 
           {/* Programming Illustrations */}
           {!isLoading && messages.length <= 3 && (
@@ -191,23 +194,24 @@ export function AIChatbot() {
               </div>
             </div>
           )}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="flex items-start space-x-2">
-                  <div className="p-2 rounded-full bg-gray-100">
-                    <Bot className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div className="bg-gray-100 p-3 rounded-2xl">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
+
+          {/* Loading Indicator */}
+          {isLoading && (
+            <div className="flex justify-start px-4 pb-2">
+              <div className="flex items-start space-x-2">
+                <div className="p-2 rounded-full bg-gray-100">
+                  <Bot className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="bg-gray-100 p-3 rounded-2xl">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Input */}
           <div className="p-4 border-t border-gray-100">

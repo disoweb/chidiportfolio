@@ -91,7 +91,7 @@ export function Booking() {
     <section 
       ref={elementRef}
       id="booking" 
-      className={`py-24 bg-gradient-to-br from-blue-50/30 to-white transition-all duration-1000 ${
+      className={`py-10 bg-gradient-to-br from-blue-50/30 to-white transition-all duration-1000 ${
         isIntersecting ? 'animate-fade-in' : 'opacity-0'
       }`}
     >

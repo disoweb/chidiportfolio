@@ -157,9 +157,9 @@ export const projects: Project[] = [
 export const experiences: Experience[] = [
   {
     id: 'senior-fullstack-current',
-    title: 'Senior Fullstack Developer',
+    title: 'Fullstack Developer',
     company: 'Freelance / Contract',
-    period: '2020 - Present',
+    period: '2019 - Present',
     description: 'Leading full-stack development projects for diverse clients, specializing in modern web technologies and scalable architectures.',
     technologies: ['React', 'Next.js', 'Node.js', 'TypeScript', 'AWS', 'PostgreSQL'],
     achievements: [
