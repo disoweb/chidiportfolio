@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Code } from 'lucide-react';
+import { Menu, X, Code, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ui/theme-provider';
 
@@ -14,7 +14,7 @@ export function Navbar() {
   }, [setTheme]);
 
   const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
 
   const scrollToSection = (id: string) => {
@@ -58,6 +58,15 @@ export function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </Button>
 
             <Button
               onClick={() => scrollToSection('booking')}

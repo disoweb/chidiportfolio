@@ -47,6 +47,7 @@ function App() {
       <TooltipProvider>
         <div className="min-h-screen bg-background text-foreground">
           <Switch>
+            <Route path="/" component={Home} />
             <Route path="/admin/login" component={AdminLogin} />
             <Route path="/admin" component={AdminDashboard} />
             <Route path="/project/:id" component={ProjectDetails} />
