@@ -1,22 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/components/ui/theme-provider';
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [theme, setTheme] = useState('light');
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
     document.documentElement.classList.toggle('dark', savedTheme === 'dark');
-  }, []);
+  }, [setTheme]);
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   const scrollToSection = (id: string) => {
@@ -60,7 +58,7 @@ export function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            
+
             <Button
               onClick={() => scrollToSection('booking')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium"
@@ -71,7 +69,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
-            
+
             <Button
               variant="ghost"
               onClick={() => setIsOpen(!isOpen)}

@@ -78,7 +78,8 @@ export function Services() {
                 </div>
               </div>
             );
-          })}</div>
+          })}
+        </div>
 
         {/* Call to Action */}
         <div className="text-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-6 sm:p-8 lg:p-12 text-white mx-4 sm:mx-0">
@@ -97,30 +98,6 @@ export function Services() {
               variant="outline"
               onClick={() => scrollToSection('#contact')}
               className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-300"
-            >
-              Get Quote
-            </Button>
-          </div>
-        </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="text-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-12 text-white">
-          <h3 className="text-3xl font-bold mb-4">Ready to Start Your Project?</h3>
-          <p className="text-xl mb-8 opacity-90">
-            Let's discuss your requirements and create something amazing together
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={() => scrollToSection('#booking')}
-              className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
-            >
-              Schedule Free Consultation
-            </Button>
-            <Button 
-              variant="outline"
-              onClick={() => scrollToSection('#contact')}
-              className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300"
             >
               Get Quote
             </Button>
