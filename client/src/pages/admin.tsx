@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
-import { Mail, Phone, Calendar, Settings, Globe, Search } from 'lucide-react';
+import { Mail, Phone, Calendar, Settings, Globe, Search, Shield } from 'lucide-react';
 
 interface Inquiry {
   id: string;
@@ -35,10 +36,12 @@ interface SiteSettings {
 }
 
 export default function AdminDashboard() {
+  const [, setLocation] = useLocation();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [filteredInquiries, setFilteredInquiries] = useState<Inquiry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     seoTitle: 'Chidi Ogara - Senior Fullstack Developer',
     seoDescription: 'Professional fullstack web developer specializing in React, Node.js, and modern web technologies. Building scalable solutions for businesses.',
@@ -54,10 +57,18 @@ export default function AdminDashboard() {
   });
 
   useEffect(() => {
+    // Check authentication
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      setLocation('/admin/login');
+      return;
+    }
+    setIsAuthenticated(true);
+    
     // Fetch inquiries from API
     fetchInquiries();
     fetchSiteSettings();
-  }, []);
+  }, [setLocation]);
 
   useEffect(() => {
     // Filter inquiries based on search term and status
@@ -141,12 +152,28 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+    setLocation('/admin/login');
+  };
+
+  if (!isAuthenticated) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage inquiries and website settings</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+            <p className="text-gray-600">Manage inquiries and website settings</p>
+          </div>
+          <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2">
+            <Shield className="w-4 h-4" />
+            Logout
+          </Button>
         </div>
 
         <Tabs defaultValue="inquiries" className="space-y-6">

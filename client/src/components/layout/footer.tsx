@@ -66,7 +66,7 @@ export function Footer() {
               </a>
             </div>
           </div>
-          
+
           {/* Quick Links */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
@@ -81,14 +81,14 @@ export function Footer() {
                 </button>
               ))}
               <a
-                href="/admin"
+                href="/admin/login"
                 className="block text-slate-400 hover:text-blue-400 transition-colors duration-200 text-left"
               >
                 Admin
               </a>
             </nav>
           </div>
-          
+
           {/* Services */}
           <div>
             <h4 className="text-lg font-semibold mb-4">Services</h4>
@@ -99,7 +99,7 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        
+
         <div className="border-t border-slate-800 mt-8 pt-8 text-center">
           <p className="text-slate-400 flex flex-col sm:flex-row items-center justify-center gap-2">
             <span>© 2024 Chidi Ogara. All rights reserved.</span>

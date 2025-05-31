@@ -45,14 +45,26 @@ export function AIChatbot() {
         context: 'web_development_portfolio'
       });
 
-      const botMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.response || 'I apologize, but I encountered an issue processing your request.',
-        isUser: false,
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, botMessage]);
+      if (response.ok) {
+        const data = await await response.json();
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.response || 'I apologize, but I encountered an issue processing your request.',
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Chat API error:', errorData);
+        const botMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: errorData.error || 'I apologize, but I encountered an issue processing your request. Please try again or contact me directly.',
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, botMessage]);
+      }
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),

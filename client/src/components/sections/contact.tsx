@@ -54,14 +54,17 @@ export function Contact() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/contact', {
+      const response = await fetch('/api/inquiry', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
-          service: 'General Inquiry'
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          phone: '',
+          service: 'General Inquiry',
+          message: `Subject: ${formData.subject}\n\n${formData.message}`
         }),
       });
 
