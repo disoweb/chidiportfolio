@@ -7,6 +7,17 @@ import { Request, Response } from 'express';
 
 // In-memory storage for demo (replace with database in production)
 let inquiries: any[] = [];
+let adminUsers = [
+  {
+    id: '1',
+    username: 'admin',
+    password: 'admin123', // In production, this should be hashed
+    email: 'admin@chidiogara.com',
+    role: 'admin',
+    createdAt: new Date().toISOString()
+  }
+];
+
 let siteSettings = {
   seoTitle: 'Chidi Ogara - Senior Fullstack Developer',
   seoDescription: 'Professional fullstack web developer specializing in React, Node.js, and modern web technologies. Building scalable solutions for businesses.',
@@ -305,6 +316,45 @@ User question: ${message}`;
       console.error('Update settings error:', error);
       res.status(500).json({ error: 'Failed to update settings' });
     }
+  });
+
+  // Admin login endpoint
+  app.post('/api/admin/login', (req: Request, res: Response) => {
+    try {
+      const { username, password } = req.body;
+
+      const admin = adminUsers.find(user => 
+        user.username === username && user.password === password
+      );
+
+      if (!admin) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // In production, use proper JWT tokens
+      res.json({ 
+        success: true, 
+        admin: {
+          id: admin.id,
+          username: admin.username,
+          email: admin.email,
+          role: admin.role
+        },
+        token: 'mock-jwt-token'
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: 'Failed to login' });
+    }
+  });
+
+  // Get admin credentials (for development only)
+  app.get('/api/admin/credentials', (req: Request, res: Response) => {
+    res.json({
+      username: 'admin',
+      password: 'admin123',
+      note: 'Default admin credentials for development'
+    });
   });
 
   const httpServer = createServer(app);

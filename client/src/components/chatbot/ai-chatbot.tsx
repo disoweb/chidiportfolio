@@ -40,7 +40,7 @@ export function AIChatbot() {
     setIsLoading(true);
 
     try {
-      const response = await apiRequest('POST', '/api/chat', {
+      const response = await apiRequest('POST', '/api/ai_chat', {
         message: inputValue,
         context: 'web_development_portfolio'
       });

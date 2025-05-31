@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Menu, X, Sun, Moon, Code } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Navbar() {
@@ -61,14 +60,7 @@ export function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="text-gray-700 hover:text-blue-600"
-            >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            </Button>
+            
             <Button
               onClick={() => scrollToSection('booking')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium"
@@ -79,14 +71,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-              className="text-gray-700"
-            >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-            </Button>
+            
             <Button
               variant="ghost"
               onClick={() => setIsOpen(!isOpen)}
