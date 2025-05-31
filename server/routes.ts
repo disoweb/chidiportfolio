@@ -3,20 +3,68 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertContactSchema, insertBookingSchema } from "@shared/schema";
 import { z } from "zod";
+import { Request, Response } from 'express';
+
+// In-memory storage for demo (replace with database in production)
+let inquiries: any[] = [];
+let siteSettings = {
+  seoTitle: 'Chidi Ogara - Senior Fullstack Developer',
+  seoDescription: 'Professional fullstack web developer specializing in React, Node.js, and modern web technologies. Building scalable solutions for businesses.',
+  seoKeywords: 'fullstack developer, web development, React, Node.js, TypeScript, JavaScript, web applications',
+  ogImage: '/og-image.jpg',
+  siteName: 'Chidi Ogara Portfolio',
+  contactEmail: 'chidi@example.com',
+  socialLinks: {
+    linkedin: 'https://linkedin.com/in/chidiogara',
+    github: 'https://github.com/chidiogara',
+    twitter: 'https://twitter.com/chidiogara'
+  }
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check
+  app.get('/api/health', (req: Request, res: Response) => {
+    res.json({ status: 'ok', message: 'Server is running' });
+  });
+
+  // Chat endpoint
+  app.post('/api/chat', async (req: Request, res: Response) => {
+    try {
+      const { message } = req.body;
+
+      // Simple AI response simulation
+      const responses = [
+        "Hi! I'm Chidi's AI assistant. I can tell you about his extensive experience in fullstack development.",
+        "Chidi specializes in React, Node.js, PHP, and modern web technologies. He has 7+ years of experience building scalable web applications.",
+        "Chidi has worked on projects ranging from biometric voting systems to modern web applications. He's passionate about clean code and user experience.",
+        "You can book a consultation with Chidi through the booking section on this website. He offers free initial consultations!",
+        "Chidi is experienced in both frontend and backend development, with expertise in databases, APIs, and modern deployment practices."
+      ];
+
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+
+      res.json({ 
+        response: randomResponse,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Chat error:', error);
+      res.status(500).json({ error: 'Failed to process chat message' });
+    }
+  });
+
   // Contact form submission endpoint
   app.post('/api/contact', async (req, res) => {
     try {
       // Validate request body
       const validatedData = insertContactSchema.parse(req.body);
-      
+
       // Store contact submission
       const contact = await storage.createContact(validatedData);
-      
+
       // In a real implementation, you would send an email notification here
       // Example: await sendEmailNotification(validatedData);
-      
+
       res.json({ 
         success: true, 
         message: 'Contact form submitted successfully',
@@ -55,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertBookingSchema.parse(req.body);
       const booking = await storage.createBooking(validatedData);
-      
+
       res.json({ 
         success: true, 
         message: 'Booking submitted successfully',
@@ -90,10 +138,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Chat endpoint using Gemini
-  app.post('/api/chat', async (req, res) => {
+  app.post('/api/ai_chat', async (req, res) => {
     try {
       const { message } = req.body;
-      
+
       if (!message) {
         return res.status(400).json({ error: 'Message is required' });
       }
@@ -194,6 +242,68 @@ User question: ${message}`;
         error: 'Failed to process chat message',
         details: error.message 
       });
+    }
+  });
+
+  // Contact form submission
+  app.post('/api/inquiry', (req: Request, res: Response) => {
+    try {
+      const { name, email, phone, service, message } = req.body;
+
+      const inquiry = {
+        id: Date.now().toString(),
+        name,
+        email,
+        phone,
+        service,
+        message,
+        status: 'new',
+        createdAt: new Date().toISOString()
+      };
+
+      inquiries.push(inquiry);
+
+      res.json({ success: true, message: 'Inquiry submitted successfully' });
+    } catch (error) {
+      console.error('Contact form error:', error);
+      res.status(500).json({ error: 'Failed to submit inquiry' });
+    }
+  });
+
+  // Admin routes
+  app.get('/api/admin/inquiries', (req: Request, res: Response) => {
+    res.json(inquiries);
+  });
+
+  app.patch('/api/admin/inquiries/:id', (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const inquiryIndex = inquiries.findIndex(inquiry => inquiry.id === id);
+      if (inquiryIndex === -1) {
+        return res.status(404).json({ error: 'Inquiry not found' });
+      }
+
+      inquiries[inquiryIndex].status = status;
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Update inquiry error:', error);
+      res.status(500).json({ error: 'Failed to update inquiry' });
+    }
+  });
+
+  app.get('/api/admin/settings', (req: Request, res: Response) => {
+    res.json(siteSettings);
+  });
+
+  app.put('/api/admin/settings', (req: Request, res: Response) => {
+    try {
+      siteSettings = { ...siteSettings, ...req.body };
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Update settings error:', error);
+      res.status(500).json({ error: 'Failed to update settings' });
     }
   });
 

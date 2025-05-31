@@ -5,12 +5,10 @@ interface UseIntersectionObserverProps {
   rootMargin?: string;
 }
 
-export function useIntersectionObserver({
-  threshold = 0.1,
-  rootMargin = '0px 0px -50px 0px'
-}: UseIntersectionObserverProps = {}) {
+export function useIntersectionObserver(options?: IntersectionObserverInit) {
   const [isIntersecting, setIsIntersecting] = useState(false);
-  const elementRef = useRef<HTMLElement | null>(null);
+  const [hasIntersected, setHasIntersected] = useState(false);
+  const elementRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const element = elementRef.current;
@@ -19,8 +17,15 @@ export function useIntersectionObserver({
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsIntersecting(entry.isIntersecting);
+        if (entry.isIntersecting && !hasIntersected) {
+          setHasIntersected(true);
+        }
       },
-      { threshold, rootMargin }
+      { 
+        threshold: 0.05, 
+        rootMargin: '50px 0px',
+        ...options 
+      }
     );
 
     observer.observe(element);
@@ -28,7 +33,7 @@ export function useIntersectionObserver({
     return () => {
       observer.unobserve(element);
     };
-  }, [threshold, rootMargin]);
+  }, [hasIntersected]);
 
-  return { elementRef, isIntersecting };
+  return { elementRef, isIntersecting, hasIntersected };
 }

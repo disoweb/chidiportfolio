@@ -32,11 +32,13 @@ export function ScrollToTop() {
 
   return (
     <Button
-      className="fixed bottom-8 right-8 z-50 rounded-full p-3 shadow-lg"
       onClick={scrollToTop}
+      className={`fixed bottom-8 left-8 z-40 p-3 rounded-full shadow-lg transition-all duration-300 ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'
+      }`}
       size="icon"
     >
-      <ArrowUp className="h-5 w-5" />
+      <ArrowUp className="w-5 h-5" />
     </Button>
   );
 }

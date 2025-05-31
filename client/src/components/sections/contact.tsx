@@ -20,6 +20,7 @@ export function Contact() {
     subject: '',
     message: ''
   });
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -28,7 +29,7 @@ export function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.subject || !formData.message) {
       toast({
@@ -51,29 +52,48 @@ export function Contact() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      await apiRequest('POST', '/api/contact', formData);
-      
-      toast({
-        title: "Message Sent!",
-        description: "Thank you for your message. I'll get back to you soon.",
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          service: 'General Inquiry'
+        }),
       });
-      
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        subject: '',
-        message: ''
-      });
+
+      if (response.ok) {
+        toast({
+          title: "Message Sent!",
+          description: "Thank you for your message. I'll get back to you soon.",
+        });
+        setIsSubmitted(true);
+        setFormData({ 
+          firstName: '',
+          lastName: '',
+          email: '',
+          subject: '',
+          message: '' 
+        });
+      } else {
+         toast({
+          title: "Error",
+          description: "Something went wrong. Please try again or email me directly.",
+          variant: "destructive",
+        });
+        throw new Error('Failed to submit form');
+      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again or email me directly.",
-        variant: "destructive",
-      });
+      console.error('Form submission error:', error);
+       toast({
+          title: "Error",
+          description: "Something went wrong. Please try again or email me directly.",
+          variant: "destructive",
+        });
+      alert('Failed to submit form. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -96,7 +116,7 @@ export function Contact() {
             Ready to bring your ideas to life? Let's discuss how we can create something amazing together.
           </p>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Info */}
           <div className="space-y-8">
@@ -108,7 +128,7 @@ export function Contact() {
                 fullstack developer, or engineering solutions expert, I'd love to hear from you.
               </p>
             </div>
-            
+
             {/* Contact Methods */}
             <div className="space-y-6">
               <div className="flex items-center space-x-4">
@@ -120,7 +140,7 @@ export function Contact() {
                   <p className="text-slate-600 dark:text-slate-400">hello@chidiogara.dev</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-lg">
                   <Phone className="w-6 h-6 text-orange-600 dark:text-orange-400" />
@@ -130,7 +150,7 @@ export function Contact() {
                   <p className="text-slate-600 dark:text-slate-400">+1 (555) 123-4567</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 <div className="bg-green-100 dark:bg-green-900 p-3 rounded-lg">
                   <MapPin className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -140,7 +160,7 @@ export function Contact() {
                   <p className="text-slate-600 dark:text-slate-400">Available for remote work</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg">
                   <Clock className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -151,7 +171,7 @@ export function Contact() {
                 </div>
               </div>
             </div>
-            
+
             {/* Social Links */}
             <div className="border-t border-slate-200 dark:border-slate-700 pt-8">
               <h4 className="font-semibold text-slate-900 dark:text-white mb-4">Connect with me</h4>
@@ -192,7 +212,7 @@ export function Contact() {
               </div>
             </div>
           </div>
-          
+
           {/* Contact Form */}
           <div className="bg-slate-50 dark:bg-slate-700 p-8 rounded-2xl">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -226,7 +246,7 @@ export function Contact() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="email" className="block text-sm font-medium mb-2">
                   Email Address *
@@ -241,7 +261,7 @@ export function Contact() {
                   className="w-full"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="subject" className="block text-sm font-medium mb-2">
                   Subject *
@@ -256,7 +276,7 @@ export function Contact() {
                   className="w-full"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="message" className="block text-sm font-medium mb-2">
                   Message *
@@ -271,7 +291,7 @@ export function Contact() {
                   className="w-full resize-vertical"
                 />
               </div>
-              
+
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
@@ -289,6 +309,12 @@ export function Contact() {
                   </>
                 )}
               </Button>
+              {isSubmitted && (
+                <div className="text-green-500 mt-4 flex items-center">
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  Message sent successfully!
+                </div>
+              )}
             </form>
           </div>
         </div>

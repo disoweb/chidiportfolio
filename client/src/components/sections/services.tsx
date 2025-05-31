@@ -38,8 +38,8 @@ export function Services() {
             From simple websites to complex SaaS platforms, I deliver high-quality web solutions tailored to your business needs
           </p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-12 md:mb-16">
           {services.map((service) => {
             const IconComponent = iconMap[service.icon] || Globe;
             return (
@@ -51,7 +51,7 @@ export function Services() {
                   <div className="flex-1">
                     <h3 className="text-2xl font-bold text-gray-900 mb-3">{service.title}</h3>
                     <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
-                    
+
                     <div className="space-y-3 mb-6">
                       {service.features.map((feature, index) => (
                         <div key={index} className="flex items-center space-x-3">
@@ -60,7 +60,7 @@ export function Services() {
                         </div>
                       ))}
                     </div>
-                    
+
                     <div className="flex items-center justify-between mb-6">
                       <div>
                         <div className="text-2xl font-bold text-blue-600">{service.price}</div>
@@ -80,7 +80,7 @@ export function Services() {
             );
           })}
         </div>
-        
+
         {/* Call to Action */}
         <div className="text-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-12 text-white">
           <h3 className="text-3xl font-bold mb-4">Ready to Start Your Project?</h3>
