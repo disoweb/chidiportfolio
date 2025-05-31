@@ -1,150 +1,138 @@
-import { Download, Mail, Award, Target, Lightbulb } from 'lucide-react';
+
+import { Download, Award, Users, Code2, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
 
 export function About() {
   const { elementRef, isIntersecting } = useIntersectionObserver();
 
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
     <section 
       ref={elementRef}
       id="about" 
-      className={`py-24 bg-gradient-to-br from-blue-50/30 to-white transition-all duration-1000 ${
+      className={`py-24 bg-white transition-all duration-1000 ${
         isIntersecting ? 'animate-fade-in' : 'opacity-0'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="text-center mb-20">
-          <p className="text-blue-600 font-semibold text-lg mb-4 tracking-wide">ABOUT ME</p>
-          <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
-            Passionate About <span className="gradient-text">Innovation</span>
-          </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Solving complex problems through innovative technology solutions and engineering excellence
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-20">
-          {/* Content */}
-          <div className="space-y-8">
-            <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-50">
-              <div className="flex items-start space-x-4 mb-6">
-                <div className="bg-blue-100 p-3 rounded-xl">
-                  <Target className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">My Mission</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    With over 5 years of experience in software development and engineering, I specialize in creating 
-                    scalable solutions that bridge the gap between complex technical requirements and real-world business needs.
-                  </p>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {/* Left Column - Content */}
+          <div>
+            <div className="mb-8">
+              <p className="text-blue-600 font-semibold text-lg mb-4 tracking-wide">ABOUT ME</p>
+              <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
+                Turning Ideas Into <span className="text-blue-600">Digital Reality</span>
+              </h2>
+              <div className="space-y-6 text-lg text-gray-600 leading-relaxed">
+                <p>
+                  I'm a passionate <strong>Senior Fullstack Web Developer</strong> with over 7 years of experience 
+                  building high-performance web applications that drive business growth. My expertise spans 
+                  the entire development lifecycle, from concept and design to deployment and optimization.
+                </p>
+                <p>
+                  With a strong foundation in both <strong>frontend and backend technologies</strong>, I create 
+                  seamless user experiences backed by robust, scalable architectures. I specialize in modern 
+                  frameworks like React and Next.js for the frontend, and Node.js and PHP for backend development.
+                </p>
+                <p>
+                  My engineering background gives me a unique perspective on problem-solving, having worked on 
+                  innovative projects including an <strong>automated biometric voting machine</strong> that was 
+                  successfully piloted in 2016 with 99.8% accuracy.
+                </p>
               </div>
             </div>
-            
-            <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-50">
-              <div className="flex items-start space-x-4 mb-6">
-                <div className="bg-blue-100 p-3 rounded-xl">
-                  <Award className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Key Achievement</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    My expertise spans across fullstack web development, solar system design, microgrid optimization, 
-                    and embedded systems. I'm particularly proud of my work on the 2016 biometric voting machine pilot 
-                    project, which demonstrated my ability to deliver innovative solutions under challenging circumstances.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-50">
-              <div className="flex items-start space-x-4 mb-6">
-                <div className="bg-blue-100 p-3 rounded-xl">
-                  <Lightbulb className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">My Philosophy</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    I believe in the power of technology to transform industries and improve lives. Whether it's 
-                    developing robust web applications or designing efficient energy systems, I approach every 
-                    project with curiosity, precision, and a commitment to excellence.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Resume Download & Contact */}
-            <div className="flex flex-col sm:flex-row gap-6 pt-4">
-              <Button 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-1"
-              >
-                <Download className="w-5 h-5 mr-3" />
+
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold">
+                <Download className="w-5 h-5 mr-2" />
                 Download Resume
               </Button>
               <Button 
-                variant="outline"
-                onClick={() => scrollToSection('#contact')}
-                className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-2xl hover:scale-105 hover:-translate-y-1"
+                variant="outline" 
+                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-6 py-3 rounded-xl font-semibold"
               >
-                <Mail className="w-5 h-5 mr-3" />
-                Get In Touch
+                View Portfolio
               </Button>
             </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-2">7+</div>
+                <div className="text-sm text-gray-600">Years Experience</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-2">100+</div>
+                <div className="text-sm text-gray-600">Projects Delivered</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-2">98%</div>
+                <div className="text-sm text-gray-600">Client Satisfaction</div>
+              </div>
+            </div>
           </div>
-          
-          {/* Visual Content */}
+
+          {/* Right Column - Visual Elements */}
           <div className="relative">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-6">
-                <div className="bg-white rounded-3xl p-6 shadow-xl border border-blue-50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                  <div className="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
+            {/* Main Image/Visual */}
+            <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-8 shadow-2xl">
+              <div className="text-white space-y-6">
+                <div className="flex items-center space-x-4 mb-6">
+                  <div className="bg-white/20 p-3 rounded-xl">
+                    <Code2 className="w-8 h-8" />
                   </div>
-                  <h4 className="font-bold text-gray-900 mb-2">Excellence</h4>
-                  <p className="text-gray-600 text-sm">Delivering top-quality solutions with attention to detail</p>
+                  <div>
+                    <h3 className="text-xl font-bold">My Approach</h3>
+                    <p className="text-blue-200">Quality-driven development</p>
+                  </div>
                 </div>
-                
-                <div className="bg-white rounded-3xl p-6 shadow-xl border border-blue-50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                  <div className="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
+
+                <div className="space-y-4">
+                  <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <Users className="w-6 h-6 text-blue-200" />
+                      <h4 className="font-semibold">Client-Focused</h4>
+                    </div>
+                    <p className="text-sm text-blue-100">
+                      Understanding business needs and translating them into technical solutions
+                    </p>
                   </div>
-                  <h4 className="font-bold text-gray-900 mb-2">Innovation</h4>
-                  <p className="text-gray-600 text-sm">Embracing cutting-edge technologies and creative solutions</p>
+
+                  <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <Award className="w-6 h-6 text-blue-200" />
+                      <h4 className="font-semibold">Quality First</h4>
+                    </div>
+                    <p className="text-sm text-blue-100">
+                      Clean, maintainable code with comprehensive testing and documentation
+                    </p>
+                  </div>
+
+                  <div className="bg-white/10 backdrop-blur rounded-xl p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <Lightbulb className="w-6 h-6 text-blue-200" />
+                      <h4 className="font-semibold">Innovation</h4>
+                    </div>
+                    <p className="text-sm text-blue-100">
+                      Staying current with latest technologies and best practices
+                    </p>
+                  </div>
                 </div>
               </div>
-              
-              <div className="space-y-6 mt-12">
-                <div className="bg-white rounded-3xl p-6 shadow-xl border border-blue-50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                  <div className="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                  </div>
-                  <h4 className="font-bold text-gray-900 mb-2">Collaboration</h4>
-                  <p className="text-gray-600 text-sm">Working effectively with diverse teams and stakeholders</p>
-                </div>
-                
-                <div className="bg-white rounded-3xl p-6 shadow-xl border border-blue-50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-                  <div className="bg-blue-100 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </div>
-                  <h4 className="font-bold text-gray-900 mb-2">Problem Solving</h4>
-                  <p className="text-gray-600 text-sm">Analytical thinking and creative approaches to challenges</p>
-                </div>
+            </div>
+
+            {/* Floating Elements */}
+            <div className="absolute -top-6 -right-6 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">24h</div>
+                <div className="text-xs text-gray-600">Response Time</div>
+              </div>
+            </div>
+
+            <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">99.9%</div>
+                <div className="text-xs text-gray-600">Uptime</div>
               </div>
             </div>
           </div>

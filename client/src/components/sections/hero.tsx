@@ -1,4 +1,5 @@
-import { ArrowRight, Download, Calendar } from 'lucide-react';
+
+import { ArrowRight, Code, Globe, Zap, Calendar, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function Hero() {
@@ -8,46 +9,127 @@ export function Hero() {
   };
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center px-4">
-      <div className="max-w-6xl mx-auto text-center">
-        <div className="mb-8">
-          <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
-            Chidi <span className="text-blue-600">Ogara</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Senior Fullstack Web Developer crafting high-performance web applications 
-            that drive business growth and user engagement
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={() => scrollToSection('booking')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
-            >
-              Start Your Project
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-            <Button 
-              onClick={() => scrollToSection('services')}
-              variant="outline" 
-              className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 text-lg"
-            >
-              View Services
-            </Button>
+    <section className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-white flex items-center justify-center px-4 py-20">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left Column - Main Content */}
+          <div className="text-center lg:text-left">
+            <div className="mb-6">
+              <div className="inline-flex items-center bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold mb-6">
+                <Zap className="w-4 h-4 mr-2" />
+                Available for New Projects
+              </div>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+                <span className="block">Fullstack</span>
+                <span className="block text-blue-600">Web Developer</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-2xl leading-relaxed">
+                I build high-performance web applications that drive business growth. 
+                From concept to deployment, I deliver scalable solutions using modern technologies.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12">
+              <Button 
+                onClick={() => scrollToSection('booking')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                <Calendar className="w-5 h-5 mr-2" />
+                Book Free Consultation
+              </Button>
+              <Button 
+                onClick={() => scrollToSection('services')}
+                variant="outline" 
+                className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg rounded-xl font-semibold transition-all duration-300"
+              >
+                <Globe className="w-5 h-5 mr-2" />
+                View Services
+              </Button>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 text-sm text-gray-600">
+              <div className="flex items-center">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                7+ Years Experience
+              </div>
+              <div className="flex items-center">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                100+ Projects Delivered
+              </div>
+              <div className="flex items-center">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                98% Client Satisfaction
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-          <div className="bg-white p-6 rounded-lg shadow-lg border border-blue-100">
-            <h3 className="text-3xl font-bold text-blue-600 mb-2">7+</h3>
-            <p className="text-gray-600">Years Experience</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-lg border border-blue-100">
-            <h3 className="text-3xl font-bold text-blue-600 mb-2">100+</h3>
-            <p className="text-gray-600">Projects Completed</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-lg border border-blue-100">
-            <h3 className="text-3xl font-bold text-blue-600 mb-2">98%</h3>
-            <p className="text-gray-600">Client Satisfaction</p>
+
+          {/* Right Column - Visual Elements */}
+          <div className="relative">
+            <div className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-8 shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 to-blue-800/90 rounded-3xl"></div>
+              <div className="relative text-white">
+                <div className="mb-6">
+                  <Code className="w-12 h-12 text-blue-200 mb-4" />
+                  <h3 className="text-2xl font-bold mb-2">Chidi Ogara</h3>
+                  <p className="text-blue-200">Senior Fullstack Developer</p>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                    <h4 className="font-semibold mb-2">Frontend Expertise</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {['React', 'TypeScript', 'Next.js', 'Tailwind'].map((tech) => (
+                        <span key={tech} className="bg-white/20 px-2 py-1 rounded text-xs">{tech}</span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                    <h4 className="font-semibold mb-2">Backend Expertise</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {['Node.js', 'PHP', 'Laravel', 'PostgreSQL'].map((tech) => (
+                        <span key={tech} className="bg-white/20 px-2 py-1 rounded text-xs">{tech}</span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/10 backdrop-blur rounded-lg p-4">
+                    <h4 className="font-semibold mb-2">Specializations</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {['E-commerce', 'SaaS', 'APIs', 'Performance'].map((spec) => (
+                        <span key={spec} className="bg-white/20 px-2 py-1 rounded text-xs">{spec}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Floating Cards */}
+            <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
+              <div className="flex items-center space-x-3">
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">Project Delivered</div>
+                  <div className="text-sm text-gray-600">On time & budget</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="absolute -bottom-4 -left-4 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
+              <div className="flex items-center space-x-3">
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Zap className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-900">Fast Delivery</div>
+                  <div className="text-sm text-gray-600">2-4 week sprints</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
