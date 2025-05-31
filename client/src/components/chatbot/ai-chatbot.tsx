@@ -17,7 +17,7 @@ export function AIChatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hi! I'm Chidi's AI assistant. I can answer questions about his web development services, experience, and projects. How can I help you today?",
+      text: "Hi! I'm Chidi Ogara. I specialize in building scalable web applications with React, Node.js, and modern tech stacks. What project can I help you with?",
       isUser: false,
       timestamp: new Date()
     }
@@ -68,7 +68,7 @@ export function AIChatbot() {
     } catch (error) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I'm sorry, I'm having trouble connecting right now. Please try again or contact Chidi directly.",
+        text: "Connection issue. Please try again or book a free consultation directly through the form below.",
         isUser: false,
         timestamp: new Date()
       };
@@ -124,36 +124,73 @@ export function AIChatbot() {
                 key={message.id}
                 className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`flex items-start space-x-2 max-w-[80%] ${
+                <div className={`flex items-start space-x-2 max-w-[85%] ${
                   message.isUser ? 'flex-row-reverse space-x-reverse' : 'flex-row'
                 }`}>
-                  <div className={`p-2 rounded-full ${
-                    message.isUser ? 'bg-blue-600' : 'bg-gray-100'
+                  <div className={`p-2 rounded-full flex-shrink-0 ${
+                    message.isUser ? 'bg-blue-600' : 'bg-gradient-to-r from-blue-500 to-purple-600'
                   }`}>
                     {message.isUser ? (
                       <User className="w-4 h-4 text-white" />
                     ) : (
-                      <Bot className="w-4 h-4 text-blue-600" />
+                      <Bot className="w-4 h-4 text-white" />
                     )}
                   </div>
-                  <div className={`p-3 rounded-2xl ${
+                  <div className={`rounded-2xl min-w-0 ${
                     message.isUser 
                       ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-100 text-gray-900'
+                      : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
                   }`}>
-                    <p className="text-sm leading-relaxed">{message.text}</p>
-                    <p className={`text-xs mt-1 ${
+                    <div className="p-3">
+                      <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                        {message.text}
+                      </div>
+                    </div>
+                    <div className={`px-3 pb-2 text-xs ${
                       message.isUser ? 'text-blue-200' : 'text-gray-500'
                     }`}>
                       {message.timestamp.toLocaleTimeString([], { 
                         hour: '2-digit', 
                         minute: '2-digit' 
                       })}
-                    </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
+            ))}</div>
+
+          {/* Programming Illustrations */}
+          {!isLoading && messages.length <= 3 && (
+            <div className="px-4 pb-2">
+              <div className="flex justify-center space-x-4 opacity-30">
+                <div className="text-center">
+                  <div className="w-8 h-8 mx-auto mb-1 text-blue-400">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/>
+                    </svg>
+                  </div>
+                  <div className="text-xs text-gray-400">Code</div>
+                </div>
+                <div className="text-center">
+                  <div className="w-8 h-8 mx-auto mb-1 text-green-400">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2L2 7v10c0 5.55 3.84 9.739 9 9.899C16.16 26.739 20 22.55 20 17V7l-8-5z"/>
+                    </svg>
+                  </div>
+                  <div className="text-xs text-gray-400">Secure</div>
+                </div>
+                <div className="text-center">
+                  <div className="w-8 h-8 mx-auto mb-1 text-purple-400">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                      <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                    </svg>
+                  </div>
+                  <div className="text-xs text-gray-400">Fast</div>
+                </div>
+              </div>
+            </div>
+          )}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="flex items-start space-x-2">
@@ -179,8 +216,8 @@ export function AIChatbot() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask about services, pricing, experience..."
-                className="flex-1 rounded-xl"
+                placeholder="Ask about web development, pricing, timeline..."
+                className="flex-1 rounded-xl border-gray-200 focus:border-blue-400"
                 disabled={isLoading}
               />
               <Button
