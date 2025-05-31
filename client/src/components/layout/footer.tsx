@@ -80,6 +80,12 @@ export function Footer() {
                   {link.label}
                 </button>
               ))}
+              <a
+                href="/admin"
+                className="block text-slate-400 hover:text-blue-400 transition-colors duration-200 text-left"
+              >
+                Admin
+              </a>
             </nav>
           </div>
           
@@ -95,10 +101,11 @@ export function Footer() {
         </div>
         
         <div className="border-t border-slate-800 mt-8 pt-8 text-center">
-          <p className="text-slate-400 flex items-center justify-center gap-2">
-            © 2024 Chidi Ogara. All rights reserved. Built with 
-            <Heart className="w-4 h-4 text-red-500" />
-            and cutting-edge technology.
+          <p className="text-slate-400 flex flex-col sm:flex-row items-center justify-center gap-2">
+            <span>© 2024 Chidi Ogara. All rights reserved.</span>
+            <span className="flex items-center gap-2">
+              Built with <Heart className="w-4 h-4 text-red-500" /> and cutting-edge technology.
+            </span>
           </p>
         </div>
       </div>

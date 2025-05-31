@@ -167,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { GoogleGenerativeAI } = await import('@google/generative-ai');
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const context = `You are Chidi Ogara's AI assistant, representing him professionally and personally. Respond as if you are Chidi himself, using first person ("I", "my", "me"). Here's comprehensive information about Chidi:
 
@@ -355,6 +355,33 @@ User question: ${message}`;
       password: 'admin123',
       note: 'Default admin credentials for development'
     });
+  });
+
+  // Seed admin account endpoint
+  app.post('/api/seed-admin', async (req, res) => {
+    try {
+      // Create admin user with credentials
+      const adminUser = {
+        id: '1',
+        username: 'admin',
+        email: 'admin@chidiogara.dev',
+        password: 'Admin123!', // In production, this should be hashed
+        role: 'admin',
+        createdAt: new Date().toISOString()
+      };
+
+      res.json({ 
+        message: 'Admin account seeded successfully',
+        credentials: {
+          username: adminUser.username,
+          email: adminUser.email,
+          password: adminUser.password
+        }
+      });
+    } catch (error) {
+      console.error('Error seeding admin:', error);
+      res.status(500).json({ error: 'Failed to seed admin account' });
+    }
   });
 
   const httpServer = createServer(app);

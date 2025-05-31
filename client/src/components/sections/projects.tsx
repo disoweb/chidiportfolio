@@ -27,7 +27,7 @@ export function Projects() {
             Innovative solutions that demonstrate technical expertise and real-world impact
           </p>
         </div>
-        
+
         {/* Featured Project - Biometric Voting System */}
         {featuredProject && (
           <div className="mb-16">
@@ -44,7 +44,7 @@ export function Projects() {
                   <p className="text-lg text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
                     {featuredProject.description}
                   </p>
-                  
+
                   {/* Tech Stack */}
                   <div className="flex flex-wrap gap-2 mb-6">
                     {featuredProject.technologies.map((tech) => (
@@ -53,7 +53,7 @@ export function Projects() {
                       </Badge>
                     ))}
                   </div>
-                  
+
                   {/* Key Metrics */}
                   {featuredProject.metrics && (
                     <div className="grid grid-cols-3 gap-4 mb-6">
@@ -69,7 +69,7 @@ export function Projects() {
                       ))}
                     </div>
                   )}
-                  
+
                   <div className="flex flex-col sm:flex-row gap-4">
                     <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                       View Case Study
@@ -79,7 +79,7 @@ export function Projects() {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="relative">
                   <img 
                     src={featuredProject.image}
@@ -92,7 +92,7 @@ export function Projects() {
             </div>
           </div>
         )}
-        
+
         {/* Project Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {otherProjects.map((project) => (
@@ -105,42 +105,68 @@ export function Projects() {
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
               </div>
-              
+
               <div className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                    {project.title}
-                  </h3>
-                  <ExternalLink className="w-5 h-5 text-slate-400 hover:text-blue-600 cursor-pointer transition-colors duration-200" />
-                </div>
-                
-                <p className="text-slate-600 dark:text-slate-400 mb-4">
-                  {project.description}
-                </p>
-                
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {project.technologies.map((tech) => (
-                    <Badge key={tech} variant="secondary" className="text-xs">
-                      {tech}
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 transition-colors duration-200">
+                      {project.title}
+                    </h3>
+                    <Badge variant="outline" className="text-xs">
+                      {project.category}
                     </Badge>
-                  ))}
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <Button variant="link" className="text-blue-600 hover:text-blue-700 p-0">
-                    View Project
-                  </Button>
-                  {project.githubUrl && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Github className="w-4 h-4" />
+                  </div>
+
+                  <p className="text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
+                    {project.description}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {project.technologies.slice(0, 3).map((tech) => (
+                      <span key={tech} className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                        {tech}
+                      </span>
+                    ))}
+                    {project.technologies.length > 3 && (
+                      <span className="text-xs text-slate-500">+{project.technologies.length - 3}</span>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 mb-3">
+                    <Button size="sm" variant="outline" asChild className="flex-1">
+                      <a href={`/project/${project.id}`}>
+                        View Details
+                      </a>
                     </Button>
-                  )}
+                    <Button size="sm" asChild className="flex-1 bg-blue-600 hover:bg-blue-700">
+                      <a href={`/case-study/${project.id}`}>
+                        Case Study
+                      </a>
+                    </Button>
+                  </div>
+
+                  <div className="flex gap-3">
+                    {project.demo && (
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={project.demo} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          Demo
+                        </a>
+                      </Button>
+                    )}
+                    {project.github && (
+                      <Button size="sm" variant="outline" asChild>
+                        <a href={project.github} target="_blank" rel="noopener noreferrer">
+                          <Github className="w-4 h-4 mr-1" />
+                          Code
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
             </div>
           ))}
         </div>
-        
+
         {/* View All Projects */}
         <div className="text-center mt-12">
           <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3">
