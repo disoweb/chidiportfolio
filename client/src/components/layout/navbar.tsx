@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTheme } from '@/components/ui/theme-provider';
 import { useScrollProgress } from '@/hooks/use-scroll-progress';
 
 const navLinks = [
@@ -15,6 +16,11 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const scrollProgress = useScrollProgress();
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,7 +46,7 @@ export function Navbar() {
         className="fixed top-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-blue-600 z-[60] transition-all duration-100"
         style={{ width: `${scrollProgress}%` }}
       />
-      
+
       <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
         isScrolled 
           ? 'glass-effect shadow-xl' 
