@@ -1,4 +1,4 @@
-import { users, contacts, type User, type InsertUser, type Contact, type InsertContact } from "@shared/schema";
+import { users, contacts, bookings, type User, type InsertUser, type Contact, type InsertContact, type Booking, type InsertBooking } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -8,6 +8,8 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   createContact(contact: InsertContact): Promise<Contact>;
   getAllContacts(): Promise<Contact[]>;
+  createBooking(booking: InsertBooking): Promise<Booking>;
+  getAllBookings(): Promise<Booking[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -43,6 +45,22 @@ export class DatabaseStorage implements IStorage {
       .from(contacts)
       .orderBy(contacts.createdAt);
     return contactList.reverse(); // Most recent first
+  }
+
+  async createBooking(insertBooking: InsertBooking): Promise<Booking> {
+    const [booking] = await db
+      .insert(bookings)
+      .values(insertBooking)
+      .returning();
+    return booking;
+  }
+
+  async getAllBookings(): Promise<Booking[]> {
+    const bookingList = await db
+      .select()
+      .from(bookings)
+      .orderBy(bookings.createdAt);
+    return bookingList.reverse(); // Most recent first
   }
 }
 
