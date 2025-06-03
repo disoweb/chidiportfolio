@@ -41,7 +41,7 @@ export function Navbar() {
               <Code className="w-5 h-5 text-white" />
             </div>
             <span className="text-2xl font-bold text-blue-600">Digital</span>
-            <span className="text-2xl font-bold text-green-600"> Chidi</span>
+            <span className="text-2xl font-bold text-green-600"> Chidi</span>.
           </div>
 
           {/* Desktop Navigation */}
