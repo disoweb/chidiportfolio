@@ -14,7 +14,8 @@ app.use((req, res, next) => {
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
     capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
+    // Ensure 'this' context is correct and pass all arguments
+    return originalResJson.apply(res, [bodyJson, ...args] as any);
   };
 
   res.on("finish", () => {
@@ -37,14 +38,19 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  const server = await registerRoutes(app); // Assuming registerRoutes returns the http.Server instance
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    throw err;
+    // It's generally not recommended to re-throw the error here
+    // as it might crash the process if not caught by a higher-level handler,
+    // and the response has already been sent.
+    // Consider logging it instead if not already handled:
+    // console.error("Unhandled error:", err);
+    // throw err; // Commented out as per common practice
   });
 
   // importantly only setup vite in development and after
@@ -56,15 +62,20 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Use the PORT environment variable provided by Render (or other platforms)
+  // Fallback to 5000 for local development if PORT is not set.
+  const portFromEnv = process.env.PORT;
+  const port = portFromEnv ? parseInt(portFromEnv, 10) : 5000;
+
+  // Ensure host is '0.0.0.0' to accept connections from Render's proxy
   server.listen({
     port,
-    host: "0.0.0.0",
-    reusePort: true,
+    host: "0.0.0.0", // Listens on all available network interfaces
+    reusePort: true, // This might not be necessary or available on all Node versions/OS
   }, () => {
-    log(`serving on port ${port}`);
+    // Using your custom 'log' function.
+    // The original log output from Render was "[express] serving on port XXXX"
+    // You can adjust this log message as you see fit.
+    log(`[express] serving on port ${port}`);
   });
 })();

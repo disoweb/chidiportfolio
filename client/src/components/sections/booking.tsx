@@ -213,10 +213,10 @@ export function Booking() {
                       <SelectValue placeholder="Select budget range" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="under-5k">Under $5,000</SelectItem>
-                      <SelectItem value="5k-10k">$5,000 - $10,000</SelectItem>
-                      <SelectItem value="10k-25k">$10,000 - $25,000</SelectItem>
-                      <SelectItem value="25k-plus">$25,000+</SelectItem>
+                      <SelectItem value="under-5k">Under ₦150,000</SelectItem>
+                      <SelectItem value="5k-10k">₦150,000 - ₦600,000</SelectItem>
+                      <SelectItem value="10k-25k">₦600,000 - ₦1,500,000</SelectItem>
+                      <SelectItem value="25k-plus">₦1,500,000+</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
