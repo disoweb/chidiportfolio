@@ -1,0 +1,23 @@
+.progress-bar-container {
+  position: relative;
+}
+
+.progress-bar-inner {
+  height: 100%;
+  border-radius: 9999px;
+  width: var(--progress-width);
+  transition: width 1s ease-out;
+}
+
+/* Category-specific colors for progress bars */
+.software-development .progress-bar-inner {
+  background-color: #3b82f6; /* blue-500 */
+}
+
+.engineering .progress-bar-inner {
+  background-color: #f97316; /* orange-500 */
+}
+
+.tools .progress-bar-inner {
+  background-color: #22c55e; /* green-500 */
+}
