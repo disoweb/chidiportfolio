@@ -80,7 +80,7 @@ export function Hero() {
               <div className="relative text-white">
                 <div className="mb-6">
                   <Code className="w-12 h-12 text-blue-200 mb-4" />
-                  <h3 className="text-2xl font-bold mb-2">Chidi Ogara</h3>
+                  <h3 className="text-2xl font-bold mb-2">Digital Chidi</h3>
                   <p className="text-blue-200">Fullstack Developer</p>
                 </div>
 
