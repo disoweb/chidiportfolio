@@ -4,8 +4,8 @@ import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
 import { services } from '@/lib/constants';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
 import { useToast } from '@/components/ui/use-toast';
+
 import { EmailModal } from '@/components/checkout/EmailModal';
 
 const iconMap: { [key: string]: any } = {
