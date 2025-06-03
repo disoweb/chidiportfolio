@@ -1,7 +1,11 @@
-'use client';
-
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription, 
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -28,9 +32,9 @@ export const EmailModal = ({
   const handleSubmit = async () => {
     if (!validateEmail(email)) {
       toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address",
-        variant: "destructive",
+        title: 'Invalid Email',
+        description: 'Please enter a valid email address',
+        variant: 'destructive',
       });
       return;
     }
@@ -41,9 +45,9 @@ export const EmailModal = ({
       onClose();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to process your email. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to process your email. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -52,10 +56,17 @@ export const EmailModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className="sm:max-w-[425px]"
+        aria-describedby="email-modal-description"  // <-- Added aria-describedby
+      >
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">Enter Your Email</DialogTitle>
+          <DialogDescription id="email-modal-description">
+            Please enter a valid email address to proceed with the payment.
+          </DialogDescription>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
             <Input
@@ -68,11 +79,7 @@ export const EmailModal = ({
               disabled={isLoading}
             />
           </div>
-          <Button 
-            onClick={handleSubmit}
-            disabled={isLoading || !email}
-            className="w-full"
-          >
+          <Button onClick={handleSubmit} disabled={isLoading || !email} className="w-full">
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Continue to Payment
           </Button>
