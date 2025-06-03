@@ -7,11 +7,27 @@ import {
   Cpu, 
   GitBranch, 
   Cloud,
-  Container
+  Container,
 } from 'lucide-react';
 import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
+import './Skills.css';
 
-const skillCategories = [
+interface Skill {
+  name: string;
+  level: number;
+  icon?: string;
+  description?: string;
+}
+
+interface SkillCategory {
+  title: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  color: string;
+  bgColor: string;
+  skills: Skill[];
+}
+
+const skillCategories: SkillCategory[] = [
   {
     title: 'Software Development',
     icon: Code,
@@ -53,7 +69,7 @@ const skillCategories = [
   }
 ];
 
-const iconMap: { [key: string]: any } = {
+const iconMap: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
   Git: GitBranch,
   Docker: Container,
   AWS: Cloud,
@@ -79,13 +95,13 @@ export function Skills() {
             Technical Skills
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-            A comprehensive toolkit for building innovative solutions across multiple domains
+            I have comprehensive toolkit for building innovative solutions across multiple domains
           </p>
         </div>
         
         {/* Skills Categories */}
         <div className="space-y-12">
-          {skillCategories.map((category, categoryIndex) => (
+          {skillCategories.map((category) => (
             <div key={category.title}>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 text-center flex items-center justify-center gap-3">
                 <category.icon className={`w-8 h-8 ${category.color}`} />
@@ -93,17 +109,19 @@ export function Skills() {
               </h3>
               
               {category.title === 'Software Development' && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 software-development">
                   {category.skills.map((skill) => (
                     <div key={skill.name} className="skill-card bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg hover:shadow-xl border border-slate-200 dark:border-slate-700">
                       <div className="text-center">
-                        <i className={`${skill.icon} text-3xl ${category.color} mb-2`} />
+                        {skill.icon && (
+                          <i className={`${skill.icon} text-3xl ${category.color} mb-2`} />
+                        )}
                         <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{skill.name}</h4>
-                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-2">
-                          <div 
-                            className="bg-blue-500 h-2 rounded-full transition-all duration-1000 ease-out"
-                            style={{ width: isIntersecting ? `${skill.level}%` : '0%' }}
-                          />
+                        <div
+                          className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-2 overflow-hidden progress-bar-container"
+                          data-progress={isIntersecting ? skill.level : 0}
+                        >
+                          <div className="progress-bar-inner" />
                         </div>
                       </div>
                     </div>
@@ -112,7 +130,7 @@ export function Skills() {
               )}
               
               {category.title === 'Engineering' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 engineering">
                   {category.skills.map((skill) => (
                     <div key={skill.name} className="skill-card bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg hover:shadow-xl border border-slate-200 dark:border-slate-700">
                       <div className="text-center">
@@ -120,12 +138,14 @@ export function Skills() {
                         {skill.name === 'Microgrid Systems' && <Zap className={`w-10 h-10 ${category.color} mx-auto mb-4`} />}
                         {skill.name === 'Embedded Systems' && <Cpu className={`w-10 h-10 ${category.color} mx-auto mb-4`} />}
                         <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">{skill.name}</h4>
-                        <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{skill.description}</p>
-                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-                          <div 
-                            className="bg-orange-500 h-2 rounded-full transition-all duration-1000 ease-out"
-                            style={{ width: isIntersecting ? `${skill.level}%` : '0%' }}
-                          />
+                        {skill.description && (
+                          <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">{skill.description}</p>
+                        )}
+                        <div
+                          className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden progress-bar-container"
+                          data-progress={isIntersecting ? skill.level : 0}
+                        >
+                          <div className="progress-bar-inner" />
                         </div>
                       </div>
                     </div>
@@ -134,18 +154,18 @@ export function Skills() {
               )}
               
               {category.title === 'Tools & Workflow' && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 tools">
                   {category.skills.map((skill) => {
                     const IconComponent = iconMap[skill.name] || GitBranch;
                     return (
                       <div key={skill.name} className="skill-card bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg hover:shadow-xl border border-slate-200 dark:border-slate-700 text-center">
                         <IconComponent className={`w-8 h-8 ${category.color} mx-auto mb-2`} />
                         <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{skill.name}</h4>
-                        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-2">
-                          <div 
-                            className="bg-green-500 h-2 rounded-full transition-all duration-1000 ease-out"
-                            style={{ width: isIntersecting ? `${skill.level}%` : '0%' }}
-                          />
+                        <div
+                          className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-2 overflow-hidden progress-bar-container"
+                          data-progress={isIntersecting ? skill.level : 0}
+                        >
+                          <div className="progress-bar-inner" />
                         </div>
                       </div>
                     );

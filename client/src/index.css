@@ -88,6 +88,28 @@
     z-index: 9999;
     transition: width 0.1s ease-out;
   }
+  
+  /* Progress bars */
+  .progress-bar-container {
+    @apply w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 relative;
+  }
+
+  .progress-bar-inner {
+    @apply h-2 rounded-full transition-all duration-1000 ease-out;
+    width: 0%;
+  }
+
+  .software-development .progress-bar-inner {
+    @apply bg-blue-500;
+  }
+
+  .engineering .progress-bar-inner {
+    @apply bg-orange-500;
+  }
+
+  .tools .progress-bar-inner {
+    @apply bg-green-500;
+  }
 }
 
 @layer utilities {

@@ -195,7 +195,7 @@ export function Services() {
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 mb-4 sm:mb-6">
                       <div>
                         <div className="text-xl sm:text-2xl font-bold text-blue-600">
-                          {service.price.startsWith('₦') ? service.price : `₦${service.price}`}
+                          {service.price.startsWith('') ? service.price : `₦${service.price}`}
                         </div>
                         <div className="text-xs sm:text-sm text-gray-500">{service.duration}</div>
                       </div>
