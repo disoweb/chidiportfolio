@@ -37,7 +37,7 @@ export const skills: Skill[] = [
 export const services: Service[] = [
   {
     id: "custom-web-apps",
-    title: "Custom Web Applications",
+    title: "Custom Web App",
     description:
       "Full-stack web applications built with modern tech. Perfect for businesses needing custom solutions.",
     icon: "Globe",
@@ -88,7 +88,7 @@ export const services: Service[] = [
   },
   {
     id: "api-development",
-    title: "API Development & Integration",
+    title: "API Development",
     description:
       "RESTful APIs and microservices with comprehensive documentation, authentication, and third-party integrations.",
     icon: "Link",

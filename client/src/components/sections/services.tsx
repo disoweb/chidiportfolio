@@ -159,7 +159,7 @@ export function Services() {
           </p>
         </div>
 
-        {/* Services Grid */}
+      {/* Services Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-12 md:mb-16">
           {services.map((service: Service) => {
             const IconComponent = iconMap[service.icon] || Globe;
@@ -170,62 +170,64 @@ export function Services() {
                 key={service.id}
                 className="bg-gradient-to-br from-blue-50 to-white rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl border border-blue-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 w-full max-w-full overflow-hidden"
               >
-                <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-6">
-                  {/* Service Icon */}
+                {/* Header with Icon and Title */}
+                <div className="flex items-center space-x-4 mb-4">
                   <div className="bg-blue-600 p-3 sm:p-4 rounded-2xl flex-shrink-0">
                     <IconComponent className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                   </div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{service.title}</h3>
+                </div>
 
-                  {/* Service Content */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 break-words">{service.title}</h3>
-                    <p className="text-gray-600 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">{service.description}</p>
+                {/* Service Content */}
+                <div className="space-y-4">
+                  <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+                    {service.description}
+                  </p>
 
-                    {/* Features List */}
-                    <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-                      {service.features.map((feature, index) => (
-                        <div key={index} className="flex items-start space-x-2 sm:space-x-3">
-                          <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700 text-sm sm:text-base break-words">{feature}</span>
-                        </div>
-                      ))}
+                  {/* Features List */}
+                  <div className="space-y-2 sm:space-y-3">
+                    {service.features.map((feature, index) => (
+                      <div key={index} className="flex items-start space-x-2 sm:space-x-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-700 text-sm sm:text-base break-words">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Price and Actions */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 pt-4">
+                    <div>
+                      <div className="text-xl sm:text-2xl font-bold text-blue-600">
+                        {service.price.startsWith('') ? service.price : `₦${service.price}`}
+                      </div>
+                      <div className="text-xs sm:text-sm text-gray-500">{service.duration}</div>
                     </div>
 
-                    {/* Price and Actions */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 mb-4 sm:mb-6">
-                      <div>
-                        <div className="text-xl sm:text-2xl font-bold text-blue-600">
-                          {service.price.startsWith('') ? service.price : `₦${service.price}`}
-                        </div>
-                        <div className="text-xs sm:text-sm text-gray-500">{service.duration}</div>
-                      </div>
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => scrollToSection('#booking')}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105 text-sm sm:text-base w-full sm:w-auto"
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Book Now
+                      </Button>
 
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
+                      {priceValue > 0 && (
                         <Button
-                          onClick={() => scrollToSection('#booking')}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105 text-sm sm:text-base w-full sm:w-auto"
+                          onClick={() =>
+                            handlePayNowClick({
+                              id: service.id,
+                              title: service.title,
+                              price: service.price,
+                            })
+                          }
+                          className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105 text-sm sm:text-base w-full sm:w-auto"
                         >
-                          <Calendar className="w-4 h-4 mr-2" />
-                          Book Now
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          Pay Now
                         </Button>
-
-                        {priceValue > 0 && (
-                          <Button
-                            onClick={() =>
-                              handlePayNowClick({
-                                id: service.id,
-                                title: service.title,
-                                price: service.price,
-                              })
-                            }
-                            className="bg-green-600 hover:bg-green-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105 text-sm sm:text-base w-full sm:w-auto"
-                          >
-                            <CreditCard className="w-4 h-4 mr-2" />
-                            Pay Now
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
