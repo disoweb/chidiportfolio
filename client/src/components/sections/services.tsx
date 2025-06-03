@@ -29,7 +29,7 @@ export function Services() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="text-center mb-20">
+        <div className="text-center mb-6">
           <p className="text-blue-600 font-semibold text-lg mb-4 tracking-wide"></p>
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-6">
             What I Can <span className="gradient-text">Build For You</span>
@@ -97,7 +97,7 @@ export function Services() {
             <Button 
               variant="outline"
               onClick={() => scrollToSection('#contact')}
-              className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-300"
+              className="border-2 border-white text-green-600 hover:bg-white hover:text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-300"
             >
               Get Quote
             </Button>

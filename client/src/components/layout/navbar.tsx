@@ -1,34 +1,34 @@
-import { useState, useEffect } from 'react';
-import { Menu, X, Code, Moon, Sun } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useTheme } from '@/components/ui/theme-provider';
+import { useState, useEffect } from "react";
+import { Menu, X, Code, Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/ui/theme-provider";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
-    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+    document.documentElement.classList.toggle("dark", savedTheme === "dark");
   }, [setTheme]);
 
   const toggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light');
+    setTheme(theme === "light" ? "dark" : "light");
   };
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
-    element?.scrollIntoView({ behavior: 'smooth' });
+    element?.scrollIntoView({ behavior: "smooth" });
     setIsOpen(false);
   };
 
   const navItems = [
-    { href: 'services', label: 'Services' },
-    { href: 'about', label: 'About' },
-    { href: 'skills', label: 'Skills' },
-    { href: 'projects', label: 'Portfolio' },
-    { href: 'contact', label: 'Contact' },
+    { href: "services", label: "Services" },
+    { href: "about", label: "About" },
+    { href: "skills", label: "Skills" },
+    { href: "projects", label: "Portfolio" },
+    { href: "contact", label: "Contact" },
   ];
 
   return (
@@ -40,7 +40,8 @@ export function Navbar() {
             <div className="bg-blue-600 p-2 rounded-lg">
               <Code className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Chidi Ogara</span>
+            <span className="text-2xl font-bold text-blue-600">Digital</span>
+            <span className="text-2xl font-bold text-green-600"> Chidi</span>
           </div>
 
           {/* Desktop Navigation */}
@@ -58,18 +59,21 @@ export function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
               className="hover:bg-gray-100 dark:hover:bg-gray-800"
             >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+              {theme === "light" ? (
+                <Moon className="w-5 h-5" />
+              ) : (
+                <Sun className="w-5 h-5" />
+              )}
             </Button>
 
             <Button
-              onClick={() => scrollToSection('booking')}
+              onClick={() => scrollToSection("booking")}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium"
             >
               Book Consultation
@@ -78,13 +82,16 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
-
             <Button
               variant="ghost"
               onClick={() => setIsOpen(!isOpen)}
               className="text-gray-700"
             >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </Button>
           </div>
         </div>
@@ -103,7 +110,7 @@ export function Navbar() {
                 </button>
               ))}
               <Button
-                onClick={() => scrollToSection('booking')}
+                onClick={() => scrollToSection("booking")}
                 className="bg-blue-600 hover:bg-blue-700 text-white w-full mt-4"
               >
                 Book Consultation

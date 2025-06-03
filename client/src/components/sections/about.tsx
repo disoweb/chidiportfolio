@@ -21,23 +21,20 @@ export function About() {
             <div className="mb-8">
               <p className="text-blue-600 font-semibold text-lg mb-4 tracking-wide">ABOUT ME</p>
               <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-6">
-                Turning Ideas Into <span className="text-blue-600">Digital Reality</span>
+                Strategic & <span className="text-blue-600">Innovative</span>
               </h2>
               <div className="space-y-6 text-lg text-gray-600 leading-relaxed">
                 <p>
-                  I'm a <strong>Fullstack Web Developer</strong> with over 7 years of experience 
+                  I'm a passionate <strong>Fullstack Developer</strong> with over 7 years of experience 
                   building high-performance web applications that drive business growth. My expertise spans 
                   the entire development lifecycle, from concept and design to deployment and optimization.
                 </p>
                 <p>
-                  With a strong foundation in both <strong>frontend and backend technologies</strong>, I create 
-                  seamless user experiences backed by robust, scalable architectures. I specialize in modern 
-                  frameworks like React and Next.js for the frontend, and Node.js, Express.js and PHP for backend development.
+                  With a strong foundation in <strong>frontend & backend techn</strong>, I turn ideas into digital reality backed by robust, scalable architectures. I specialize in modern web
+                  frameworks with emphasis on strong security, performance, scalability and exceptional user experience.
                 </p>
                 <p>
-                  My engineering background gives me a unique perspective on problem-solving, having worked on 
-                  innovative projects including an <strong>automated biometric voting machine</strong> that was 
-                  successfully piloted in 2016 with 99.8% accuracy.
+                  My background in engineering gives me a unique perspective to problem-solving, innovation and <strong>out-of-the-box</strong> thinking
                 </p>
               </div>
             </div>
@@ -59,15 +56,15 @@ export function About() {
             <div className="grid grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">7+</div>
-                <div className="text-sm text-gray-600">Years Experience</div>
+                <div className="text-sm text-green-600">Years Experience</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">100+</div>
-                <div className="text-sm text-gray-600">Projects Delivered</div>
+                <div className="text-sm text-green-600">Projects Delivered</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">98%</div>
-                <div className="text-sm text-gray-600">Client Satisfaction</div>
+                <div className="text-sm text-green-600">Client Satisfaction</div>
               </div>
             </div>
           </div>
@@ -122,16 +119,16 @@ export function About() {
             </div>
 
             {/* Floating Elements */}
-            <div className="absolute -top-6 -right-2 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
+            <div className="absolute -top-6 -right-1 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">30 mins</div>
+                <div className="text-2xl font-bold text-blue-600">Instant</div>
                 <div className="text-xs text-gray-600">Response Time</div>
               </div>
             </div>
 
-            <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
+            <div className="absolute -bottom-12 -left-1 bg-white rounded-2xl shadow-xl p-4 border border-blue-100">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">99.9%</div>
+                <div className="text-2xl font-bold text-green-600">99.99%</div>
                 <div className="text-xs text-gray-600">Secure</div>
               </div>
             </div>
