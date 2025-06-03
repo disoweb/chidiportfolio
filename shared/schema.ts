@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, varchar, numeric, json, integer } from "drizzle-orm/pg-core"; // Consolidated imports
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -61,3 +61,37 @@ export type InsertContact = z.infer<typeof insertContactSchema>;
 export type Contact = typeof contacts.$inferSelect;
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
 export type Booking = typeof bookings.$inferSelect;
+
+// No longer need the duplicate import here as it's merged above
+// import { pgTable, serial, text, timestamp, varchar, numeric, json, integer } from "drizzle-orm/pg-core";
+
+export const transactions = pgTable("transactions", {
+  id: serial("id").primaryKey(),
+  reference: varchar("reference", { length: 100 }).notNull().unique(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default('NGN'),
+  status: varchar("status", { length: 20 }).notNull(),
+  serviceId: varchar("service_id", { length: 50 }),
+  serviceName: varchar("service_name", { length: 100 }).notNull(),
+  customerEmail: varchar("customer_email", { length: 100 }).notNull(),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  transactionId: integer("transaction_id").references(() => transactions.id),
+  status: varchar("status", { length: 20 }).default('pending'),
+  customerEmail: varchar("customer_email", { length: 100 }).notNull(),
+  serviceId: varchar("service_id", { length: 50 }),
+  serviceName: varchar("service_name", { length: 100 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// Add to your existing schema types
+export type Transaction = typeof transactions.$inferSelect;
+export type InsertTransaction = typeof transactions.$inferInsert;
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = typeof orders.$inferInsert;
