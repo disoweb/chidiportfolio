@@ -59,7 +59,7 @@ export function Services() {
     }
 
     try {
-      const response = await fetch('/server/api/paystack/initiate', {
+      const response = await fetch('/api/paystack/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
