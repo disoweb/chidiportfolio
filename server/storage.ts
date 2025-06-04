@@ -63,6 +63,28 @@ export class DatabaseStorage implements IStorage {
       .orderBy(bookings.createdAt);
     return bookingList.reverse(); // Most recent first
   }
+
+  async updateBooking(id: number, data: any) {
+    const index = this.bookings.findIndex(booking => booking.id === id);
+    if (index === -1) return null;
+
+    // Ensure payment status and transaction ID are properly handled
+    const updateData = {
+      ...data,
+      updatedAt: new Date().toISOString()
+    };
+
+    if (data.paymentStatus) {
+      updateData.paymentStatus = data.paymentStatus;
+    }
+
+    if (data.transactionId) {
+      updateData.transactionId = data.transactionId;
+    }
+
+    this.bookings[index] = { ...this.bookings[index], ...updateData };
+    return this.bookings[index];
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -483,6 +483,12 @@ User question: ${message}`;
     }
   });
 
+  // Paystack webhook endpoint
+  app.post('/api/paystack/webhook', async (req: Request, res: Response) => {
+    const { handleWebhook } = await import('./api/paystack/webhook');
+    return handleWebhook(req, res);
+  });
+
   // Paystack payment initiation endpoint
   app.post('/api/paystack/initiate', async (req: Request, res: Response) => {
     try {

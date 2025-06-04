@@ -5,11 +5,12 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { useSiteSettings } from '@/hooks/use-site-settings';
 import Home from '@/pages/home';
-import NotFound from '@/pages/not-found';
-import AdminDashboard from '@/pages/admin';
+import Admin from '@/pages/admin';
 import AdminLogin from '@/pages/admin-login';
-import ProjectDetails from '@/pages/project-details';
+import NotFound from '@/pages/not-found';
 import CaseStudy from '@/pages/case-study';
+import ProjectDetails from '@/pages/project-details';
+import PaymentCallback from '@/pages/payment-callback';
 
 function App() {
   const { settings } = useSiteSettings();
@@ -52,6 +53,7 @@ function App() {
             <Route path="/admin" component={AdminDashboard} />
             <Route path="/project/:id" component={ProjectDetails} />
             <Route path="/case-study/:id" component={CaseStudy} />
+            <Route path="/payment/callback" component={PaymentCallback} />
             <Route component={NotFound} />
           </Switch>
         </div>
