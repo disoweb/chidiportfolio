@@ -409,6 +409,150 @@ User question: ${message}`;
     }
   });
 
+  // Paystack payment initiation endpoint
+  app.post('/api/paystack/initiate', async (req: Request, res: Response) => {
+    try {
+      const { email, amount, serviceId, serviceName, bookingId } = req.body;
+
+      if (!email || !amount || !serviceId || !serviceName) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing required fields: email, amount, serviceId, serviceName'
+        });
+      }
+
+      if (!process.env.PAYSTACK_SECRET_KEY) {
+        return res.status(500).json({
+          success: false,
+          message: 'Payment configuration error'
+        });
+      }
+
+      const axios = require('axios');
+      const paystackResponse = await axios.post(
+        'https://api.paystack.co/transaction/initialize',
+        {
+          email,
+          amount: amount * 100, // convert to kobo
+          metadata: {
+            service_id: serviceId,
+            service_name: serviceName,
+            booking_id: bookingId
+          },
+          callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000'}/payment/callback`
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      res.json({
+        success: true,
+        data: paystackResponse.data.data
+      });
+
+    } catch (error: any) {
+      if (error.response) {
+        return res.status(error.response.status || 400).json({
+          success: false,
+          message: error.response.data?.message || 'Paystack API error'
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Payment initiation failed'
+      });
+    }
+  });
+
+  // Paystack payment verification endpoint
+  app.post('/api/paystack/verify', async (req: Request, res: Response) => {
+    if (!process.env.PAYSTACK_SECRET_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error: Paystack secret key not found.'
+      });
+    }
+
+    const { reference, service: clientService, amount: clientAmount } = req.body;
+
+    if (!reference) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reference is required'
+      });
+    }
+
+    try {
+      const axios = require('axios');
+      // Step 1: Verify with Paystack
+      const paystackResponse = await axios.get(
+        `https://api.paystack.co/transaction/verify/${reference}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          },
+        }
+      );
+
+      const paystackTransactionDetails = paystackResponse.data.data;
+
+      if (!paystackTransactionDetails || paystackResponse.data.status === false) {
+        return res.status(400).json({
+          success: false,
+          message: paystackResponse.data.message || 'Failed to verify transaction with Paystack.'
+        });
+      }
+
+      if (paystackTransactionDetails.status !== 'success') {
+        return res.status(400).json({
+          success: false,
+          message: `Payment not successful. Status: ${paystackTransactionDetails.status}`
+        });
+      }
+
+      // Step 2: Verify amount matches
+      if (clientAmount && (paystackTransactionDetails.amount / 100 !== clientAmount)) {
+        console.warn(`Amount mismatch for reference ${reference}. Expected: ${clientAmount}, Got: ${paystackTransactionDetails.amount / 100}`);
+        return res.status(400).json({
+          success: false,
+          message: 'Amount mismatch after verification.'
+        });
+      }
+
+      // Step 3: Return success response
+      res.json({
+        success: true,
+        message: 'Payment verified and processed successfully.',
+        data: {
+          reference: paystackTransactionDetails.reference,
+          amount: paystackTransactionDetails.amount / 100,
+          service: paystackTransactionDetails.metadata?.service_name || clientService || 'Unknown Service',
+          customerEmail: paystackTransactionDetails.customer?.email,
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Payment verification process error:', error);
+
+      if (error.response) {
+        return res.status(error.response.status || 400).json({
+          success: false,
+          message: error.response.data?.message || 'Error verifying payment with Paystack.'
+        });
+      }
+
+      res.status(500).json({
+        success: false,
+        message: 'An unexpected error occurred during payment verification.'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
