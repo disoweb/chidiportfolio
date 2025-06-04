@@ -11,6 +11,9 @@ export interface IStorage {
   getAllContacts(): Promise<Contact[]>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   getAllBookings(): Promise<Booking[]>;
+  updateBooking(id: number, data: Partial<Booking>): Promise<Booking | null>;
+  deleteBooking(id: number): Promise<boolean>;
+  getBookingById(id: number): Promise<Booking | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -64,26 +67,50 @@ export class DatabaseStorage implements IStorage {
     return bookingList.reverse(); // Most recent first
   }
 
-  async updateBooking(id: number, data: any) {
-    const index = this.bookings.findIndex(booking => booking.id === id);
-    if (index === -1) return null;
-
-    // Ensure payment status and transaction ID are properly handled
-    const updateData = {
-      ...data,
-      updatedAt: new Date().toISOString()
-    };
-
-    if (data.paymentStatus) {
-      updateData.paymentStatus = data.paymentStatus;
+  async updateBooking(id: number, data: Partial<Booking>): Promise<Booking | null> {
+    try {
+      const [updatedBooking] = await db
+        .update(bookings)
+        .set({
+          ...data,
+          updatedAt: new Date()
+        })
+        .where(eq(bookings.id, id))
+        .returning();
+      
+      return updatedBooking || null;
+    } catch (error) {
+      console.error('Update booking error:', error);
+      return null;
     }
+  }
 
-    if (data.transactionId) {
-      updateData.transactionId = data.transactionId;
+  async deleteBooking(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(bookings)
+        .where(eq(bookings.id, id))
+        .returning();
+      
+      return result.length > 0;
+    } catch (error) {
+      console.error('Delete booking error:', error);
+      return false;
     }
+  }
 
-    this.bookings[index] = { ...this.bookings[index], ...updateData };
-    return this.bookings[index];
+  async getBookingById(id: number): Promise<Booking | undefined> {
+    try {
+      const [booking] = await db
+        .select()
+        .from(bookings)
+        .where(eq(bookings.id, id));
+      
+      return booking || undefined;
+    } catch (error) {
+      console.error('Get booking by ID error:', error);
+      return undefined;
+    }
   }
 }
 

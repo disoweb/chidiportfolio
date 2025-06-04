@@ -151,9 +151,10 @@ export default function AdminDashboard() {
     try {
       const response = await fetch('/api/bookings');
       const data = await response.json();
-      setBookings(data);
+      setBookings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch bookings:', error);
+      setBookings([]);
     }
   };
 
@@ -318,7 +319,7 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm text-gray-600">Pending Payment</p>
                       <p className="text-2xl font-bold text-gray-600">
-                        {bookings.filter(b => b.paymentStatus === 'pending').length}
+                        {Array.isArray(bookings) ? bookings.filter(b => b.paymentStatus === 'pending').length : 0}
                       </p>
                     </div>
                     <Clock className="w-8 h-8 text-gray-600" />
@@ -332,7 +333,7 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm text-gray-600">Paid Bookings</p>
                       <p className="text-2xl font-bold text-green-600">
-                        {bookings.filter(b => b.paymentStatus === 'completed').length}
+                        {Array.isArray(bookings) ? bookings.filter(b => b.paymentStatus === 'completed').length : 0}
                       </p>
                     </div>
                     <DollarSign className="w-8 h-8 text-green-600" />
@@ -346,9 +347,9 @@ export default function AdminDashboard() {
                     <div>
                       <p className="text-sm text-gray-600">This Month</p>
                       <p className="text-2xl font-bold text-blue-600">
-                        {bookings.filter(b => 
+                        {Array.isArray(bookings) ? bookings.filter(b => 
                           new Date(b.createdAt).getMonth() === new Date().getMonth()
-                        ).length}
+                        ).length : 0}
                       </p>
                     </div>
                     <Calendar className="w-8 h-8 text-blue-600" />
