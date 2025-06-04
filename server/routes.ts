@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertContactSchema, insertBookingSchema } from "@shared/schema";
 import { z } from "zod";
 import { Request, Response } from 'express';
+import axios from 'axios';
 
 // In-memory storage for demo (replace with database in production)
 let inquiries: any[] = [];
@@ -428,7 +429,6 @@ User question: ${message}`;
         });
       }
 
-      const axios = require('axios');
       const paystackResponse = await axios.post(
         'https://api.paystack.co/transaction/initialize',
         {
@@ -488,7 +488,6 @@ User question: ${message}`;
     }
 
     try {
-      const axios = require('axios');
       // Step 1: Verify with Paystack
       const paystackResponse = await axios.get(
         `https://api.paystack.co/transaction/verify/${reference}`,
