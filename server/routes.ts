@@ -119,7 +119,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         message: 'Booking submitted successfully',
-        id: booking.id 
+        id: booking.id,
+        booking: booking
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -133,6 +134,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: 'Internal server error' 
         });
       }
+    }
+  });
+
+  // Update booking endpoint
+  app.put('/api/bookings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertBookingSchema.parse(req.body);
+      const updatedBooking = await storage.updateBooking(parseInt(id), validatedData);
+
+      if (!updatedBooking) {
+        return res.status(404).json({ error: 'Booking not found' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Booking updated successfully',
+        booking: updatedBooking
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          error: 'Validation error', 
+          details: error.errors 
+        });
+      } else {
+        console.error('Update booking error:', error);
+        res.status(500).json({ 
+          error: 'Internal server error' 
+        });
+      }
+    }
+  });
+
+  // Delete booking endpoint
+  app.delete('/api/bookings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteBooking(parseInt(id));
+
+      if (!success) {
+        return res.status(404).json({ error: 'Booking not found' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Booking deleted successfully'
+      });
+    } catch (error) {
+      console.error('Delete booking error:', error);
+      res.status(500).json({ 
+        error: 'Internal server error' 
+      });
+    }
+  });
+
+  // Get single booking endpoint
+  app.get('/api/bookings/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const booking = await storage.getBookingById(parseInt(id));
+
+      if (!booking) {
+        return res.status(404).json({ error: 'Booking not found' });
+      }
+
+      res.json(booking);
+    } catch (error) {
+      console.error('Get booking error:', error);
+      res.status(500).json({ 
+        error: 'Internal server error' 
+      });
     }
   });
 
