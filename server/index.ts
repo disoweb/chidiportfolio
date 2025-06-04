@@ -1,6 +1,32 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, serveStatic } from "./vite";
+import { createServer } from "http";
+import { pool } from "./db";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Run database migrations
+async function runMigrations() {
+  try {
+    const migrationPath = path.join(__dirname, 'migrations', '001_add_admin_tables.sql');
+    if (fs.existsSync(migrationPath)) {
+      const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
+      await pool.query(migrationSQL);
+      console.log('Database migrations completed successfully');
+    } else {
+      // Optional: Log if migration file is not found, could be normal if no migrations yet
+      console.log('Migration file not found, skipping migrations:', migrationPath);
+    }
+  } catch (error) {
+    console.error('Migration error:', error);
+  }
+}
 
 const app = express();
 app.use(express.json());
@@ -8,29 +34,34 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
+  const reqPath = req.path; // Renamed to avoid conflict with 'path' module if used in broader scope
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
+  res.json = function (this: Response, bodyJson: any, ...args: any[]) { // Added 'this' type and 'any' for bodyJson
     capturedJsonResponse = bodyJson;
     // Ensure 'this' context is correct and pass all arguments
-    return originalResJson.apply(res, [bodyJson, ...args] as any);
+    return originalResJson.apply(this, [bodyJson, ...args] as any); // 'this' instead of 'res'
   };
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+    if (reqPath.startsWith("/api")) {
+      let logLine = `${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        try {
+          const jsonResponseString = JSON.stringify(capturedJsonResponse);
+          logLine += ` :: ${jsonResponseString}`;
+        } catch (e) {
+          logLine += ` :: [Unserializable JSON response]`;
+        }
       }
 
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
+      if (logLine.length > 200) { // Increased limit for more useful logs
+        logLine = logLine.slice(0, 199) + "…";
       }
 
-      log(logLine);
+      console.log(logLine); // CORRECTED: Was 'log(logLine);'
     }
   });
 
@@ -38,11 +69,17 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+
+  await runMigrations();
+  
   const server = await registerRoutes(app); // Assuming registerRoutes returns the http.Server instance
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
+
+    // Log the error details on the server for debugging
+    console.error(`Error ${status}: ${message}`, err.stack || err);
 
     res.status(status).json({ message });
     // It's generally not recommended to re-throw the error here
@@ -67,15 +104,20 @@ app.use((req, res, next) => {
   const portFromEnv = process.env.PORT;
   const port = portFromEnv ? parseInt(portFromEnv, 10) : 5000;
 
+  if (isNaN(port)) {
+    console.error(`Invalid PORT environment variable: ${portFromEnv}. Defaulting to 5000.`);
+    // port = 5000; // Already handled by the ternary, but an explicit log is good.
+  }
+
   // Ensure host is '0.0.0.0' to accept connections from Render's proxy
   server.listen({
     port,
     host: "0.0.0.0", // Listens on all available network interfaces
-    reusePort: true, // This might not be necessary or available on all Node versions/OS
+    // reusePort: true, // This might not be necessary or available on all Node versions/OS. Evaluate if needed.
   }, () => {
     // Using your custom 'log' function.
     // The original log output from Render was "[express] serving on port XXXX"
     // You can adjust this log message as you see fit.
-    log(`[express] serving on port ${port}`);
+    console.log(`[express] serving on port ${port}`); // CORRECTED: Was 'log(...);'
   });
 })();

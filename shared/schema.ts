@@ -23,15 +23,15 @@ export const contacts = pgTable("contacts", {
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
 
-// Bookings Table (now with payment fields)
+// Bookings Table
 export const bookings = pgTable("bookings", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull(),
   phone: text("phone"),
   service: text("service").notNull(),
-  projectType: text("project_type").notNull(),
-  budget: numeric("budget", { precision: 10, scale: 2 }),
+  projectType: text("project_type"),
+  budget: varchar("budget", { length: 50 }),
   timeline: text("timeline"),
   message: text("message"),
   paymentStatus: varchar("payment_status", { length: 20 }).default('pending'),
@@ -68,6 +68,43 @@ export const orders = pgTable("orders", {
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
 
+// Admin Users Table
+export const adminUsers = pgTable("admin_users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 50 }).notNull().unique(),
+  email: varchar("email", { length: 100 }).notNull().unique(),
+  password: text("password").notNull(),
+  role: varchar("role", { length: 20 }).default('admin'),
+  isActive: varchar("is_active", { length: 10 }).default('true'),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// Site Settings Table
+export const siteSettings = pgTable("site_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: text("value"),
+  category: varchar("category", { length: 50 }).default('general'),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// Inquiries Table
+export const inquiries = pgTable("inquiries", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  service: text("service").notNull(),
+  message: text("message").notNull(),
+  status: varchar("status", { length: 20 }).default('new'),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
 // Zod Schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -91,6 +128,12 @@ export const insertBookingSchema = createInsertSchema(bookings).pick({
   budget: true,
   timeline: true,
   message: true,
+}).partial({
+  phone: true,
+  projectType: true,
+  budget: true,
+  timeline: true,
+  message: true,
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions).pick({
@@ -106,6 +149,28 @@ export const insertOrderSchema = createInsertSchema(orders).pick({
   bookingId: true,
 });
 
+export const insertAdminUserSchema = createInsertSchema(adminUsers).pick({
+  username: true,
+  email: true,
+  password: true,
+  role: true,
+});
+
+export const insertSiteSettingSchema = createInsertSchema(siteSettings).pick({
+  key: true,
+  value: true,
+  category: true,
+  description: true,
+});
+
+export const insertInquirySchema = createInsertSchema(inquiries).pick({
+  name: true,
+  email: true,
+  phone: true,
+  service: true,
+  message: true,
+});
+
 // Type Definitions
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -117,6 +182,12 @@ export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Order = typeof orders.$inferSelect;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
+export type SiteSetting = typeof siteSettings.$inferSelect;
+export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
+export type Inquiry = typeof inquiries.$inferSelect;
+export type InsertInquiry = z.infer<typeof insertInquirySchema>;
 
 // Additional Utility Types
 export type BookingWithTransaction = Booking & {

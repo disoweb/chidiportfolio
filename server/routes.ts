@@ -1,39 +1,24 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertBookingSchema } from "@shared/schema";
+import { insertContactSchema, insertBookingSchema, insertInquirySchema } from "@shared/schema";
 import { z } from "zod";
 import { Request, Response } from 'express';
 import axios from 'axios';
-
-// In-memory storage for demo (replace with database in production)
-let inquiries: any[] = [];
-let adminUsers = [
-  {
-    id: '1',
-    username: 'admin',
-    password: 'admin123', // In production, this should be hashed
-    email: 'admin@chidiogara.com',
-    role: 'admin',
-    createdAt: new Date().toISOString()
-  }
-];
-
-let siteSettings = {
-  seoTitle: 'Chidi Ogara - Senior Fullstack Developer',
-  seoDescription: 'Professional fullstack web developer specializing in React, Node.js, and modern web technologies. Building scalable solutions for businesses.',
-  seoKeywords: 'fullstack developer, web development, React, Node.js, TypeScript, JavaScript, web applications',
-  ogImage: '/og-image.jpg',
-  siteName: 'Chidi Ogara Portfolio',
-  contactEmail: 'chidi@example.com',
-  socialLinks: {
-    linkedin: 'https://linkedin.com/in/chidiogara',
-    github: 'https://github.com/chidiogara',
-    twitter: 'https://twitter.com/chidiogara'
-  }
-};
+import bcrypt from 'bcryptjs';
+import { runMigrations } from "./migrate"; // Ensure migrate.ts exists and exports runMigrations
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Run database migrations first
+  try {
+    await runMigrations();
+  } catch (error: any) { // Added :any for safety, though console.error handles unknown well
+    console.error('Failed to run migrations:', error);
+  }
+  
+  // Initialize default settings on startup
+  await storage.initializeDefaultSettings();
+
   // Health check
   app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', message: 'Server is running' });
@@ -59,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         response: randomResponse,
         timestamp: new Date().toISOString()
       });
-    } catch (error) {
+    } catch (error) { // This catch block doesn't access error properties, so 'unknown' is fine
       console.error('Chat error:', error);
       res.status(500).json({ error: 'Failed to process chat message' });
     }
@@ -74,15 +59,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Store contact submission
       const contact = await storage.createContact(validatedData);
 
-      // In a real implementation, you would send an email notification here
-      // Example: await sendEmailNotification(validatedData);
-
       res.json({ 
         success: true, 
         message: 'Contact form submitted successfully',
         id: contact.id 
       });
-    } catch (error) {
+    } catch (error) { // This catch block handles ZodError specifically or logs generally
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
           error: 'Validation error', 
@@ -110,10 +92,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete contact endpoint
+  app.delete('/api/contacts/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteContact(parseInt(id));
+
+      if (!success) {
+        return res.status(404).json({ error: 'Contact not found' });
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Contact deleted successfully'
+      });
+    } catch (error) {
+      console.error('Delete contact error:', error);
+      res.status(500).json({ 
+        error: 'Internal server error' 
+      });
+    }
+  });
+
   // Booking form submission endpoint
   app.post('/api/booking', async (req, res) => {
     try {
+      console.log('Received booking request:', req.body);
       const validatedData = insertBookingSchema.parse(req.body);
+      console.log('Validated booking data:', validatedData);
       const booking = await storage.createBooking(validatedData);
 
       res.json({ 
@@ -122,16 +128,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: booking.id,
         booking: booking
       });
-    } catch (error) {
+    } catch (error: any) { // UPDATED: Added :any because error.message is accessed
       if (error instanceof z.ZodError) {
+        console.error('Validation error:', error.errors);
         res.status(400).json({ 
           error: 'Validation error', 
           details: error.errors 
         });
       } else {
-        console.error('Booking error:', error);
+        console.error('Booking error details:', error);
         res.status(500).json({ 
-          error: 'Internal server error' 
+          error: 'Internal server error',
+          details: error.message // Accessing error.message
         });
       }
     }
@@ -141,8 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/bookings/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const validatedData = insertBookingSchema.parse(req.body);
-      const updatedBooking = await storage.updateBooking(parseInt(id), validatedData);
+      const updatedBooking = await storage.updateBooking(parseInt(id), req.body);
 
       if (!updatedBooking) {
         return res.status(404).json({ error: 'Booking not found' });
@@ -154,17 +161,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         booking: updatedBooking
       });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          error: 'Validation error', 
-          details: error.errors 
-        });
-      } else {
-        console.error('Update booking error:', error);
-        res.status(500).json({ 
-          error: 'Internal server error' 
-        });
-      }
+      console.error('Update booking error:', error);
+      res.status(500).json({ 
+        error: 'Internal server error' 
+      });
     }
   });
 
@@ -212,7 +212,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all bookings (for admin purposes)
   app.get('/api/bookings', async (req, res) => {
     try {
-      const bookings = await storage.getAllBookings();
+      const { search, paymentStatus } = req.query;
+      let bookings;
+      
+      if (search || paymentStatus) {
+        bookings = await storage.searchBookings(
+          search as string || '', 
+          paymentStatus as string
+        );
+      } else {
+        bookings = await storage.getAllBookings();
+      }
+      
       res.json(bookings);
     } catch (error) {
       console.error('Get bookings error:', error);
@@ -243,10 +254,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      const context = `You are Chidi Ogara's AI assistant. Respond as Chidi himself using "I", "my", "me". Be concise, smart, and straight to the point while maintaining professionalism.
+      const context = `You are Digital Chidi's AI assistant. Respond as Chidi himself using "I", "my", "me". Be concise, smart, and straight to the point while maintaining professionalism.
 
 ABOUT ME:
-I'm Chidi Ogara, a Senior Fullstack Developer with 7+ years building scalable web applications. I transform business ideas into robust digital solutions using modern technologies.
+My name is Digital Chidi, a Fullstack Developer with 7+ years building scalable web applications. I transform business ideas into robust digital solutions using modern technologies.
 
 CORE EXPERTISE:
 • Frontend: React, Next.js, TypeScript, Tailwind CSS
@@ -271,40 +282,40 @@ RESPONSE GUIDELINES:
 - Mention free consultation for serious inquiries
 
 PRICING CONTEXT:
-- Simple websites: $500-2000
-- Complex web apps: $2000-8000
-- API development: $800-3000
-- Consulting: $50-100/hour
+- Simple websites: ₦150,000-200,000
+- Complex web apps: ₦800,000-3,200,000
+- API development: ₦320,000-1,200,000
+- Consulting: ₦5,000-10,000/hour
 - Always offer free initial consultation
 
 SERVICES I OFFER:
-1. Web Application Development (React, Vue.js, Node.js) - Starting at $5,000, 4-8 weeks
+1. Web Application Development (React, Vue.js, Node.js) - Starting at ₦250,000, 4-8 weeks
    - Custom web applications with modern frameworks
    - Progressive Web Apps (PWAs)
    - Single Page Applications (SPAs)
 
-2. E-commerce Solutions - Starting at $8,000, 6-12 weeks  
+2. E-commerce Solutions - Starting at ₦250,000, 6-12 weeks
    - Payment gateway integration (Stripe, PayPal, local payment systems)
    - Inventory management systems
    - Shopping cart and checkout optimization
    - Multi-vendor marketplaces
 
-3. SaaS Platform Development - Starting at $15,000, 12-20 weeks
+3. SaaS Platform Development - Starting at ₦250,000, 12-20 weeks
    - Multi-tenant architecture
    - Subscription management and billing
    - Analytics and reporting dashboards
    - User management and role-based access
 
-4. API Development & Integration - Starting at $3,000, 2-4 weeks
+4. API Development & Integration - Starting at ₦120,000, 2-4 weeks
    - RESTful API design and development
    - Third-party API integrations
    - Microservices architecture
    - API documentation and testing
 
 PROFESSIONAL EXPERIENCE:
-- Senior Fullstack Developer at TechFlow Solutions (2021-Present): I lead development of enterprise web applications serving 50,000+ users, focusing on performance optimization and scalable architecture
-- Fullstack Developer at Digital Innovation Labs (2019-2021): I built 15+ successful projects, achieving 45% reduction in load times through optimization techniques
-- Web Developer at StartupTech Inc (2017-2019): I developed 20+ responsive websites and improved user engagement by 35% through UX/UI enhancements
+- Fullstack Developer at CyferLabs (2019-2020): I lead development of enterprise web applications serving 50,000+ users, focusing on performance optimization and scalable architecture
+- Fullstack Developer at DiSO Web Services (2020-present): I built 15+ successful projects, achieving 45% reduction in load times through optimization techniques
+- Web Developer at Digital Skills Academy (2017-present): I developed 20+ responsive websites and improved user engagement by 35% through UX/UI enhancements
 
 NOTABLE PROJECTS:
 1. Automated Biometric Voting Machine - A comprehensive voting system with biometric authentication
@@ -339,6 +350,7 @@ Instructions:
 - Always end with a call-to-action
 - Use my experience to build credibility
 
+
 User question: ${message}`;
 
       const result = await model.generateContent(context);
@@ -346,89 +358,270 @@ User question: ${message}`;
       const text = response.text();
 
       res.json({ response: text });
-    } catch (error) {
+    } catch (error: any) { // UPDATED: Added :any because error.message is accessed
       console.error('Chat error:', error);
       res.status(500).json({ 
         error: 'Failed to process chat message',
-        details: error.message 
+        details: error.message // Accessing error.message
       });
     }
   });
 
-  // Contact form submission
-  app.post('/api/inquiry', (req: Request, res: Response) => {
+  // Inquiry form submission
+  app.post('/api/inquiry', async (req: Request, res: Response) => {
     try {
-      const { name, email, phone, service, message } = req.body;
+      const validatedData = insertInquirySchema.parse(req.body);
+      const inquiry = await storage.createInquiry(validatedData);
 
-      const inquiry = {
-        id: Date.now().toString(),
-        name,
-        email,
-        phone,
-        service,
-        message,
-        status: 'new',
-        createdAt: new Date().toISOString()
-      };
-
-      inquiries.push(inquiry);
-
-      res.json({ success: true, message: 'Inquiry submitted successfully' });
-    } catch (error) {
-      console.error('Contact form error:', error);
-      res.status(500).json({ error: 'Failed to submit inquiry' });
+      res.json({ 
+        success: true, 
+        message: 'Inquiry submitted successfully',
+        id: inquiry.id
+      });
+    } catch (error) { // This catch block handles ZodError specifically or logs generally
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          error: 'Validation error', 
+          details: error.errors 
+        });
+      } else {
+        console.error('Inquiry submission error:', error);
+        res.status(500).json({ error: 'Failed to submit inquiry' });
+      }
     }
   });
 
   // Admin routes
-  app.get('/api/admin/inquiries', (req: Request, res: Response) => {
-    res.json(inquiries);
+  app.get('/api/admin/inquiries', async (req: Request, res: Response) => {
+    try {
+      const { search, status } = req.query;
+      let inquiries;
+      
+      if (search || status) {
+        inquiries = await storage.searchInquiries(
+          search as string || '', 
+          status as string
+        );
+      } else {
+        inquiries = await storage.getAllInquiries();
+      }
+      
+      res.json(inquiries);
+    } catch (error) {
+      console.error('Get inquiries error:', error);
+      res.status(500).json({ error: 'Failed to fetch inquiries' });
+    }
   });
 
-  app.patch('/api/admin/inquiries/:id', (req: Request, res: Response) => {
+  app.patch('/api/admin/inquiries/:id', async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { status } = req.body;
 
-      const inquiryIndex = inquiries.findIndex(inquiry => inquiry.id === id);
-      if (inquiryIndex === -1) {
+      const updatedInquiry = await storage.updateInquiry(parseInt(id), { status });
+      
+      if (!updatedInquiry) {
         return res.status(404).json({ error: 'Inquiry not found' });
       }
 
-      inquiries[inquiryIndex].status = status;
-      res.json({ success: true });
+      res.json({ success: true, inquiry: updatedInquiry });
     } catch (error) {
       console.error('Update inquiry error:', error);
       res.status(500).json({ error: 'Failed to update inquiry' });
     }
   });
 
-  app.get('/api/admin/settings', (req: Request, res: Response) => {
-    res.json(siteSettings);
+  app.delete('/api/admin/inquiries/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteInquiry(parseInt(id));
+
+      if (!success) {
+        return res.status(404).json({ error: 'Inquiry not found' });
+      }
+
+      res.json({ success: true, message: 'Inquiry deleted successfully' });
+    } catch (error) {
+      console.error('Delete inquiry error:', error);
+      res.status(500).json({ error: 'Failed to delete inquiry' });
+    }
   });
 
-  app.put('/api/admin/settings', (req: Request, res: Response) => {
+  // Site settings routes
+  app.get('/api/admin/settings', async (req: Request, res: Response) => {
     try {
-      siteSettings = { ...siteSettings, ...req.body };
-      res.json({ success: true });
+      const settings = await storage.getAllSiteSettings();
+      
+      // Convert to object format for frontend compatibility
+      const settingsObject = {
+        seoTitle: settings.find(s => s.key === 'seo_title')?.value || '',
+        seoDescription: settings.find(s => s.key === 'seo_description')?.value || '',
+        seoKeywords: settings.find(s => s.key === 'seo_keywords')?.value || '',
+        ogImage: settings.find(s => s.key === 'og_image')?.value || '',
+        siteName: settings.find(s => s.key === 'site_name')?.value || '',
+        contactEmail: settings.find(s => s.key === 'contact_email')?.value || '',
+        socialLinks: {
+          linkedin: settings.find(s => s.key === 'linkedin_url')?.value || '',
+          github: settings.find(s => s.key === 'github_url')?.value || '',
+          twitter: settings.find(s => s.key === 'twitter_url')?.value || ''
+        }
+      };
+      
+      res.json(settingsObject);
+    } catch (error: any) { // UPDATED: Added :any because error.code is accessed
+      console.error('Get settings error:', error);
+      if (error.code === '42P01') { // Accessing error.code
+        // Return empty settings if table doesn't exist
+        res.json({
+          seoTitle: '',
+          seoDescription: '',
+          seoKeywords: '',
+          ogImage: '',
+          siteName: '',
+          contactEmail: '',
+          socialLinks: {
+            linkedin: '',
+            github: '',
+            twitter: ''
+          }
+        });
+      } else {
+        res.status(500).json({ error: 'Failed to fetch settings' });
+      }
+    }
+  });
+
+  app.put('/api/admin/settings', async (req: Request, res: Response) => {
+    try {
+      const settingsData = req.body;
+      
+      // Update each setting in the database
+      await storage.upsertSiteSetting('seo_title', settingsData.seoTitle, 'seo');
+      await storage.upsertSiteSetting('seo_description', settingsData.seoDescription, 'seo');
+      await storage.upsertSiteSetting('seo_keywords', settingsData.seoKeywords, 'seo');
+      await storage.upsertSiteSetting('og_image', settingsData.ogImage, 'seo');
+      await storage.upsertSiteSetting('site_name', settingsData.siteName, 'general');
+      await storage.upsertSiteSetting('contact_email', settingsData.contactEmail, 'contact');
+      await storage.upsertSiteSetting('linkedin_url', settingsData.socialLinks.linkedin, 'social');
+      await storage.upsertSiteSetting('github_url', settingsData.socialLinks.github, 'social');
+      await storage.upsertSiteSetting('twitter_url', settingsData.socialLinks.twitter, 'social');
+      
+      res.json({ success: true, message: 'Settings updated successfully' });
     } catch (error) {
       console.error('Update settings error:', error);
       res.status(500).json({ error: 'Failed to update settings' });
     }
   });
 
+  // Admin user management routes
+  app.get('/api/admin/users', async (req: Request, res: Response) => {
+    try {
+      const users = await storage.getAllAdminUsers();
+      // Remove passwords from response
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      res.json(safeUsers);
+    } catch (error) {
+      console.error('Get admin users error:', error);
+      res.status(500).json({ error: 'Failed to fetch admin users' });
+    }
+  });
+
+  app.post('/api/admin/users', async (req: Request, res: Response) => {
+    try {
+      const { username, email, password, role } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getAdminByUsername(username) || await storage.getAdminByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: 'User already exists' });
+      }
+      
+      const newUser = await storage.createAdminUser({ username, email, password, role });
+      const { password: _, ...safeUser } = newUser; // eslint-disable-line @typescript-eslint/no-unused-vars
+      
+      res.json({ success: true, user: safeUser });
+    } catch (error) {
+      console.error('Create admin user error:', error);
+      res.status(500).json({ error: 'Failed to create admin user' });
+    }
+  });
+
+  app.put('/api/admin/users/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      const updatedUser = await storage.updateAdminUser(parseInt(id), updateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      const { password, ...safeUser } = updatedUser;
+      res.json({ success: true, user: safeUser });
+    } catch (error) {
+      console.error('Update admin user error:', error);
+      res.status(500).json({ error: 'Failed to update admin user' });
+    }
+  });
+
+  app.delete('/api/admin/users/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteAdminUser(parseInt(id));
+
+      if (!success) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      res.json({ success: true, message: 'Admin user deleted successfully' });
+    } catch (error) {
+      console.error('Delete admin user error:', error);
+      res.status(500).json({ error: 'Failed to delete admin user' });
+    }
+  });
+
   // Admin login endpoint
-  app.post('/api/admin/login', (req: Request, res: Response) => {
+  app.post('/api/admin/login', async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
+      
+      console.log('Login attempt for username:', username);
 
-      const admin = adminUsers.find(user => 
-        user.username === username && user.password === password
-      );
+      if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+      }
 
+      const admin = await storage.getAdminByUsername(username);
+      
       if (!admin) {
+        console.log('Admin user not found:', username);
         return res.status(401).json({ error: 'Invalid credentials' });
       }
+
+      console.log('Admin found:', { id: admin.id, username: admin.username, isActive: admin.isActive });
+      
+      if (admin.isActive !== 'true' && admin.isActive !== true) { // check for both string and boolean true
+        console.log('Admin account is not active');
+        return res.status(401).json({ error: 'Invalid credentials or account disabled' });
+      }
+
+      console.log('Comparing passwords...');
+      const isValidPassword = await bcrypt.compare(password, admin.password);
+      console.log('Password comparison result:', isValidPassword);
+      
+      if (!isValidPassword) {
+        console.log('Password mismatch for user:', username);
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      // Update last login
+      await storage.updateLastLogin(admin.id);
+
+      console.log('Login successful for user:', username);
 
       // In production, use proper JWT tokens
       res.json({ 
@@ -439,7 +632,7 @@ User question: ${message}`;
           email: admin.email,
           role: admin.role
         },
-        token: 'mock-jwt-token'
+        token: 'mock-jwt-token' // Replace with actual JWT generation
       });
     } catch (error) {
       console.error('Login error:', error);
@@ -459,33 +652,59 @@ User question: ${message}`;
   // Seed admin account endpoint
   app.post('/api/seed-admin', async (req, res) => {
     try {
-      // Create admin user with credentials
-      const adminUser = {
-        id: '1',
+      console.log('Seeding admin account...');
+      
+      // Check if admin already exists
+      const existingAdmin = await storage.getAdminByUsername('admin');
+      
+      if (existingAdmin) {
+        console.log('Admin already exists, updating password...');
+        // Update the password to ensure it's correct
+        const hashedPassword = await bcrypt.hash('admin123', 12);
+        await storage.updateAdminUser(existingAdmin.id, { 
+          password: hashedPassword,
+          isActive: 'true' // Ensure isActive is a string if your DB expects it
+        });
+        
+        console.log('Admin password updated successfully');
+        
+        return res.json({ 
+          message: 'Admin account already exists - password updated',
+          credentials: {
+            username: 'admin',
+            password: 'admin123'
+          }
+        });
+      }
+
+      console.log('Creating new admin user...');
+      // Create admin user
+      const adminUser = await storage.createAdminUser({
         username: 'admin',
         email: 'admin@chidiogara.dev',
-        password: 'Admin123!', // In production, this should be hashed
-        role: 'admin',
-        createdAt: new Date().toISOString()
-      };
+        password: 'admin123', // Password will be hashed by createAdminUser
+        role: 'admin'
+      });
+
+      console.log('Admin user created successfully:', adminUser.username);
 
       res.json({ 
         message: 'Admin account seeded successfully',
         credentials: {
           username: adminUser.username,
           email: adminUser.email,
-          password: adminUser.password
+          password: 'admin123' // Show the plain password for dev purposes
         }
       });
-    } catch (error) {
+    } catch (error: any) { // UPDATED: Added :any because error.message is accessed
       console.error('Error seeding admin:', error);
-      res.status(500).json({ error: 'Failed to seed admin account' });
+      res.status(500).json({ error: 'Failed to seed admin account', details: error.message }); // Accessing error.message
     }
   });
 
   // Paystack webhook endpoint
   app.post('/api/paystack/webhook', async (req: Request, res: Response) => {
-    const { handleWebhook } = await import('./api/paystack/webhook');
+    const { handleWebhook } = await import('./api/paystack/webhook'); // Ensure this path is correct
     return handleWebhook(req, res);
   });
 
@@ -533,7 +752,8 @@ User question: ${message}`;
         data: paystackResponse.data.data
       });
 
-    } catch (error: any) {
+    } catch (error: any) { // This was already correctly :any
+      console.error('Paystack initiation error:', error.response ? error.response.data : error.message);
       if (error.response) {
         return res.status(error.response.status || 400).json({
           success: false,
@@ -614,8 +834,8 @@ User question: ${message}`;
         }
       });
 
-    } catch (error: any) {
-      console.error('Payment verification process error:', error);
+    } catch (error: any) { // This was already correctly :any
+      console.error('Payment verification process error:', error.response ? error.response.data : error.message);
 
       if (error.response) {
         return res.status(error.response.status || 400).json({
@@ -626,7 +846,7 @@ User question: ${message}`;
 
       res.status(500).json({
         success: false,
-        message: 'An unexpected error occurred during payment verification.'
+        message: error.message || 'An unexpected error occurred during payment verification.'
       });
     }
   });

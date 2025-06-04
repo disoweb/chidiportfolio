@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     }
 
     if (!process.env.PAYSTACK_SECRET_KEY) {
+      console.error('Paystack secret key is not configured.'); // Added server-side logging for easier debugging
       return new Response(JSON.stringify({
         success: false,
         message: 'Payment configuration error'
@@ -35,9 +36,9 @@ export async function POST(req: Request) {
         metadata: {
           service_id: serviceId,
           service_name: serviceName,
-          booking_id: bookingId
+          booking_id: bookingId // Ensure bookingId is included if it exists
         },
-        callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/callback`
+        callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://chidi.onrender.com'}/payment/callback`
       },
       {
         headers: {
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
       }
     );
 
-    if (bookingId) {
+    if (bookingId && paystackResponse.data && paystackResponse.data.data && paystackResponse.data.data.reference) {
       await db.update(bookings)
         .set({
           paymentStatus: 'initiated',
@@ -65,19 +66,25 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
+    console.error('Payment initiation error:', error); // Log the actual error on the server
+
     if (error.response) {
+      // Axios error (Paystack API returned an error)
+      console.error('Paystack API error response:', error.response.data);
       return new Response(JSON.stringify({
         success: false,
-        message: error.response.data?.message || 'Paystack API error'
+        message: error.response.data?.message || 'Paystack API error',
+        details: error.response.data // Optionally include more details if safe
       }), {
         status: error.response.status || 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
+    // Other errors (network issue, programming error, etc.)
     return new Response(JSON.stringify({
       success: false,
-      message: error.message || 'Payment initiation failed'
+      message: error.message || 'Payment initiation failed due to an unexpected error.'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

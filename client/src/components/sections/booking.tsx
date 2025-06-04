@@ -24,6 +24,7 @@ export function Booking() {
     timeline: '',
     message: ''
   });
+  const [submissionStatus, setSubmissionStatus] = useState<'' | 'success' | 'error'>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -34,54 +35,88 @@ export function Booking() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const reset = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      service: '',
+      projectType: '',
+      budget: '',
+      timeline: '',
+      message: ''
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.email || !formData.service || !formData.projectType) {
+
+    // Simple validation
+    if (!formData.name || !formData.email || !formData.service) {
       toast({
-        title: "Required fields missing",
-        description: "Please fill in all required fields.",
+        title: "Missing Information",
+        description: "Please fill in all required fields (Name, Email, and Service).",
         variant: "destructive",
       });
+      setIsSubmitting(false);
       return;
     }
 
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       toast({
-        title: "Invalid email",
+        title: "Invalid Email",
         description: "Please enter a valid email address.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
       return;
     }
 
     setIsSubmitting(true);
-    
+    setSubmissionStatus(''); // Reset status before submitting
+
     try {
-      await apiRequest('POST', '/api/booking', formData);
-      
-      toast({
-        title: "Booking submitted successfully!",
-        description: "I'll contact you within 24 hours to schedule your consultation.",
+      const response = await fetch('/api/booking', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
-      
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        service: '',
-        projectType: '',
-        budget: '',
-        timeline: '',
-        message: ''
-      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Booking submission successful:', result);
+
+      if (result.success) {
+        toast({
+          title: "Booking Submitted Successfully!",
+          description: "We'll get back to you within 24 hours.",
+        });
+        setSubmissionStatus('success');
+        reset();
+      } else {
+        console.error('Booking submission failed:', result);
+        toast({
+          title: "Submission Failed",
+          description: result.error || "Please try again later.",
+          variant: "destructive",
+        });
+        setSubmissionStatus('error');
+      }
     } catch (error) {
+      console.error('Booking submission error:', error);
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again or email me directly.",
+        title: "Submission Failed",
+        description: "Network error. Please check your connection and try again.",
         variant: "destructive",
       });
+      setSubmissionStatus('error');
     } finally {
       setIsSubmitting(false);
     }
@@ -105,6 +140,34 @@ export function Booking() {
             Schedule a free consultation
           </p>
         </div>
+
+        {submissionStatus === 'success' && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-semibold">Booking Request Submitted Successfully!</p>
+                <p>We'll get back to you within 24 hours to schedule our consultation.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {submissionStatus === 'error' && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-semibold">Submission Failed</p>
+                <p>Please check your connection and try again. If the problem persists, contact us directly.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Mobile Form - Shows immediately after heading */}
         <div className="lg:hidden mb-12">
@@ -148,7 +211,7 @@ export function Booking() {
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="phone" className="block text-sm font-medium mb-2">
                   Phone Number
@@ -166,7 +229,7 @@ export function Booking() {
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="service" className="block text-sm font-medium mb-2">
@@ -202,7 +265,7 @@ export function Booking() {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="budget" className="block text-sm font-medium mb-2">
@@ -237,7 +300,7 @@ export function Booking() {
                   </Select>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="message" className="block text-sm font-medium mb-2">
                   Project Details
@@ -252,7 +315,7 @@ export function Booking() {
                   placeholder="Tell me about your project goals, requirements, and any specific features you need..."
                 />
               </div>
-              
+
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
@@ -273,7 +336,7 @@ export function Booking() {
             </form>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Benefits - Shows on all screens */}
           <div className="space-y-8 order-2 lg:order-1">
@@ -289,7 +352,7 @@ export function Booking() {
                     <p className="text-gray-600">Discuss your project goals and technical requirements</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="bg-blue-100 p-3 rounded-xl">
                     <Clock className="w-6 h-6 text-blue-600" />
@@ -299,7 +362,7 @@ export function Booking() {
                     <p className="text-gray-600">Detailed timeline with milestones and deliverables</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="bg-purple-100 p-3 rounded-xl">
                     <DollarSign className="w-6 h-6 text-purple-600" />
@@ -309,7 +372,7 @@ export function Booking() {
                     <p className="text-gray-600">Transparent pricing based on your specific needs</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="bg-orange-100 p-3 rounded-xl">
                     <Calendar className="w-6 h-6 text-orange-600" />
@@ -321,13 +384,13 @@ export function Booking() {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-3xl p-8 text-white">
               <h3 className="text-xl font-bold mb-4">Fast Response Guarantee</h3>
               <p className="opacity-90">I'll respond to your consultation request within minutes and we can schedule a free call ASAP.</p>
             </div>
           </div>
-          
+
           {/* Desktop Form - Hidden on mobile, shown on large screens */}
           <div className="hidden lg:block bg-white rounded-3xl p-8 shadow-xl border border-blue-50 order-1 lg:order-2">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -369,7 +432,7 @@ export function Booking() {
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="phone" className="block text-sm font-medium mb-2">
                   Phone Number
@@ -387,7 +450,7 @@ export function Booking() {
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="service" className="block text-sm font-medium mb-2">
@@ -423,7 +486,7 @@ export function Booking() {
                   </Select>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="budget" className="block text-sm font-medium mb-2">
@@ -458,7 +521,7 @@ export function Booking() {
                   </Select>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="message" className="block text-sm font-medium mb-2">
                   Project Details
@@ -473,7 +536,7 @@ export function Booking() {
                   placeholder="Tell me about your project goals, requirements, and any specific features you need..."
                 />
               </div>
-              
+
               <Button 
                 type="submit" 
                 disabled={isSubmitting}
