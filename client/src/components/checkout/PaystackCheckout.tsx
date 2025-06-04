@@ -57,7 +57,7 @@ export const PaystackCheckout = ({
     const paymentReference = ref.reference || reference; 
     try {
     
-      const response = await axios.post('/api/paystack/verify', {
+      const response = await axios.post('/server/api/paystack/verify', {
         reference: paymentReference,
         service: serviceName,
         amount: amount

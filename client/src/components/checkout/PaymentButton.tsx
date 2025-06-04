@@ -39,8 +39,8 @@ export function PaymentButton({
 
       const data = await response.json();
 
-      if (data.success && data.data.authorizationUrl) {
-        window.location.href = data.data.authorizationUrl;
+      if (data.success && data.data.authorization_url) {
+        window.location.href = data.data.authorization_url;
       } else {
         throw new Error(data.message || 'Payment initiation failed');
       }
