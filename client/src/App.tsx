@@ -5,7 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { useSiteSettings } from '@/hooks/use-site-settings';
 import Home from '@/pages/home';
-import Admin from '@/pages/admin';
+import AdminDashboard from '@/pages/admin';
 import AdminLogin from '@/pages/admin-login';
 import NotFound from '@/pages/not-found';
 import CaseStudy from '@/pages/case-study';
