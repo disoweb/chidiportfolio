@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,7 +56,7 @@ export default function AdminLogin() {
               <span className="text-sm">{error}</span>
             </div>
           )}
-          
+
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700 font-medium">Default Credentials:</p>
             <p className="text-xs text-blue-600">Username: admin</p>

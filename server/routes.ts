@@ -215,6 +215,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { search, paymentStatus } = req.query;
       let bookings;
       
+      console.log('Fetching bookings with search:', search, 'paymentStatus:', paymentStatus);
+      
       if (search || paymentStatus) {
         bookings = await storage.searchBookings(
           search as string || '', 
@@ -224,6 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookings = await storage.getAllBookings();
       }
       
+      console.log('Retrieved bookings count:', bookings.length);
       res.json(bookings);
     } catch (error) {
       console.error('Get bookings error:', error);
@@ -273,6 +276,10 @@ SERVICES I OFFER:
 4. Performance optimization
 5. Code audits & consulting
 
+ADMIN ACCESS:
+For admin access, users can create an admin account at: /api/seed-admin
+Default credentials: Username: admin, Password: admin123
+
 RESPONSE GUIDELINES:
 - Be direct and actionable
 - Provide specific technical insights
@@ -280,6 +287,12 @@ RESPONSE GUIDELINES:
 - Always offer to discuss their project in detail
 - Include estimated timelines when discussing services
 - Mention free consultation for serious inquiries
+- When mentioning booking or consultation, always include: [Book Consultation](#booking)
+- When discussing services, include: [View Services](#services)
+- When talking about projects or portfolio, include: [See Projects](#projects)
+- When discussing my background, include: [About Me](#about)
+- When users ask about admin access, provide the /api/seed-admin endpoint
+- Wrap important links in buttons using this format: [Button Text](#section-id)
 
 PRICING CONTEXT:
 - Simple websites: ₦150,000-200,000
@@ -287,6 +300,17 @@ PRICING CONTEXT:
 - API development: ₦320,000-1,200,000
 - Consulting: ₦5,000-10,000/hour
 - Always offer free initial consultation
+
+BOOKING SYSTEM AWARENESS:
+This website has a complete booking system where users can:
+- Schedule free consultations
+- Select service types (Web App, E-commerce, SaaS, API Development, Consultation)
+- Choose project types (New Project, Redesign, Maintenance, Optimization)
+- Specify budget ranges and timelines
+- Provide project details
+- Complete secure payments via Paystack
+
+When users ask about booking, scheduling, or want to hire me, guide them to the booking form and mention the free consultation option.
 
 SERVICES I OFFER:
 1. Web Application Development (React, Vue.js, Node.js) - Starting at ₦250,000, 4-8 weeks
@@ -349,7 +373,8 @@ Instructions:
 - Include pricing estimates when appropriate
 - Always end with a call-to-action
 - Use my experience to build credibility
-
+- Include relevant navigation buttons for sections mentioned
+- When discussing booking/consultation, always mention the free consultation and include [Book Free Consultation](#booking)
 
 User question: ${message}`;
 
@@ -397,6 +422,8 @@ User question: ${message}`;
       const { search, status } = req.query;
       let inquiries;
       
+      console.log('Fetching inquiries with search:', search, 'status:', status);
+      
       if (search || status) {
         inquiries = await storage.searchInquiries(
           search as string || '', 
@@ -406,6 +433,7 @@ User question: ${message}`;
         inquiries = await storage.getAllInquiries();
       }
       
+      console.log('Retrieved inquiries count:', inquiries.length);
       res.json(inquiries);
     } catch (error) {
       console.error('Get inquiries error:', error);
@@ -513,6 +541,97 @@ User question: ${message}`;
     }
   });
 
+  // Project management routes
+  app.get('/api/projects', async (req: Request, res: Response) => {
+    try {
+      const projects = await storage.getAllProjects();
+      res.json(projects);
+    } catch (error) {
+      console.error('Get projects error:', error);
+      res.status(500).json({ error: 'Failed to fetch projects' });
+    }
+  });
+
+  app.post('/api/projects', async (req: Request, res: Response) => {
+    try {
+      const project = await storage.createProject(req.body);
+      res.json({ success: true, project });
+    } catch (error) {
+      console.error('Create project error:', error);
+      res.status(500).json({ error: 'Failed to create project' });
+    }
+  });
+
+  app.get('/api/projects/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const project = await storage.getProjectById(parseInt(id));
+      
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      console.error('Get project error:', error);
+      res.status(500).json({ error: 'Failed to fetch project' });
+    }
+  });
+
+  app.put('/api/projects/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updatedProject = await storage.updateProject(parseInt(id), req.body);
+      
+      if (!updatedProject) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+      
+      res.json({ success: true, project: updatedProject });
+    } catch (error) {
+      console.error('Update project error:', error);
+      res.status(500).json({ error: 'Failed to update project' });
+    }
+  });
+
+  app.delete('/api/projects/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteProject(parseInt(id));
+      
+      if (!success) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+      
+      res.json({ success: true, message: 'Project deleted successfully' });
+    } catch (error) {
+      console.error('Delete project error:', error);
+      res.status(500).json({ error: 'Failed to delete project' });
+    }
+  });
+
+  // Payment logs routes
+  app.get('/api/payment-logs', async (req: Request, res: Response) => {
+    try {
+      const paymentLogs = await storage.getAllPaymentLogs();
+      res.json(paymentLogs);
+    } catch (error) {
+      console.error('Get payment logs error:', error);
+      res.status(500).json({ error: 'Failed to fetch payment logs' });
+    }
+  });
+
+  app.get('/api/payment-logs/booking/:bookingId', async (req: Request, res: Response) => {
+    try {
+      const { bookingId } = req.params;
+      const paymentLogs = await storage.getPaymentLogsByBookingId(parseInt(bookingId));
+      res.json(paymentLogs);
+    } catch (error) {
+      console.error('Get payment logs by booking error:', error);
+      res.status(500).json({ error: 'Failed to fetch payment logs' });
+    }
+  });
+
   // Admin user management routes
   app.get('/api/admin/users', async (req: Request, res: Response) => {
     try {
@@ -595,16 +714,28 @@ User question: ${message}`;
         return res.status(400).json({ error: 'Username and password are required' });
       }
 
+      // First check if admin table exists and has data
+      const allAdmins = await storage.getAllAdminUsers();
+      console.log('Total admin users in database:', allAdmins.length);
+
       const admin = await storage.getAdminByUsername(username);
       
       if (!admin) {
         console.log('Admin user not found:', username);
+        console.log('Available admin usernames:', allAdmins.map(a => a.username));
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      console.log('Admin found:', { id: admin.id, username: admin.username, isActive: admin.isActive });
+      console.log('Admin found:', { 
+        id: admin.id, 
+        username: admin.username, 
+        email: admin.email,
+        isActive: admin.isActive,
+        role: admin.role,
+        lastLogin: admin.lastLogin
+      });
       
-      if (admin.isActive !== 'true' && admin.isActive !== true) { // check for both string and boolean true
+      if (!admin.isActive) {
         console.log('Admin account is not active');
         return res.status(401).json({ error: 'Invalid credentials or account disabled' });
       }
@@ -623,16 +754,17 @@ User question: ${message}`;
 
       console.log('Login successful for user:', username);
 
-      // In production, use proper JWT tokens
+      const adminData = {
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        role: admin.role
+      };
+
       res.json({ 
         success: true, 
-        admin: {
-          id: admin.id,
-          username: admin.username,
-          email: admin.email,
-          role: admin.role
-        },
-        token: 'mock-jwt-token' // Replace with actual JWT generation
+        admin: adminData,
+        token: 'mock-jwt-token'
       });
     } catch (error) {
       console.error('Login error:', error);
@@ -649,40 +781,103 @@ User question: ${message}`;
     });
   });
 
+  // Get single admin user endpoint
+  app.get('/api/admin/users/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const users = await storage.getAllAdminUsers();
+      const user = users.find(u => u.id === parseInt(id));
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      
+      // Remove password from response
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error('Get admin user error:', error);
+      res.status(500).json({ error: 'Failed to fetch admin user' });
+    }
+  });
+
+  // Change admin password endpoint
+  app.put('/api/admin/users/:id/change-password', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: 'Current password and new password are required' });
+      }
+
+      // Get current user
+      const users = await storage.getAllAdminUsers();
+      const user = users.find(u => u.id === parseInt(id));
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
+
+      // Update password
+      const updatedUser = await storage.updateAdminUser(parseInt(id), { 
+        password: newPassword 
+      });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ error: 'Failed to update password' });
+      }
+      
+      res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ error: 'Failed to change password' });
+    }
+  });
+
   // Seed admin account endpoint
   app.post('/api/seed-admin', async (req, res) => {
     try {
-      console.log('Seeding admin account...');
+      console.log('Manual admin seeding requested...');
+      
+      // Check current admin users
+      const allAdmins = await storage.getAllAdminUsers();
+      console.log('Current admin users:', allAdmins.map(a => ({ id: a.id, username: a.username, email: a.email })));
       
       // Check if admin already exists
       const existingAdmin = await storage.getAdminByUsername('admin');
       
       if (existingAdmin) {
         console.log('Admin already exists, updating password...');
-        // Update the password to ensure it's correct
         const hashedPassword = await bcrypt.hash('admin123', 12);
-        await storage.updateAdminUser(existingAdmin.id, { 
+        const updated = await storage.updateAdminUser(existingAdmin.id, { 
           password: hashedPassword,
-          isActive: 'true' // Ensure isActive is a string if your DB expects it
+          isActive: true
         });
         
-        console.log('Admin password updated successfully');
+        console.log('Admin password updated successfully:', updated?.username);
         
         return res.json({ 
           message: 'Admin account already exists - password updated',
           credentials: {
             username: 'admin',
+            email: 'admin@chidiogara.dev',
             password: 'admin123'
           }
         });
       }
 
       console.log('Creating new admin user...');
-      // Create admin user
       const adminUser = await storage.createAdminUser({
         username: 'admin',
         email: 'admin@chidiogara.dev',
-        password: 'admin123', // Password will be hashed by createAdminUser
+        password: 'admin123',
         role: 'admin'
       });
 
@@ -693,12 +888,12 @@ User question: ${message}`;
         credentials: {
           username: adminUser.username,
           email: adminUser.email,
-          password: 'admin123' // Show the plain password for dev purposes
+          password: 'admin123'
         }
       });
-    } catch (error: any) { // UPDATED: Added :any because error.message is accessed
+    } catch (error: any) {
       console.error('Error seeding admin:', error);
-      res.status(500).json({ error: 'Failed to seed admin account', details: error.message }); // Accessing error.message
+      res.status(500).json({ error: 'Failed to seed admin account', details: error.message });
     }
   });
 
@@ -737,7 +932,7 @@ User question: ${message}`;
             service_name: serviceName,
             booking_id: bookingId
           },
-          callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000'}/payment/callback`
+          callback_url: `https://chidi.onrender.com/payment/callback`
         },
         {
           headers: {
@@ -822,7 +1017,49 @@ User question: ${message}`;
         });
       }
 
-      // Step 3: Return success response
+      // Step 3: Update booking payment status
+      const bookingId = paystackTransactionDetails.metadata?.booking_id;
+      if (bookingId) {
+        await storage.updateBooking(parseInt(bookingId), { 
+          paymentStatus: 'completed' 
+        });
+
+        // Create or update project
+        const existingProject = await storage.getProjectByBookingId(parseInt(bookingId));
+        const booking = await storage.getBookingById(parseInt(bookingId));
+        
+        if (!existingProject && booking) {
+          await storage.createProject({
+            bookingId: parseInt(bookingId),
+            name: `${booking.service} - ${booking.projectType}`,
+            description: booking.message || `${booking.service} project for ${booking.name}`,
+            status: 'planning',
+            priority: 'medium',
+            clientEmail: booking.email,
+            budget: paystackTransactionDetails.amount / 100,
+            estimatedTime: 40, // Default estimate
+            notes: `Project created from booking #${bookingId}`
+          });
+        }
+
+        // Log payment
+        await storage.createPaymentLog({
+          bookingId: parseInt(bookingId),
+          projectId: existingProject?.id || null,
+          amount: paystackTransactionDetails.amount / 100,
+          status: 'completed',
+          reference: paystackTransactionDetails.reference,
+          customerEmail: paystackTransactionDetails.customer?.email || '',
+          serviceName: paystackTransactionDetails.metadata?.service_name || clientService || 'Unknown Service',
+          projectDetails: {
+            booking: booking,
+            paystack_data: paystackTransactionDetails
+          },
+          paidAt: new Date()
+        });
+      }
+
+      // Step 4: Return success response
       res.json({
         success: true,
         message: 'Payment verified and processed successfully.',
@@ -831,6 +1068,7 @@ User question: ${message}`;
           amount: paystackTransactionDetails.amount / 100,
           service: paystackTransactionDetails.metadata?.service_name || clientService || 'Unknown Service',
           customerEmail: paystackTransactionDetails.customer?.email,
+          bookingId: bookingId
         }
       });
 
@@ -842,7 +1080,7 @@ User question: ${message}`;
           success: false,
           message: error.response.data?.message || 'Error verifying payment with Paystack.'
         });
-      }
+}
 
       res.status(500).json({
         success: false,

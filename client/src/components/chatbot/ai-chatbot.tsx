@@ -89,6 +89,52 @@ export function AIChatbot() {
     }
   };
 
+  const handleNavigation = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setIsOpen(false); // Close chat after navigation
+    }
+  };
+
+  const renderMessageWithButtons = (text: string) => {
+    // Pattern to match [Button Text](#section-id)
+    const buttonPattern = /\[([^\]]+)\]\(#([^)]+)\)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = buttonPattern.exec(text)) !== null) {
+      // Ensure match has required parts
+      if (!match[1] || !match[2]) continue;
+
+      // Add text before the button
+      if (match.index > lastIndex) {
+        parts.push(text.slice(lastIndex, match.index));
+      }
+
+      // Add the button
+      parts.push(
+        <button
+            key={match.index}
+            onClick={() => handleNavigation(match[2] || '')}
+            className="inline-flex items-center px-3 py-1 mx-1 bg-blue-600 text-white text-xs rounded-full hover:bg-blue-700 transition-colors"
+          >
+          {match[1]}
+        </button>
+      );
+
+      lastIndex = match.index + match[0].length;
+    }
+
+    // Add remaining text after the last button
+    if (lastIndex < text.length) {
+      parts.push(text.slice(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
+
   return (
     <>
       {/* Chat Button */}
@@ -166,7 +212,7 @@ export function AIChatbot() {
                     >
                       <div className="p-3">
                         <div className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                          {message.text}
+                          {renderMessageWithButtons(message.text)}
                         </div>
                       </div>
                       <div

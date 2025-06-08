@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Mail, Phone, Calendar, Settings, Globe, Search, Shield, Edit, Trash2, Eye, Plus, DollarSign, Clock, User } from 'lucide-react';
+import { Mail, Phone, Calendar, Settings, Globe, Search, Shield, Edit, Trash2, Eye, Plus, DollarSign, Clock, User, Target } from 'lucide-react';
 
 interface Inquiry {
   id: string;
@@ -58,8 +58,12 @@ export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [filteredInquiries, setFilteredInquiries] = useState<Inquiry[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+  const [filteredPayments, setFilteredPayments] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [bookingSearchTerm, setBookingSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -83,6 +87,18 @@ export default function AdminDashboard() {
     }
   });
 
+  const [adminProfile, setAdminProfile] = useState({
+    username: '',
+    email: '',
+    role: ''
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
   useEffect(() => {
     // Check authentication
     const token = localStorage.getItem('admin_token');
@@ -95,7 +111,10 @@ export default function AdminDashboard() {
     // Fetch data from API
     fetchInquiries();
     fetchBookings();
+    fetchProjects();
+    fetchPayments();
     fetchSiteSettings();
+    fetchAdminProfile();
   }, [setLocation]);
 
   useEffect(() => {
@@ -139,8 +158,11 @@ export default function AdminDashboard() {
 
   const fetchInquiries = async () => {
     try {
+      console.log('Fetching inquiries from /api/admin/inquiries...');
       const response = await fetch('/api/admin/inquiries');
+      console.log('Inquiries response status:', response.status);
       const data = await response.json();
+      console.log('Inquiries data received:', data);
       setInquiries(data);
     } catch (error) {
       console.error('Failed to fetch inquiries:', error);
@@ -149,12 +171,41 @@ export default function AdminDashboard() {
 
   const fetchBookings = async () => {
     try {
+      console.log('Fetching bookings from /api/bookings...');
       const response = await fetch('/api/bookings');
+      console.log('Bookings response status:', response.status);
       const data = await response.json();
+      console.log('Bookings data received:', data);
       setBookings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch bookings:', error);
       setBookings([]);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch('/api/projects');
+      const data = await response.json();
+      setProjects(Array.isArray(data) ? data : []);
+      setFilteredProjects(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to fetch projects:', error);
+      setProjects([]);
+      setFilteredProjects([]);
+    }
+  };
+
+  const fetchPayments = async () => {
+    try {
+      const response = await fetch('/api/payment-logs');
+      const data = await response.json();
+      setPayments(Array.isArray(data) ? data : []);
+      setFilteredPayments(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to fetch payments:', error);
+      setPayments([]);
+      setFilteredPayments([]);
     }
   };
 
@@ -165,6 +216,91 @@ export default function AdminDashboard() {
       setSiteSettings(data);
     } catch (error) {
       console.error('Failed to fetch settings:', error);
+    }
+  };
+
+  const fetchAdminProfile = async () => {
+    try {
+      const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+      if (adminUser.id) {
+        const response = await fetch(`/api/admin/users/${adminUser.id}`);
+        const data = await response.json();
+        setAdminProfile({
+          username: data.username || '',
+          email: data.email || '',
+          role: data.role || ''
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch admin profile:', error);
+    }
+  };
+
+  const updateAdminProfile = async () => {
+    try {
+      const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+      const response = await fetch(`/api/admin/users/${adminUser.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: adminProfile.username,
+          email: adminProfile.email
+        })
+      });
+      
+      if (response.ok) {
+        alert('Profile updated successfully!');
+        // Update local storage
+        const updatedUser = { ...adminUser, ...adminProfile };
+        localStorage.setItem('admin_user', JSON.stringify(updatedUser));
+      } else {
+        alert('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      alert('Failed to update profile');
+    }
+  };
+
+  const changePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('New passwords do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
+      const response = await fetch(`/api/admin/users/${adminUser.id}/change-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+      
+      if (response.ok) {
+        alert('Password changed successfully!');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to change password');
+      }
+    } catch (error) {
+      console.error('Failed to change password:', error);
+      alert('Failed to change password');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -292,9 +428,12 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+          <TabsList className="grid w-full grid-cols-6 max-w-3xl">
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="projects">Projects</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="inquiries">Inquiries</TabsTrigger>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
@@ -473,6 +612,327 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="projects" className="space-y-6">
+            {/* Project Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Projects</p>
+                      <p className="text-2xl font-bold">{projects.length}</p>
+                    </div>
+                    <Target className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">In Progress</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {projects.filter(p => p.status === 'in-progress').length}
+                      </p>
+                    </div>
+                    <Clock className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Completed</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {projects.filter(p => p.status === 'completed').length}
+                      </p>
+                    </div>
+                    <DollarSign className="w-8 h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">This Month</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {projects.filter(p => 
+                          new Date(p.createdAt).getMonth() === new Date().getMonth()
+                        ).length}
+                      </p>
+                    </div>
+                    <Calendar className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Projects List */}
+            <div className="space-y-4">
+              {filteredProjects.map((project) => (
+                <Card key={project.id}>
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-lg">{project.name}</h3>
+                          <Badge className={project.status === 'completed' ? 'bg-green-100 text-green-800' : 
+                                           project.status === 'in-progress' ? 'bg-blue-100 text-blue-800' : 
+                                           'bg-gray-100 text-gray-800'}>
+                            {project.status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            <span>{project.clientEmail}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            <span>Created: {new Date(project.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          {project.dueDate && (
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              <span>Due: {new Date(project.dueDate).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-3">
+                          <p className="text-sm font-medium text-gray-900">
+                            Progress: {project.progress || 0}%
+                          </p>
+                          {project.budget && (
+                            <p className="text-sm text-gray-600">Budget: ₦{Number(project.budget).toLocaleString()}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="payments" className="space-y-6">
+            {/* Payment Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Payments</p>
+                      <p className="text-2xl font-bold">{payments.length}</p>
+                    </div>
+                    <DollarSign className="w-8 h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Revenue</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        ₦{payments.reduce((sum, p) => sum + Number(p.amount || 0), 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <DollarSign className="w-8 h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">This Month</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {payments.filter(p => 
+                          new Date(p.createdAt).getMonth() === new Date().getMonth()
+                        ).length}
+                      </p>
+                    </div>
+                    <Calendar className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600">Avg Payment</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        ₦{payments.length > 0 ? 
+                          (payments.reduce((sum, p) => sum + Number(p.amount || 0), 0) / payments.length).toLocaleString() : '0'}
+                      </p>
+                    </div>
+                    <DollarSign className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Payments List */}
+            <div className="space-y-4">
+              {filteredPayments.map((payment) => (
+                <Card key={payment.id}>
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-lg">₦{Number(payment.amount).toLocaleString()}</h3>
+                          <Badge className="bg-green-100 text-green-800">
+                            {payment.status}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            <span>{payment.customerEmail}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="w-4 h-4" />
+                            <span>{payment.serviceName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            <span>Paid: {new Date(payment.paidAt || payment.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          {payment.projectDetails?.booking && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-4 h-4" />
+                              <span>{payment.projectDetails.booking.phone || 'No phone'}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-3">
+                          <p className="text-sm font-medium text-gray-900">
+                            Reference: {payment.reference}
+                          </p>
+                          {payment.bookingId && (
+                            <p className="text-sm text-gray-600">Booking ID: #{payment.bookingId}</p>
+                          )}
+                          {payment.projectDetails?.booking && (
+                            <div className="mt-2 p-2 bg-gray-50 rounded">
+                              <p className="text-xs text-gray-600">
+                                <strong>Customer:</strong> {payment.projectDetails.booking.name}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                <strong>Project:</strong> {payment.projectDetails.booking.projectType}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                <strong>Budget:</strong> {payment.projectDetails.booking.budget}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="profile" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Profile Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Profile Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="admin-username">Username</Label>
+                    <Input
+                      id="admin-username"
+                      value={adminProfile.username}
+                      onChange={(e) => setAdminProfile({...adminProfile, username: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="admin-email">Email</Label>
+                    <Input
+                      id="admin-email"
+                      type="email"
+                      value={adminProfile.email}
+                      onChange={(e) => setAdminProfile({...adminProfile, email: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="admin-role">Role</Label>
+                    <Input
+                      id="admin-role"
+                      value={adminProfile.role}
+                      disabled
+                      className="bg-gray-100"
+                    />
+                  </div>
+                  <Button onClick={updateAdminProfile} className="w-full">
+                    Update Profile
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Change Password */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    Change Password
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="current-password">Current Password</Label>
+                    <Input
+                      id="current-password"
+                      type="password"
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                    />
+                  </div>
+                  <Button 
+                    onClick={changePassword} 
+                    disabled={isChangingPassword}
+                    className="w-full"
+                  >
+                    {isChangingPassword ? 'Changing...' : 'Change Password'}
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 

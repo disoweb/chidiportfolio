@@ -105,6 +105,46 @@ export const inquiries = pgTable("inquiries", {
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
 
+// Projects Table for project management
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").references(() => bookings.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).default('planning'), // planning, in-progress, testing, completed, on-hold
+  priority: varchar("priority", { length: 10 }).default('medium'), // low, medium, high
+  progress: integer("progress").default(0), // 0-100
+  startDate: timestamp("start_date"),
+  dueDate: timestamp("due_date"),
+  completedDate: timestamp("completed_date"),
+  assignedTo: text("assigned_to").default('Chidi Ogara'),
+  clientEmail: text("client_email").notNull(),
+  budget: numeric("budget", { precision: 10, scale: 2 }),
+  timeSpent: integer("time_spent").default(0), // in hours
+  estimatedTime: integer("estimated_time"), // in hours
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// Payment Logs Table
+export const paymentLogs = pgTable("payment_logs", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").references(() => bookings.id),
+  projectId: integer("project_id").references(() => projects.id),
+  transactionId: integer("transaction_id").references(() => transactions.id),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default('NGN'),
+  paymentMethod: varchar("payment_method", { length: 50 }).default('paystack'),
+  status: varchar("status", { length: 20 }).notNull(),
+  reference: varchar("reference", { length: 100 }).notNull(),
+  customerEmail: varchar("customer_email", { length: 100 }).notNull(),
+  serviceName: varchar("service_name", { length: 100 }).notNull(),
+  projectDetails: json("project_details"),
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Zod Schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -171,6 +211,32 @@ export const insertInquirySchema = createInsertSchema(inquiries).pick({
   message: true,
 });
 
+export const insertProjectSchema = createInsertSchema(projects).pick({
+  bookingId: true,
+  name: true,
+  description: true,
+  status: true,
+  priority: true,
+  startDate: true,
+  dueDate: true,
+  clientEmail: true,
+  budget: true,
+  estimatedTime: true,
+  notes: true,
+});
+
+export const insertPaymentLogSchema = createInsertSchema(paymentLogs).pick({
+  bookingId: true,
+  projectId: true,
+  transactionId: true,
+  amount: true,
+  status: true,
+  reference: true,
+  customerEmail: true,
+  serviceName: true,
+  projectDetails: true,
+});
+
 // Type Definitions
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -188,6 +254,10 @@ export type SiteSetting = typeof siteSettings.$inferSelect;
 export type InsertSiteSetting = z.infer<typeof insertSiteSettingSchema>;
 export type Inquiry = typeof inquiries.$inferSelect;
 export type InsertInquiry = z.infer<typeof insertInquirySchema>;
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type PaymentLog = typeof paymentLogs.$inferSelect;
+export type InsertPaymentLog = z.infer<typeof insertPaymentLogSchema>;
 
 // Additional Utility Types
 export type BookingWithTransaction = Booking & {

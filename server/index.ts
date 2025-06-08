@@ -11,7 +11,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Run database migrations
+// Run database migrations and seed admin
 async function runMigrations() {
   try {
     const migrationPath = path.join(__dirname, 'migrations', '001_add_admin_tables.sql');
@@ -20,11 +20,80 @@ async function runMigrations() {
       await pool.query(migrationSQL);
       console.log('Database migrations completed successfully');
     } else {
-      // Optional: Log if migration file is not found, could be normal if no migrations yet
       console.log('Migration file not found, skipping migrations:', migrationPath);
     }
+
+    // Also run the project management migration
+    const projectMigrationPath = path.join(__dirname, 'migrations', '002_add_project_management.sql');
+    if (fs.existsSync(projectMigrationPath)) {
+      const projectMigrationSQL = fs.readFileSync(projectMigrationPath, 'utf8');
+      await pool.query(projectMigrationSQL);
+      console.log('Project management migration completed successfully');
+    }
+
+    // Auto-seed admin user
+    await seedAdminUser();
   } catch (error) {
     console.error('Migration error:', error);
+  }
+}
+
+// Function to ensure admin user exists
+async function seedAdminUser() {
+  try {
+    const bcrypt = await import('bcryptjs');
+    
+    // Use a transaction to ensure atomicity
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      // Check if admin user exists
+      const checkAdminQuery = 'SELECT id, username, email FROM admin_users WHERE username = $1';
+      const existingAdmin = await client.query(checkAdminQuery, ['admin']);
+      
+      if (existingAdmin.rows.length === 0) {
+        // Create admin user
+        const hashedPassword = await bcrypt.default.hash('admin123', 12);
+        const insertAdminQuery = `
+          INSERT INTO admin_users (username, email, password, role, is_active, created_at, updated_at)
+          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+          RETURNING id, username, email
+        `;
+        
+        const newAdmin = await client.query(insertAdminQuery, [
+          'admin',
+          'admin@chidiogara.dev',
+          hashedPassword,
+          'admin',
+          true
+        ]);
+        
+        await client.query('COMMIT');
+        console.log('Admin user created successfully:', newAdmin.rows[0]);
+      } else {
+        // Update existing admin password to ensure it's correct
+        const hashedPassword = await bcrypt.default.hash('admin123', 12);
+        const updateAdminQuery = `
+          UPDATE admin_users 
+          SET password = $1, is_active = $2, updated_at = NOW()
+          WHERE username = $3
+          RETURNING id, username, email
+        `;
+        
+        const updatedAdmin = await client.query(updateAdminQuery, [hashedPassword, true, 'admin']);
+        await client.query('COMMIT');
+        console.log('Admin user password updated successfully:', updatedAdmin.rows[0]);
+      }
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Admin seeding error:', error);
   }
 }
 
@@ -34,7 +103,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
   const start = Date.now();
-  const reqPath = req.path; // Renamed to avoid conflict with 'path' module if used in broader scope
+  const reqPath = req.path; 
   let capturedJsonResponse: Record<string, any> | undefined = undefined;
 
   const originalResJson = res.json;
@@ -71,7 +140,7 @@ app.use((req, res, next) => {
 (async () => {
 
   await runMigrations();
-  
+
   const server = await registerRoutes(app); // Assuming registerRoutes returns the http.Server instance
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

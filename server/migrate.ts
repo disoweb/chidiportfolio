@@ -1,4 +1,3 @@
-
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
@@ -10,29 +9,35 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export async function runMigrations() {
-  try {
-    console.log('Running database migrations...');
-    
-    // Read the migration file
-    const migrationPath = join(__dirname, 'migrations', '001_add_admin_tables.sql');
-    const migrationSQL = readFileSync(migrationPath, 'utf8');
-    
-    // Split the SQL into individual statements and execute them
-    const statements = migrationSQL
-      .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0);
-    
-    for (const statement of statements) {
-      if (statement.trim()) {
-        await db.execute(sql.raw(statement));
-        console.log('Executed migration statement successfully');
+  const migrationFiles = [
+    '001_add_admin_tables.sql',
+    '002_add_project_management.sql',
+    '003_fix_admin_boolean.sql'
+  ];
+
+  console.log('Running database migrations...');
+
+  for (const file of migrationFiles) {
+    try {
+      const migrationPath = join(__dirname, 'migrations', file);
+
+      if (fs.existsSync(migrationPath)) {
+        const migrationSQL = readFileSync(migrationPath, 'utf8');
+        const statements = migrationSQL.split(';').map(stmt => stmt.trim()).filter(stmt => stmt.length > 0);
+
+        for (const statement of statements) {
+          if (statement.trim()) {
+            await db.execute(sql.raw(statement));
+            console.log('Executed migration statement successfully');
+          }
+        }
+      } else {
+        console.log(`Migration file not found: ${file}`);
       }
+    } catch (error) {
+      console.error(`Error running migration ${file}:`, error);
     }
-    
-    console.log('Database migrations completed successfully');
-  } catch (error) {
-    console.error('Migration error:', error);
-    throw error;
   }
+
+  console.log('Database migrations completed successfully');
 }

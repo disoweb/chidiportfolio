@@ -14,6 +14,7 @@ export function Booking() {
   const { elementRef, isIntersecting } = useIntersectionObserver();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [formData, setFormData] = useState<BookingForm>({
     name: '',
     email: '',
@@ -141,33 +142,7 @@ export function Booking() {
           </p>
         </div>
 
-        {submissionStatus === 'success' && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <div>
-                <p className="font-semibold">Booking Request Submitted Successfully!</p>
-                <p>We'll get back to you within 24 hours to schedule our consultation.</p>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {submissionStatus === 'error' && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-              <div>
-                <p className="font-semibold">Submission Failed</p>
-                <p>Please check your connection and try again. If the problem persists, contact us directly.</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Mobile Form - Shows immediately after heading */}
         <div className="lg:hidden mb-12">
@@ -334,6 +309,33 @@ export function Booking() {
                 )}
               </Button>
             </form>
+
+            {/* Success/Error Messages - Mobile */}
+            {submissionStatus === 'success' && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4">
+                <div className="flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  <div>
+                    <p className="font-semibold">Booking Request Submitted Successfully!</p>
+                    <p>We'll get back to you within 24 hours to schedule our consultation.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {submissionStatus === 'error' && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="font-semibold">Submission Failed</p>
+                    <p>Please check your connection and try again. If the problem persists, contact us directly.</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -555,6 +557,33 @@ export function Booking() {
                 )}
               </Button>
             </form>
+
+            {/* Success/Error Messages - Desktop */}
+            {submissionStatus === 'success' && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4">
+                <div className="flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  <div>
+                    <p className="font-semibold">Booking Request Submitted Successfully!</p>
+                    <p>We'll get back to you within 24 hours to schedule our consultation.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {submissionStatus === 'error' && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="font-semibold">Submission Failed</p>
+                    <p>Please check your connection and try again. If the problem persists, contact us directly.</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

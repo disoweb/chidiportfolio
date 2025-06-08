@@ -1,13 +1,15 @@
 import { db } from "./db";
 import { 
-  contacts, bookings, transactions, orders, adminUsers, siteSettings, inquiries,
+  contacts, bookings, transactions, orders, adminUsers, siteSettings, inquiries, projects, paymentLogs,
   type Contact, type InsertContact,
   type Booking, type InsertBooking,
   type Transaction, type InsertTransaction,
   type Order, type InsertOrder,
   type AdminUser, type InsertAdminUser,
   type SiteSetting, type InsertSiteSetting,
-  type Inquiry, type InsertInquiry
+  type Inquiry, type InsertInquiry,
+  type Project, type InsertProject,
+  type PaymentLog, type InsertPaymentLog
 } from "@shared/schema";
 import { eq, desc, and, like, or } from "drizzle-orm";
 import bcrypt from 'bcryptjs';
@@ -52,24 +54,27 @@ class DatabaseStorage {
   }
 
   // Booking methods
-  async createBooking(data: InsertBooking): Promise<Booking> {
-    try {
-      console.log('Creating booking with data:', data);
-      const [booking] = await db.insert(bookings).values(data).returning();
-      console.log('Booking created successfully:', booking);
-      return booking;
-    } catch (error) {
-      console.error('Error creating booking:', error);
-      throw error;
-    }
+  async createBooking(insertBooking: InsertBooking): Promise<Booking> {
+    console.log('Creating booking with data:', insertBooking);
+    const [booking] = await db
+      .insert(bookings)
+      .values(insertBooking)
+      .returning();
+
+    console.log('Created booking:', booking);
+    return booking;
   }
 
   async getAllBookings(): Promise<Booking[]> {
-    const bookingList = await db
-      .select()
-      .from(bookings)
-      .orderBy(desc(bookings.createdAt));
-    return bookingList;
+    try {
+      console.log('Executing getAllBookings query...');
+      const result = await db.select().from(bookings).orderBy(desc(bookings.createdAt));
+      console.log('getAllBookings result:', result.length, 'bookings found');
+      return result;
+    } catch (error) {
+      console.error('Get all bookings error:', error);
+      return [];
+    }
   }
 
   async getBookingById(id: number): Promise<Booking | undefined> {
@@ -87,12 +92,23 @@ class DatabaseStorage {
 
   async updateBooking(id: number, data: Partial<Booking>): Promise<Booking | null> {
     try {
+      // Remove timestamps and convert any string dates to Date objects
+      const { updatedAt, createdAt, ...cleanData } = data;
+
+      // Ensure all data is properly typed
+      const updateData: any = {};
+      for (const [key, value] of Object.entries(cleanData)) {
+        if (value !== undefined && value !== null) {
+          updateData[key] = value;
+        }
+      }
+
+      // Always update the updatedAt timestamp
+      updateData.updatedAt = new Date();
+
       const [updatedBooking] = await db
         .update(bookings)
-        .set({
-          ...data,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(bookings.id, id))
         .returning();
 
@@ -151,16 +167,27 @@ class DatabaseStorage {
   }
 
   // Admin user methods
-  async createAdminUser(insertAdminUser: InsertAdminUser): Promise<AdminUser> {
-    const hashedPassword = await bcrypt.hash(insertAdminUser.password, 10);
-    const [adminUser] = await db
-      .insert(adminUsers)
-      .values({
-        ...insertAdminUser,
-        password: hashedPassword
-      })
-      .returning();
-    return adminUser;
+  async createAdminUser(data: InsertAdminUser): Promise<AdminUser> {
+    try {
+      const hashedPassword = await bcrypt.hash(data.password, 12);
+
+      const [newAdmin] = await db
+        .insert(adminUsers)
+        .values({
+          ...data,
+          password: hashedPassword,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+
+      console.log('Admin user created in database:', { id: newAdmin.id, username: newAdmin.username });
+      return newAdmin;
+    } catch (error) {
+      console.error('Error creating admin user:', error);
+      throw error;
+    }
   }
 
   async getAdminByUsername(username: string): Promise<AdminUser | undefined> {
@@ -325,11 +352,15 @@ class DatabaseStorage {
   }
 
   async getAllInquiries(): Promise<Inquiry[]> {
-    const inquiriesList = await db
-      .select()
-      .from(inquiries)
-      .orderBy(desc(inquiries.createdAt));
-    return inquiriesList;
+    try {
+      console.log('Executing getAllInquiries query...');
+      const result = await db.select().from(inquiries).orderBy(desc(inquiries.createdAt));
+      console.log('getAllInquiries result:', result.length, 'inquiries found');
+      return result;
+    } catch (error) {
+      console.error('Get all inquiries error:', error);
+      return [];
+    }
   }
 
   async getInquiryById(id: number): Promise<Inquiry | undefined> {
@@ -487,6 +518,118 @@ class DatabaseStorage {
     } catch (error) {
       console.error('Update order error:', error);
       return null;
+    }
+  }
+
+  // Project methods
+  async createProject(insertProject: InsertProject): Promise<Project> {
+    const [project] = await db
+      .insert(projects)
+      .values(insertProject)
+      .returning();
+    return project;
+  }
+
+  async getAllProjects(): Promise<Project[]> {
+    try {
+      const result = await db.select().from(projects).orderBy(desc(projects.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Get all projects error:', error);
+      return [];
+    }
+  }
+
+  async getProjectById(id: number): Promise<Project | undefined> {
+    try {
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, id));
+      return project;
+    } catch (error) {
+      console.error('Get project by ID error:', error);
+      return undefined;
+    }
+  }
+
+  async getProjectByBookingId(bookingId: number): Promise<Project | undefined> {
+    try {
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.bookingId, bookingId));
+      return project;
+    } catch (error) {
+      console.error('Get project by booking ID error:', error);
+      return undefined;
+    }
+  }
+
+  async updateProject(id: number, data: Partial<Project>): Promise<Project | null> {
+    try {
+      const { updatedAt, ...cleanData } = data;
+
+      const [updatedProject] = await db
+        .update(projects)
+        .set({
+          ...cleanData,
+          updatedAt: new Date()
+        })
+        .where(eq(projects.id, id))
+        .returning();
+
+      return updatedProject || null;
+    } catch (error) {
+      console.error('Update project error:', error);
+      return null;
+    }
+  }
+
+  async deleteProject(id: number): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(projects)
+        .where(eq(projects.id, id))
+        .returning();
+
+      return result.length > 0;
+    } catch (error) {
+      console.error('Delete project error:', error);
+      return false;
+    }
+  }
+
+  // Payment log methods
+  async createPaymentLog(insertPaymentLog: InsertPaymentLog): Promise<PaymentLog> {
+    const [paymentLog] = await db
+      .insert(paymentLogs)
+      .values(insertPaymentLog)
+      .returning();
+    return paymentLog;
+  }
+
+  async getAllPaymentLogs(): Promise<PaymentLog[]> {
+    try {
+      const result = await db.select().from(paymentLogs).orderBy(desc(paymentLogs.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Get all payment logs error:', error);
+      return [];
+    }
+  }
+
+  async getPaymentLogsByBookingId(bookingId: number): Promise<PaymentLog[]> {
+    try {
+      const result = await db
+        .select()
+        .from(paymentLogs)
+        .where(eq(paymentLogs.bookingId, bookingId))
+        .orderBy(desc(paymentLogs.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Get payment logs by booking ID error:', error);
+      return [];
     }
   }
 

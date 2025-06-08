@@ -7,6 +7,7 @@ import { useSiteSettings } from '@/hooks/use-site-settings';
 import Home from '@/pages/home';
 import AdminDashboard from '@/pages/admin';
 import AdminLogin from '@/pages/admin-login';
+import CreateAdmin from "./pages/create-admin";
 import NotFound from '@/pages/not-found';
 import CaseStudy from '@/pages/case-study';
 import ProjectDetails from '@/pages/project-details';
@@ -49,8 +50,9 @@ function App() {
         <div className="min-h-screen bg-background text-foreground">
           <Switch>
             <Route path="/" component={Home} />
-            <Route path="/admin/login" component={AdminLogin} />
             <Route path="/admin" component={AdminDashboard} />
+            <Route path="/admin/login" component={AdminLogin} />
+            <Route path="/create-admin" component={CreateAdmin} />
             <Route path="/project/:id" component={ProjectDetails} />
             <Route path="/case-study/:id" component={CaseStudy} />
             <Route path="/payment/callback" component={PaymentCallback} />
@@ -62,5 +64,4 @@ function App() {
     </ThemeProvider>
   );
 }
-
 export default App;
