@@ -146,7 +146,7 @@ export function Services() {
     <section
       ref={elementRef}
       id="services"
-      className={`py-5 bg-white transition-all duration-1000 ${isIntersecting ? 'animate-fade-in' : 'opacity-0'}`}
+      className={`py-16 bg-white transition-all duration-1000 ${isIntersecting ? 'animate-fade-in' : 'opacity-0'}`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header Section */}
