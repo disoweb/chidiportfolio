@@ -59,9 +59,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertBookingSchema.parse(req.body);
       console.log('Validated booking data:', validatedData);
 
-      // Store booking submission
-      const booking = await storage.createBooking(validatedData);
+      // Store booking submission with default payment status
+      const bookingDataWithDefaults = {
+        ...validatedData,
+        paymentStatus: 'pending' // Ensure payment status is set
+      };
+
+      const booking = await storage.createBooking(bookingDataWithDefaults);
       console.log('Created booking:', booking);
+
+      // Verify booking was created by fetching it back
+      const verifyBooking = await storage.getBookingById(booking.id);
+      console.log('Verified booking exists:', verifyBooking);
 
       // Create a project record for this booking
       const project = await storage.createProject({
@@ -92,6 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else {
         console.error('Booking error details:', error);
+        console.error('Full error stack:', error.stack);
         res.status(500).json({ 
           error: 'Internal server error',
           details: error.message
@@ -248,11 +258,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('Retrieved bookings count:', bookings.length);
+      console.log('Sample booking data:', bookings.length > 0 ? JSON.stringify(bookings[0], null, 2) : 'No bookings found');
       res.json(bookings);
     } catch (error) {
       console.error('Get bookings error:', error);
+      console.error('Full error details:', error);
       res.status(500).json({ 
-        error: 'Internal server error' 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });

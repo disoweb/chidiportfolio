@@ -70,9 +70,18 @@ class DatabaseStorage {
       console.log('Executing getAllBookings query...');
       const result = await db.select().from(bookings).orderBy(desc(bookings.createdAt));
       console.log('getAllBookings result:', result.length, 'bookings found');
+      console.log('Sample booking data:', result.length > 0 ? result[0] : 'No bookings');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Get all bookings error:', error);
+      console.error('Error details:', error.message, error.code);
+      
+      // If table doesn't exist, return empty array
+      if (error.code === '42P01') {
+        console.log('Bookings table does not exist yet');
+        return [];
+      }
+      
       return [];
     }
   }
@@ -256,6 +265,66 @@ class DatabaseStorage {
         .where(eq(adminUsers.id, id));
     } catch (error) {
       console.error('Update last login error:', error);
+    }
+  }
+
+  async getAdminUserById(id: number): Promise<AdminUser | undefined> {
+    try {
+      const [user] = await db
+        .select()
+        .from(adminUsers)
+        .where(eq(adminUsers.id, id));
+      return user;
+    } catch (error) {
+      console.error('Get admin user by ID error:', error);
+      return undefined;
+    }
+  }
+
+  async getProjectsByClientEmail(clientEmail: string): Promise<Project[]> {
+    try {
+      const result = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.clientEmail, clientEmail))
+        .orderBy(desc(projects.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Get projects by client email error:', error);
+      return [];
+    }
+  }
+
+  async getProjectUpdates(projectId: number): Promise<any[]> {
+    try {
+      // Return empty array for now as we don't have projectUpdates table implemented
+      console.log('Getting project updates for project:', projectId);
+      return [];
+    } catch (error) {
+      console.error('Get project updates error:', error);
+      return [];
+    }
+  }
+
+  async getProjectMessages(projectId: number): Promise<any[]> {
+    try {
+      // Return empty array for now as we don't have messages table implemented  
+      console.log('Getting project messages for project:', projectId);
+      return [];
+    } catch (error) {
+      console.error('Get project messages error:', error);
+      return [];
+    }
+  }
+
+  async createMessage(messageData: any): Promise<any> {
+    try {
+      // Return mock message for now as we don't have messages table implemented
+      console.log('Creating message:', messageData);
+      return { id: 1, ...messageData, createdAt: new Date() };
+    } catch (error) {
+      console.error('Create message error:', error);
+      throw error;
     }
   }
 
