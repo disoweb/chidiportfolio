@@ -210,6 +210,24 @@ export default function ClientDashboard() {
     );
   }
 
+  if (projectsError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Error</CardTitle>
+            <CardDescription>Failed to load your projects. Please try again.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => window.location.reload()} className="w-full">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
