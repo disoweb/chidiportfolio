@@ -125,7 +125,7 @@ export const projects = pgTable("projects", {
   completedDate: timestamp("completed_date"),
   assignedTo: text("assigned_to").default('Chidi Ogara'),
   clientEmail: text("client_email").notNull(),
-  budget: numeric("budget", { precision: 10, scale: 2 }),
+  budget: text("budget"),
   timeSpent: integer("time_spent").default(0), // in hours
   estimatedTime: integer("estimated_time"), // in hours
   notes: text("notes"),
