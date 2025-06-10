@@ -176,9 +176,7 @@ class DatabaseStorage {
         .values({
           ...data,
           password: hashedPassword,
-          isActive: true,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          isActive: 'true'
         })
         .returning();
 

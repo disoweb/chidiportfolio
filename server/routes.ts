@@ -1,12 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertBookingSchema, insertInquirySchema } from "@shared/schema";
+import { insertContactSchema, insertBookingSchema, insertInquirySchema, projects, projectUpdates, messages, bookings } from "@shared/schema";
 import { z } from "zod";
 import { Request, Response } from 'express';
 import axios from 'axios';
 import bcrypt from 'bcryptjs';
-import { runMigrations } from "./migrate"; // Ensure migrate.ts exists and exports runMigrations
+import { runMigrations } from "./migrate";
+import { db } from "./db";
+import { eq, desc, and } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Run database migrations first
@@ -47,6 +49,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) { // This catch block doesn't access error properties, so 'unknown' is fine
       console.error('Chat error:', error);
       res.status(500).json({ error: 'Failed to process chat message' });
+    }
+  });
+
+  // Booking form submission endpoint
+  app.post('/api/booking', async (req, res) => {
+    try {
+      // Validate request body
+      const validatedData = insertBookingSchema.parse(req.body);
+
+      // Store booking submission
+      const booking = await storage.createBooking(validatedData);
+
+      // Create a project record for this booking
+      const project = await storage.createProject({
+        bookingId: booking.id,
+        name: `${validatedData.service} - ${validatedData.name}`,
+        description: validatedData.message || `${validatedData.service} project for ${validatedData.name}`,
+        status: 'planning',
+        priority: 'medium',
+        clientEmail: validatedData.email,
+        budget: validatedData.budget,
+        estimatedTime: 40, // Default 40 hours
+        notes: `Project type: ${validatedData.projectType}, Timeline: ${validatedData.timeline}`
+      });
+
+      res.json({ 
+        success: true, 
+        message: 'Booking submitted successfully',
+        bookingId: booking.id,
+        projectId: project.id
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          error: 'Validation error', 
+          details: error.errors 
+        });
+      } else {
+        console.error('Booking form error:', error);
+        res.status(500).json({ 
+          error: 'Internal server error' 
+        });
+      }
     }
   });
 
@@ -897,9 +942,179 @@ User question: ${message}`;
     }
   });
 
+  // Client dashboard - get projects for a client
+  app.get('/api/client/projects/:email', async (req: Request, res: Response) => {
+    try {
+      const { email } = req.params;
+      const clientProjects = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.clientEmail, email))
+        .orderBy(desc(projects.createdAt));
+      
+      res.json(clientProjects);
+    } catch (error) {
+      console.error('Get client projects error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get project updates for a specific project
+  app.get('/api/projects/:id/updates', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const updates = await db
+        .select()
+        .from(projectUpdates)
+        .where(and(
+          eq(projectUpdates.projectId, parseInt(id)),
+          eq(projectUpdates.isVisibleToClient, true)
+        ))
+        .orderBy(desc(projectUpdates.createdAt));
+      
+      res.json(updates);
+    } catch (error) {
+      console.error('Get project updates error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Admin - add project update
+  app.post('/api/admin/projects/:id/updates', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { title, description, updateType, isVisibleToClient = true } = req.body;
+      
+      const [update] = await db
+        .insert(projectUpdates)
+        .values({
+          projectId: parseInt(id),
+          updatedBy: 1,
+          updateType,
+          title,
+          description,
+          isVisibleToClient
+        })
+        .returning();
+
+      res.json(update);
+    } catch (error) {
+      console.error('Add project update error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Admin - update project status and progress
+  app.patch('/api/admin/projects/:id', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { status, progress, notes } = req.body;
+      
+      const [updatedProject] = await db
+        .update(projects)
+        .set({ 
+          status, 
+          progress: parseInt(progress || 0),
+          notes
+        })
+        .where(eq(projects.id, parseInt(id)))
+        .returning();
+
+      if (status || progress) {
+        await db
+          .insert(projectUpdates)
+          .values({
+            projectId: parseInt(id),
+            updatedBy: 1,
+            updateType: 'status_change',
+            title: `Project ${status ? 'status' : 'progress'} updated`,
+            description: status ? `Status changed to ${status}` : `Progress updated to ${progress}%`,
+            newValue: status || progress.toString(),
+            isVisibleToClient: true
+          });
+      }
+
+      res.json(updatedProject);
+    } catch (error) {
+      console.error('Update project error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get messages for a project
+  app.get('/api/projects/:id/messages', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const projectMessages = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.projectId, parseInt(id)))
+        .orderBy(desc(messages.createdAt));
+      
+      res.json(projectMessages);
+    } catch (error) {
+      console.error('Get project messages error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Send message
+  app.post('/api/projects/:id/messages', async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { senderId, senderType, recipientId, recipientType, subject, message } = req.body;
+      
+      const [newMessage] = await db
+        .insert(messages)
+        .values({
+          projectId: parseInt(id),
+          senderId,
+          senderType,
+          recipientId,
+          recipientType,
+          subject,
+          message
+        })
+        .returning();
+
+      res.json(newMessage);
+    } catch (error) {
+      console.error('Send message error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get all bookings with projects (admin view)
+  app.get('/api/admin/bookings-with-projects', async (req: Request, res: Response) => {
+    try {
+      const bookingsWithProjects = await db
+        .select({
+          bookingId: bookings.id,
+          bookingName: bookings.name,
+          bookingEmail: bookings.email,
+          bookingService: bookings.service,
+          bookingStatus: bookings.paymentStatus,
+          bookingCreatedAt: bookings.createdAt,
+          projectId: projects.id,
+          projectName: projects.name,
+          projectStatus: projects.status,
+          projectProgress: projects.progress,
+          projectDueDate: projects.dueDate
+        })
+        .from(bookings)
+        .leftJoin(projects, eq(bookings.id, projects.bookingId))
+        .orderBy(desc(bookings.createdAt));
+      
+      res.json(bookingsWithProjects);
+    } catch (error) {
+      console.error('Get bookings with projects error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Paystack webhook endpoint
   app.post('/api/paystack/webhook', async (req: Request, res: Response) => {
-    const { handleWebhook } = await import('./api/paystack/webhook'); // Ensure this path is correct
+    const { handleWebhook } = await import('./api/paystack/webhook');
     return handleWebhook(req, res);
   });
 
