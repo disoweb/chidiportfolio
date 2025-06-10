@@ -1,5 +1,7 @@
 import { Route, Switch } from 'wouter';
 import { useEffect } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from '@/lib/queryClient';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/ui/theme-provider';
@@ -46,24 +48,26 @@ function App() {
   }, [settings]);
 
   return (
-    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-      <TooltipProvider>
-        <div className="min-h-screen bg-background text-foreground">
-          <Switch>
-            <Route path="/" component={Home} />
-            <Route path="/admin" component={AdminDashboard} />
-            <Route path="/admin/login" component={AdminLogin} />
-            <Route path="/create-admin" component={CreateAdmin} />
-            <Route path="/client-dashboard" component={ClientDashboard} />
-            <Route path="/project/:id" component={ProjectDetails} />
-            <Route path="/case-study/:id" component={CaseStudy} />
-            <Route path="/payment/callback" component={PaymentCallback} />
-            <Route component={NotFound} />
-          </Switch>
-        </div>
-        <Toaster />
-      </TooltipProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <div className="min-h-screen bg-background text-foreground">
+            <Switch>
+              <Route path="/" component={Home} />
+              <Route path="/admin" component={AdminDashboard} />
+              <Route path="/admin/login" component={AdminLogin} />
+              <Route path="/create-admin" component={CreateAdmin} />
+              <Route path="/client-dashboard" component={ClientDashboard} />
+              <Route path="/project/:id" component={ProjectDetails} />
+              <Route path="/case-study/:id" component={CaseStudy} />
+              <Route path="/payment/callback" component={PaymentCallback} />
+              <Route component={NotFound} />
+            </Switch>
+          </div>
+          <Toaster />
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 export default App;

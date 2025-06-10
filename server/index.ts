@@ -49,43 +49,131 @@ async function seedAdminUser() {
     try {
       await client.query('BEGIN');
       
-      // Check if admin user exists
-      const checkAdminQuery = 'SELECT id, username, email FROM admin_users WHERE username = $1';
-      const existingAdmin = await client.query(checkAdminQuery, ['admin']);
-      
-      if (existingAdmin.rows.length === 0) {
-        // Create admin user
-        const hashedPassword = await bcrypt.default.hash('admin123', 12);
-        const insertAdminQuery = `
-          INSERT INTO admin_users (username, email, password, role, is_active, created_at, updated_at)
-          VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
-          RETURNING id, username, email
-        `;
+      // Admin accounts to create
+      const adminAccounts = [
+        {
+          username: 'admin',
+          email: 'admin@chidiogara.dev',
+          password: 'AdminPass123!',
+          role: 'admin',
+          firstName: 'Admin',
+          lastName: 'User'
+        },
+        {
+          username: 'manager',
+          email: 'manager@chidiogara.dev',
+          password: 'ManagerPass123!',
+          role: 'manager',
+          firstName: 'Project',
+          lastName: 'Manager'
+        }
+      ];
+
+      // Regular user accounts to create
+      const userAccounts = [
+        {
+          username: 'client1',
+          email: 'client1@example.com',
+          password: 'Client123!',
+          firstName: 'John',
+          lastName: 'Smith'
+        },
+        {
+          username: 'client2',
+          email: 'client2@example.com',
+          password: 'Client456!',
+          firstName: 'Jane',
+          lastName: 'Doe'
+        }
+      ];
+
+      // Create admin accounts
+      for (const admin of adminAccounts) {
+        const checkAdminQuery = 'SELECT id, username, email FROM admin_users WHERE username = $1';
+        const existingAdmin = await client.query(checkAdminQuery, [admin.username]);
         
-        const newAdmin = await client.query(insertAdminQuery, [
-          'admin',
-          'admin@chidiogara.dev',
-          hashedPassword,
-          'admin',
-          true
-        ]);
-        
-        await client.query('COMMIT');
-        console.log('Admin user created successfully:', newAdmin.rows[0]);
-      } else {
-        // Update existing admin password to ensure it's correct
-        const hashedPassword = await bcrypt.default.hash('admin123', 12);
-        const updateAdminQuery = `
-          UPDATE admin_users 
-          SET password = $1, is_active = $2, updated_at = NOW()
-          WHERE username = $3
-          RETURNING id, username, email
-        `;
-        
-        const updatedAdmin = await client.query(updateAdminQuery, [hashedPassword, true, 'admin']);
-        await client.query('COMMIT');
-        console.log('Admin user password updated successfully:', updatedAdmin.rows[0]);
+        if (existingAdmin.rows.length === 0) {
+          const hashedPassword = await bcrypt.default.hash(admin.password, 12);
+          const insertAdminQuery = `
+            INSERT INTO admin_users (username, email, password, role, first_name, last_name, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+            RETURNING id, username, email, role
+          `;
+          
+          const newAdmin = await client.query(insertAdminQuery, [
+            admin.username,
+            admin.email,
+            hashedPassword,
+            admin.role,
+            admin.firstName,
+            admin.lastName,
+            true
+          ]);
+          
+          console.log(`Admin account created: ${admin.username} (${admin.email}) - Password: ${admin.password}`);
+        } else {
+          // Update existing admin password
+          const hashedPassword = await bcrypt.default.hash(admin.password, 12);
+          const updateAdminQuery = `
+            UPDATE admin_users 
+            SET password = $1, is_active = $2, updated_at = NOW()
+            WHERE username = $3
+            RETURNING id, username, email, role
+          `;
+          
+          await client.query(updateAdminQuery, [hashedPassword, true, admin.username]);
+          console.log(`Admin account updated: ${admin.username} (${admin.email}) - Password: ${admin.password}`);
+        }
       }
+
+      // Create regular user accounts
+      for (const user of userAccounts) {
+        const checkUserQuery = 'SELECT id, username, email FROM users WHERE username = $1';
+        const existingUser = await client.query(checkUserQuery, [user.username]);
+        
+        if (existingUser.rows.length === 0) {
+          const hashedPassword = await bcrypt.default.hash(user.password, 12);
+          const insertUserQuery = `
+            INSERT INTO users (username, email, password, first_name, last_name, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+            RETURNING id, username, email
+          `;
+          
+          const newUser = await client.query(insertUserQuery, [
+            user.username,
+            user.email,
+            hashedPassword,
+            user.firstName,
+            user.lastName,
+            true
+          ]);
+          
+          console.log(`User account created: ${user.username} (${user.email}) - Password: ${user.password}`);
+        } else {
+          // Update existing user password
+          const hashedPassword = await bcrypt.default.hash(user.password, 12);
+          const updateUserQuery = `
+            UPDATE users 
+            SET password = $1, is_active = $2, updated_at = NOW()
+            WHERE username = $3
+            RETURNING id, username, email
+          `;
+          
+          await client.query(updateUserQuery, [hashedPassword, true, user.username]);
+          console.log(`User account updated: ${user.username} (${user.email}) - Password: ${user.password}`);
+        }
+      }
+      
+      await client.query('COMMIT');
+      console.log('\n=== ACCOUNT SUMMARY ===');
+      console.log('ADMIN ACCOUNTS:');
+      console.log('1. Username: admin, Email: admin@chidiogara.dev, Password: AdminPass123!');
+      console.log('2. Username: manager, Email: manager@chidiogara.dev, Password: ManagerPass123!');
+      console.log('\nUSER ACCOUNTS:');
+      console.log('1. Username: client1, Email: client1@example.com, Password: Client123!');
+      console.log('2. Username: client2, Email: client2@example.com, Password: Client456!');
+      console.log('========================\n');
+      
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -93,7 +181,7 @@ async function seedAdminUser() {
       client.release();
     }
   } catch (error) {
-    console.error('Admin seeding error:', error);
+    console.error('Error seeding accounts:', error);
   }
 }
 

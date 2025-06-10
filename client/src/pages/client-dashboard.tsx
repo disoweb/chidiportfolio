@@ -61,19 +61,28 @@ export default function ClientDashboard() {
 
   const { data: projects = [], isLoading: loadingProjects } = useQuery({
     queryKey: ['/api/client/projects', clientEmail],
-    queryFn: () => apiRequest('GET', `/api/client/projects/${encodeURIComponent(clientEmail)}`),
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/client/projects/${encodeURIComponent(clientEmail)}`);
+      return response.json();
+    },
     enabled: !!clientEmail,
   });
 
   const { data: projectUpdates = [] } = useQuery({
     queryKey: ['/api/projects/updates', selectedProject?.id],
-    queryFn: () => apiRequest('GET', `/api/projects/${selectedProject?.id}/updates`),
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/projects/${selectedProject?.id}/updates`);
+      return response.json();
+    },
     enabled: !!selectedProject?.id,
   });
 
   const { data: messages = [] } = useQuery({
     queryKey: ['/api/projects/messages', selectedProject?.id],
-    queryFn: () => apiRequest('GET', `/api/projects/${selectedProject?.id}/messages`),
+    queryFn: async () => {
+      const response = await apiRequest('GET', `/api/projects/${selectedProject?.id}/messages`);
+      return response.json();
+    },
     enabled: !!selectedProject?.id,
   });
 
