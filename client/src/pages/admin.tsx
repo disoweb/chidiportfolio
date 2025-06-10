@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,6 +17,7 @@ import {
   CheckCircle, AlertCircle, Timer, Briefcase
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { toast } from "@/components/ui/use-toast"
 
 interface Inquiry {
   id: string;
@@ -86,6 +86,15 @@ interface SiteSettings {
   };
 }
 
+interface Message {
+  id: number;
+  subject: string;
+  message: string;
+  recipientEmail: string;
+  projectName: string;
+  createdAt: string;
+}
+
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
@@ -136,6 +145,8 @@ export default function AdminDashboard() {
   });
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [messageData, setMessageData] = useState({ subject: '', message: '' });
+  const [recentMessages, setRecentMessages] = useState<Message[]>([]);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -144,7 +155,7 @@ export default function AdminDashboard() {
       return;
     }
     setIsAuthenticated(true);
-    
+
     fetchInquiries();
     fetchBookings();
     fetchProjects();
@@ -152,11 +163,12 @@ export default function AdminDashboard() {
     fetchSiteSettings();
     fetchAdminProfile();
     fetchTeamMembers();
+    fetchRecentMessages();
   }, [setLocation]);
 
   useEffect(() => {
     let filtered = inquiries;
-    
+
     if (searchTerm) {
       filtered = filtered.filter(inquiry =>
         inquiry.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,17 +176,17 @@ export default function AdminDashboard() {
         inquiry.service.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     if (statusFilter !== 'all') {
       filtered = filtered.filter(inquiry => inquiry.status === statusFilter);
     }
-    
+
     setFilteredInquiries(filtered);
   }, [inquiries, searchTerm, statusFilter]);
 
   useEffect(() => {
     let filtered = bookings;
-    
+
     if (bookingSearchTerm) {
       filtered = filtered.filter(booking =>
         booking.name.toLowerCase().includes(bookingSearchTerm.toLowerCase()) ||
@@ -183,11 +195,11 @@ export default function AdminDashboard() {
         booking.projectType.toLowerCase().includes(bookingSearchTerm.toLowerCase())
       );
     }
-    
+
     if (paymentStatusFilter !== 'all') {
       filtered = filtered.filter(booking => booking.paymentStatus === paymentStatusFilter);
     }
-    
+
     setFilteredBookings(filtered);
   }, [bookings, bookingSearchTerm, paymentStatusFilter]);
 
@@ -283,7 +295,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
-      
+
       if (response.ok) {
         setInquiries(inquiries.map(inquiry =>
           inquiry.id === id ? { ...inquiry, status } : inquiry
@@ -301,7 +313,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData)
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         setBookings(bookings.map(booking =>
@@ -320,7 +332,7 @@ export default function AdminDashboard() {
       const response = await fetch(`/api/bookings/${id}`, {
         method: 'DELETE'
       });
-      
+
       if (response.ok) {
         setBookings(bookings.filter(booking => booking.id !== id));
       }
@@ -336,7 +348,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(projectFormData)
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         setProjects([...projects, result.project]);
@@ -355,7 +367,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData)
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         setProjects(projects.map(project =>
@@ -377,7 +389,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(teamFormData)
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         setTeamMembers([...teamMembers, result.user]);
@@ -394,7 +406,7 @@ export default function AdminDashboard() {
       const response = await fetch(`/api/admin/users/${id}`, {
         method: 'DELETE'
       });
-      
+
       if (response.ok) {
         setTeamMembers(teamMembers.filter(member => member.id !== id));
       }
@@ -410,7 +422,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(siteSettings)
       });
-      
+
       if (response.ok) {
         alert('Settings saved successfully!');
       }
@@ -467,6 +479,107 @@ export default function AdminDashboard() {
       </CardContent>
     </Card>
   );
+
+  const handlePasswordChange = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New passwords don't match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const response = await fetch(`/api/admin/users/${adminProfile.id}/change-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Password changed successfully",
+        });
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.error || "Failed to change password",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to change password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedProject || !messageData.subject || !messageData.message) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: selectedProject.id,
+          clientEmail: selectedProject.clientEmail,
+          subject: messageData.subject,
+          message: messageData.message,
+          adminId: 1 // Current admin ID
+        })
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Message sent successfully",
+        });
+        setMessageData({ subject: '', message: '' });
+        // Refresh recent messages
+        fetchRecentMessages();
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchRecentMessages = async () => {
+    try {
+      const response = await fetch('/api/admin/recent-messages');
+      if (response.ok) {
+        const messages = await response.json();
+        setRecentMessages(messages);
+      }
+    } catch (error) {
+      console.error('Failed to fetch recent messages:', error);
+    }
+  };
 
   if (!isAuthenticated) {
     return (
@@ -569,6 +682,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="settings" className="text-xs lg:text-sm py-3">
                 <Settings className="w-4 h-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">Settings</span>
+              </TabsTrigger>
+              <TabsTrigger value="messaging" className="text-xs lg:text-sm py-3">
+                <MessageSquare className="w-4 h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Messages</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -697,7 +814,8 @@ export default function AdminDashboard() {
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="failed">Failed</SelectItem>
+                      ```text
+<SelectItem value="failed">Failed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -822,9 +940,9 @@ export default function AdminDashboard() {
                           {project.priority}
                         </Badge>
                       </div>
-                      
+
                       <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
-                      
+
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>Progress</span>
@@ -837,7 +955,7 @@ export default function AdminDashboard() {
                           />
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
@@ -854,7 +972,7 @@ export default function AdminDashboard() {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex gap-2 pt-2">
                         <Button 
                           size="sm" 
@@ -915,7 +1033,7 @@ export default function AdminDashboard() {
                           {member.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </div>
-                      
+
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Role:</span>
@@ -932,7 +1050,7 @@ export default function AdminDashboard() {
                           </div>
                         )}
                       </div>
-                      
+
                       <div className="flex gap-2 pt-2">
                         <Button size="sm" variant="outline" className="flex-1">
                           <Edit className="w-4 h-4 mr-1" />
@@ -967,6 +1085,99 @@ export default function AdminDashboard() {
               ))}
             </div>
           </TabsContent>
+
+          <TabsContent value="messaging" className="space-y-6">
+                <div className="grid gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Send Message to Client</CardTitle>
+                      <CardDescription>Send updates and messages to your clients</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label htmlFor="project-select">Select Project</Label>
+                        <Select onValueChange={(value) => {
+                          const project = projects.find(p => p.id.toString() === value);
+                          setSelectedProject(project || null);
+                        }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a project" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {projects.map((project) => (
+                              <SelectItem key={project.id} value={project.id.toString()}>
+                                {project.name} - {project.clientEmail}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {selectedProject && (
+                        <>
+                          <div>
+                            <Label htmlFor="message-subject">Subject</Label>
+                            <Input
+                              id="message-subject"
+                              placeholder="Message subject"
+                              value={messageData.subject}
+                              onChange={(e) => setMessageData(prev => ({ ...prev, subject: e.target.value }))}
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="message-content">Message</Label>
+                            <Textarea
+                              id="message-content"
+                              placeholder="Your message to the client..."
+                              rows={4}
+                              value={messageData.message}
+                              onChange={(e) => setMessageData(prev => ({ ...prev, message: e.target.value }))}
+                            />
+                          </div>
+
+                          <Button 
+                            onClick={handleSendMessage}
+                            disabled={!messageData.subject || !messageData.message}
+                            className="w-full"
+                          >
+                            <MessageSquare className="w-4 h-4 mr-2" />
+                            Send Message
+                          </Button>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Recent Messages</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {recentMessages.length === 0 ? (
+                          <p className="text-center text-gray-500 py-8">No messages sent yet</p>
+                        ) : (
+                          recentMessages.map((message) => (
+                            <div key={message.id} className="border rounded-lg p-4">
+                              <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-semibold">{message.subject}</h4>
+                                <span className="text-sm text-gray-500">
+                                  {new Date(message.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-gray-700 mb-2">{message.message}</p>
+                              <p className="text-sm text-gray-500">
+                                To: {message.recipientEmail} (Project: {message.projectName})
+                              </p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
 
           {/* Payments Tab */}
           <TabsContent value="payments" className="space-y-6">
@@ -1266,7 +1477,7 @@ export default function AdminDashboard() {
         </Tabs>
 
         {/* Modals */}
-        
+
         {/* Edit Booking Modal */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -1412,8 +1623,7 @@ export default function AdminDashboard() {
                     <SelectContent>
                       <SelectItem value="planning">Planning</SelectItem>
                       <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="testing">Testing</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="testing">Testing</SelectItem><SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="on-hold">On Hold</SelectItem>
                     </SelectContent>
                   </Select>

@@ -75,13 +75,13 @@ class DatabaseStorage {
     } catch (error: any) {
       console.error('Get all bookings error:', error);
       console.error('Error details:', error.message, error.code);
-      
+
       // If table doesn't exist, return empty array
       if (error.code === '42P01') {
         console.log('Bookings table does not exist yet');
         return [];
       }
-      
+
       return [];
     }
   }

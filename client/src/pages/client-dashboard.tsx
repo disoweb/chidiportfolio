@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -9,8 +9,35 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, Clock, DollarSign, MessageSquare, User, Mail, CheckCircle, AlertCircle, Briefcase, Target } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { 
+  CalendarDays, 
+  Clock, 
+  DollarSign, 
+  MessageSquare, 
+  User, 
+  Mail, 
+  CheckCircle, 
+  AlertCircle, 
+  Briefcase, 
+  Target,
+  LogOut,
+  Search,
+  CreditCard,
+  Bell,
+  Settings,
+  Eye
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+}
 
 interface Project {
   id: number;
@@ -27,11 +54,25 @@ interface Project {
   createdAt: string;
 }
 
-interface ProjectUpdate {
+interface Booking {
   id: number;
-  title: string;
-  description: string;
-  updateType: string;
+  name: string;
+  email: string;
+  service: string;
+  projectType: string;
+  budget: string;
+  timeline: string;
+  paymentStatus: string;
+  createdAt: string;
+}
+
+interface PaymentLog {
+  id: number;
+  amount: string;
+  status: string;
+  reference: string;
+  serviceName: string;
+  paidAt: string;
   createdAt: string;
 }
 
@@ -40,113 +81,189 @@ interface Message {
   subject: string;
   message: string;
   senderType: string;
+  isRead: boolean;
   createdAt: string;
 }
 
-export default function ClientDashboard() {
-  const [clientEmail, setClientEmail] = useState('');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [newMessage, setNewMessage] = useState({ subject: '', message: '' });
-  const { toast } = useToast();
+interface DashboardData {
+  user: User;
+  projects: Project[];
+  bookings: Booking[];
+  paymentLogs: PaymentLog[];
+  unreadMessages: Message[];
+  stats: {
+    totalProjects: number;
+    activeProjects: number;
+    completedProjects: number;
+    totalSpent: number;
+  };
+}
 
-  // Get client email from URL params or localStorage
+export default function ClientDashboard() {
+  const [sessionToken, setSessionToken] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [registerData, setRegisterData] = useState({ 
+    email: '', 
+    password: '', 
+    firstName: '', 
+    lastName: '', 
+    phone: '' 
+  });
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [projectTrackingId, setProjectTrackingId] = useState('');
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Check for existing session on load
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const email = urlParams.get('email') || localStorage.getItem('clientEmail') || '';
-    setClientEmail(email);
-    if (email) {
-      localStorage.setItem('clientEmail', email);
+    const token = localStorage.getItem('clientSessionToken');
+    if (token) {
+      setSessionToken(token);
+      verifySession(token);
     }
   }, []);
 
-  const { data: projects = [], isLoading: loadingProjects, error: projectsError, refetch } = useQuery({
-    queryKey: ['/api/client/projects', clientEmail],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/client/projects/${encodeURIComponent(clientEmail)}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        return Array.isArray(data) ? data : [];
-      } catch (error) {
-        console.error('Failed to fetch projects:', error);
-        return [];
-      }
-    },
-    enabled: !!clientEmail,
-    retry: 2,
-    retryDelay: 1000,
-  });
-
-  const { data: projectUpdates = [] } = useQuery({
-    queryKey: ['/api/projects/updates', selectedProject?.id],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/projects/${selectedProject?.id}/updates`);
-        if (!response.ok) return [];
-        return response.json();
-      } catch (error) {
-        console.error('Failed to fetch project updates:', error);
-        return [];
-      }
-    },
-    enabled: !!selectedProject?.id,
-  });
-
-  const { data: messages = [] } = useQuery({
-    queryKey: ['/api/projects/messages', selectedProject?.id],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/projects/${selectedProject?.id}/messages`);
-        if (!response.ok) return [];
-        return response.json();
-      } catch (error) {
-        console.error('Failed to fetch project messages:', error);
-        return [];
-      }
-    },
-    enabled: !!selectedProject?.id,
-  });
-
-  const sendMessage = async () => {
-    if (!selectedProject || !newMessage.subject || !newMessage.message) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in both subject and message fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const verifySession = async (token: string) => {
     try {
-      const response = await fetch(`/api/projects/${selectedProject.id}/messages`, {
+      const response = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          senderId: 0, // Client ID (would be from auth)
-          senderType: 'client',
-          recipientId: 1, // Admin ID
-          recipientType: 'admin',
-          subject: newMessage.subject,
-          message: newMessage.message,
-        })
+        body: JSON.stringify({ sessionToken: token })
       });
 
       if (response.ok) {
-        setNewMessage({ subject: '', message: '' });
-        toast({
-          title: "Message Sent",
-          description: "Your message has been sent to the project manager.",
-        });
+        setIsAuthenticated(true);
+        setSessionToken(token);
       } else {
-        throw new Error('Failed to send message');
+        localStorage.removeItem('clientSessionToken');
+        setIsAuthenticated(false);
       }
     } catch (error) {
+      localStorage.removeItem('clientSessionToken');
+      setIsAuthenticated(false);
+    }
+  };
+
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Login failed');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      localStorage.setItem('clientSessionToken', data.sessionToken);
+      setSessionToken(data.sessionToken);
+      setIsAuthenticated(true);
       toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive",
+        title: "Login Successful",
+        description: `Welcome back, ${data.user.firstName}!`
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async (userData: any) => {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Registration failed');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      localStorage.setItem('clientSessionToken', data.sessionToken);
+      setSessionToken(data.sessionToken);
+      setIsAuthenticated(true);
+      toast({
+        title: "Registration Successful",
+        description: `Welcome, ${data.user.firstName}!`
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Registration Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const { data: dashboardData, isLoading } = useQuery<DashboardData>({
+    queryKey: ['dashboard', sessionToken],
+    queryFn: async () => {
+      const response = await fetch(`/api/user/dashboard/${sessionToken}`);
+      if (!response.ok) throw new Error('Failed to fetch dashboard data');
+      return response.json();
+    },
+    enabled: !!sessionToken && isAuthenticated,
+    refetchInterval: 30000 // Refresh every 30 seconds
+  });
+
+  const trackProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      const response = await fetch(`/api/track-project/${projectId}`);
+      if (!response.ok) throw new Error('Project not found');
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSelectedProject(data.project);
+      toast({
+        title: "Project Found",
+        description: `Tracking project: ${data.project.name}`
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Project Not Found",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionToken })
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('clientSessionToken');
+      setSessionToken('');
+      setIsAuthenticated(false);
+      setLoginData({ email: '', password: '' });
+      setRegisterData({ email: '', password: '', firstName: '', lastName: '', phone: '' });
+      queryClient.clear();
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out."
       });
     }
   };
@@ -171,92 +288,164 @@ export default function ClientDashboard() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return CheckCircle;
-      case 'in-progress': return Clock;
-      case 'testing': return AlertCircle;
-      case 'planning': return Target;
-      case 'on-hold': return AlertCircle;
-      default: return Clock;
-    }
-  };
-
-  if (!clientEmail) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-lg">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">Client Access</CardTitle>
-            <CardDescription>Enter your email to access your project dashboard</CardDescription>
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              {isLoginMode ? 'Client Login' : 'Create Account'}
+            </CardTitle>
+            <CardDescription>
+              {isLoginMode ? 'Access your project dashboard' : 'Sign up to track your projects'}
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <Input
-                  placeholder="your.email@example.com"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  className="text-center"
-                />
+          <CardContent className="space-y-4">
+            {isLoginMode ? (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={loginData.email}
+                    onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Your password"
+                    value={loginData.password}
+                    onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                  />
+                </div>
+                <Button 
+                  className="w-full"
+                  onClick={() => loginMutation.mutate(loginData)}
+                  disabled={loginMutation.isPending || !loginData.email || !loginData.password}
+                >
+                  {loginMutation.isPending ? 'Logging in...' : 'Login'}
+                </Button>
               </div>
-              <Button 
-                className="w-full"
-                onClick={() => {
-                  if (clientEmail) {
-                    localStorage.setItem('clientEmail', clientEmail);
-                    const url = new URL(window.location.href);
-                    url.searchParams.set('email', clientEmail);
-                    window.history.replaceState({}, '', url.toString());
-                    window.location.reload();
-                  }
-                }}
-                disabled={!clientEmail}
-              >
-                Access Dashboard
-              </Button>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      placeholder="John"
+                      value={registerData.firstName}
+                      onChange={(e) => setRegisterData(prev => ({ ...prev, firstName: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Doe"
+                      value={registerData.lastName}
+                      onChange={(e) => setRegisterData(prev => ({ ...prev, lastName: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={registerData.email}
+                    onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="phone">Phone (Optional)</Label>
+                  <Input
+                    id="phone"
+                    placeholder="+1234567890"
+                    value={registerData.phone}
+                    onChange={(e) => setRegisterData(prev => ({ ...prev, phone: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Create a password"
+                    value={registerData.password}
+                    onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
+                  />
+                </div>
+                <Button 
+                  className="w-full"
+                  onClick={() => registerMutation.mutate(registerData)}
+                  disabled={registerMutation.isPending || !registerData.email || !registerData.password || !registerData.firstName}
+                >
+                  {registerMutation.isPending ? 'Creating Account...' : 'Sign Up'}
+                </Button>
+              </div>
+            )}
+
+            <Separator />
+
+            {/* Project Tracking by ID */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Track Project by ID</Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter project ID"
+                  value={projectTrackingId}
+                  onChange={(e) => setProjectTrackingId(e.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => trackProjectMutation.mutate(projectTrackingId)}
+                  disabled={!projectTrackingId || trackProjectMutation.isPending}
+                >
+                  <Search className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setIsLoginMode(!isLoginMode)}
+            >
+              {isLoginMode ? 'Need an account? Sign up' : 'Already have an account? Login'}
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  if (loadingProjects) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-gray-600">Loading your projects...</p>
+          <p className="text-gray-600">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (projectsError) {
+  if (!dashboardData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <Card className="w-full max-w-md shadow-lg">
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl font-bold text-red-600">Error</CardTitle>
-            <CardDescription>Failed to load your projects. Please try again.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Button onClick={() => refetch()} className="w-full">
-                Retry
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  localStorage.removeItem('clientEmail');
-                  window.location.reload();
-                }} 
-                className="w-full"
-              >
-                Change Email
-              </Button>
-            </div>
+          <CardContent className="text-center p-6">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Error Loading Dashboard</h3>
+            <p className="text-gray-600 mb-4">Failed to load your dashboard data.</p>
+            <Button onClick={logout}>Logout and Try Again</Button>
           </CardContent>
         </Card>
       </div>
@@ -265,56 +454,111 @@ export default function ClientDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-6 lg:py-8 max-w-6xl">
+      <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Project Dashboard</h1>
-            <p className="text-gray-600 mb-4">Welcome back! Here's an overview of your projects with us.</p>
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700 font-medium">{clientEmail}</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  localStorage.removeItem('clientEmail');
-                  window.location.reload();
-                }}
-                className="ml-auto"
-              >
-                Change Email
-              </Button>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Welcome back, {dashboardData.user.firstName}!</h1>
+                <p className="text-gray-600">Here's an overview of your projects and activities.</p>
+              </div>
+              <div className="flex items-center gap-4">
+                {dashboardData.unreadMessages.length > 0 && (
+                  <div className="relative">
+                    <Bell className="h-6 w-6 text-gray-500" />
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {dashboardData.unreadMessages.length}
+                    </span>
+                  </div>
+                )}
+                <Button variant="outline" onClick={logout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-700">
+              <Mail className="h-4 w-4" />
+              {dashboardData.user.email}
+              {dashboardData.user.phone && (
+                <>
+                  <span>•</span>
+                  {dashboardData.user.phone}
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        {projects.length === 0 ? (
-          <Card className="shadow-lg">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                <Briefcase className="w-8 h-8 text-blue-600" />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Briefcase className="h-8 w-8 text-blue-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Projects</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData.stats.totalProjects}</p>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">No Projects Found</h3>
-              <p className="text-gray-600 text-center mb-6 max-w-md">
-                We couldn't find any projects associated with this email address. If you have recently booked a service, it may take some time to appear here.
-              </p>
-              <Button onClick={() => window.location.href = '/#booking'} size="lg">
-                Book a New Project
-              </Button>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project: Project) => {
-              const StatusIcon = getStatusIcon(project.status);
-              
-              return (
-                <Card key={project.id} className="cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-500">
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <Clock className="h-8 w-8 text-yellow-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Active Projects</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData.stats.activeProjects}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Completed</p>
+                  <p className="text-2xl font-bold text-gray-900">{dashboardData.stats.completedProjects}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <DollarSign className="h-8 w-8 text-emerald-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Total Spent</p>
+                  <p className="text-2xl font-bold text-gray-900">₦{dashboardData.stats.totalSpent.toLocaleString()}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content */}
+        <Tabs defaultValue="projects" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="projects">Projects</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="projects" className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {dashboardData.projects.map((project) => (
+                <Card key={project.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-lg mb-2 line-clamp-1">{project.name}</CardTitle>
+                        <CardTitle className="text-lg mb-2">{project.name}</CardTitle>
                         <div className="flex items-center gap-2 mb-2">
                           <Badge variant={getPriorityColor(project.priority)} className="text-xs">
                             {project.priority} priority
@@ -325,7 +569,7 @@ export default function ClientDashboard() {
                           </div>
                         </div>
                       </div>
-                      <StatusIcon className="w-5 h-5 text-gray-400" />
+                      <div className="text-sm text-gray-500">#{project.id}</div>
                     </div>
                     <CardDescription className="line-clamp-2">
                       {project.description}
@@ -363,211 +607,145 @@ export default function ClientDashboard() {
                         </div>
                       )}
 
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="default"
-                            className="w-full"
-                            onClick={() => setSelectedProject(project)}
-                          >
-                            View Details
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <Briefcase className="w-5 h-5" />
-                              {project.name}
-                            </DialogTitle>
-                            <DialogDescription>{project.description}</DialogDescription>
-                          </DialogHeader>
-
-                          <Tabs defaultValue="overview" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3">
-                              <TabsTrigger value="overview">Overview</TabsTrigger>
-                              <TabsTrigger value="updates">Updates</TabsTrigger>
-                              <TabsTrigger value="messages">Messages</TabsTrigger>
-                            </TabsList>
-
-                            <div className="max-h-[60vh] overflow-y-auto">
-                              <TabsContent value="overview" className="space-y-6">
-                                <div className="grid gap-6 md:grid-cols-2">
-                                  <Card>
-                                    <CardHeader className="pb-3">
-                                      <CardTitle className="text-base">Project Status</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                      <div className="flex items-center gap-3">
-                                        <div className={`w-4 h-4 rounded-full ${getStatusColor(project.status)}`} />
-                                        <span className="capitalize font-medium">{project.status}</span>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-
-                                  <Card>
-                                    <CardHeader className="pb-3">
-                                      <CardTitle className="text-base">Progress</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                      <div className="space-y-2">
-                                        <Progress value={project.progress} />
-                                        <span className="text-sm text-gray-600">{project.progress}% complete</span>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-
-                                  <Card>
-                                    <CardHeader className="pb-3">
-                                      <CardTitle className="text-base">Team</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                      <div className="flex items-center gap-2">
-                                        <User className="w-4 h-4 text-gray-400" />
-                                        <span>{project.assignedTo}</span>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-
-                                  {project.budget && (
-                                    <Card>
-                                      <CardHeader className="pb-3">
-                                        <CardTitle className="text-base">Budget</CardTitle>
-                                      </CardHeader>
-                                      <CardContent>
-                                        <div className="flex items-center gap-2">
-                                          <DollarSign className="w-4 h-4 text-gray-400" />
-                                          <span>{project.budget}</span>
-                                        </div>
-                                      </CardContent>
-                                    </Card>
-                                  )}
-                                </div>
-
-                                {(project.startDate || project.dueDate) && (
-                                  <Card>
-                                    <CardHeader className="pb-3">
-                                      <CardTitle className="text-base">Timeline</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                      <div className="grid gap-2 md:grid-cols-2">
-                                        {project.startDate && (
-                                          <div>
-                                            <p className="text-sm text-muted-foreground">Start Date</p>
-                                            <p className="font-medium">{new Date(project.startDate).toLocaleDateString()}</p>
-                                          </div>
-                                        )}
-                                        {project.dueDate && (
-                                          <div>
-                                            <p className="text-sm text-muted-foreground">Due Date</p>
-                                            <p className="font-medium">{new Date(project.dueDate).toLocaleDateString()}</p>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                )}
-                              </TabsContent>
-
-                              <TabsContent value="updates" className="space-y-4">
-                                <h4 className="font-semibold">Project Updates</h4>
-                                {projectUpdates.length === 0 ? (
-                                  <Card>
-                                    <CardContent className="flex flex-col items-center justify-center py-8">
-                                      <AlertCircle className="w-8 h-8 text-gray-400 mb-2" />
-                                      <p className="text-gray-600 text-center">No updates available yet.</p>
-                                      <p className="text-sm text-gray-500 text-center mt-1">Check back later for project updates.</p>
-                                    </CardContent>
-                                  </Card>
-                                ) : (
-                                  <div className="space-y-3">
-                                    {projectUpdates.map((update: ProjectUpdate) => (
-                                      <Card key={update.id}>
-                                        <CardContent className="pt-4">
-                                          <div className="flex justify-between items-start mb-2">
-                                            <h5 className="font-medium">{update.title}</h5>
-                                            <span className="text-xs text-gray-500">
-                                              {new Date(update.createdAt).toLocaleDateString()}
-                                            </span>
-                                          </div>
-                                          <p className="text-sm text-gray-600">{update.description}</p>
-                                          <Badge variant="outline" className="mt-2 text-xs">
-                                            {update.updateType}
-                                          </Badge>
-                                        </CardContent>
-                                      </Card>
-                                    ))}
-                                  </div>
-                                )}
-                              </TabsContent>
-
-                              <TabsContent value="messages" className="space-y-4">
-                                <div className="space-y-4">
-                                  <h4 className="font-semibold">Project Communication</h4>
-
-                                  <div className="space-y-3 max-h-60 overflow-y-auto">
-                                    {messages.length === 0 ? (
-                                      <Card>
-                                        <CardContent className="flex flex-col items-center justify-center py-8">
-                                          <MessageSquare className="w-8 h-8 text-gray-400 mb-2" />
-                                          <p className="text-gray-600 text-center">No messages yet.</p>
-                                          <p className="text-sm text-gray-500 text-center mt-1">Start a conversation with your project team.</p>
-                                        </CardContent>
-                                      </Card>
-                                    ) : (
-                                      messages.map((message: Message) => (
-                                        <Card key={message.id}>
-                                          <CardContent className="pt-4">
-                                            <div className="flex justify-between items-start mb-2">
-                                              <h5 className="font-medium">{message.subject}</h5>
-                                              <div className="text-xs text-gray-500 text-right">
-                                                <div>{message.senderType === 'admin' ? 'Team' : 'You'}</div>
-                                                <div>{new Date(message.createdAt).toLocaleDateString()}</div>
-                                              </div>
-                                            </div>
-                                            <p className="text-sm text-gray-600">{message.message}</p>
-                                          </CardContent>
-                                        </Card>
-                                      ))
-                                    )}
-                                  </div>
-
-                                  <Card>
-                                    <CardHeader className="pb-3">
-                                      <CardTitle className="text-base">Send Message</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                      <div className="space-y-3">
-                                        <Input
-                                          placeholder="Subject"
-                                          value={newMessage.subject}
-                                          onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
-                                        />
-                                        <Textarea
-                                          placeholder="Your message..."
-                                          value={newMessage.message}
-                                          onChange={(e) => setNewMessage(prev => ({ ...prev, message: e.target.value }))}
-                                          rows={3}
-                                        />
-                                        <Button onClick={sendMessage} className="w-full">
-                                          <MessageSquare className="h-4 w-4 mr-2" />
-                                          Send Message
-                                        </Button>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                </div>
-                              </TabsContent>
-                            </div>
-                          </Tabs>
-                        </DialogContent>
-                      </Dialog>
+                      <Button
+                        variant="default"
+                        className="w-full"
+                        onClick={() => setSelectedProject(project)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+
+            {dashboardData.projects.length === 0 && (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-16">
+                  <Briefcase className="w-16 h-16 text-gray-400 mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No Projects Yet</h3>
+                  <p className="text-gray-600 text-center mb-6">
+                    You don't have any projects yet. Book a service to get started!
+                  </p>
+                  <Button onClick={() => window.location.href = '/#booking'}>
+                    Book a New Project
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="bookings" className="space-y-4">
+            <div className="grid gap-4">
+              {dashboardData.bookings.map((booking) => (
+                <Card key={booking.id}>
+                  <CardContent className="p-6">
+                    <div className="grid md:grid-cols-4 gap-4">
+                      <div>
+                        <h4 className="font-semibold">{booking.service}</h4>
+                        <p className="text-sm text-gray-600">{booking.projectType}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Budget</p>
+                        <p className="font-medium">{booking.budget}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Timeline</p>
+                        <p className="font-medium">{booking.timeline}</p>
+                      </div>
+                      <div>
+                        <Badge variant={booking.paymentStatus === 'completed' ? 'default' : 'secondary'}>
+                          {booking.paymentStatus}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {new Date(booking.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="payments" className="space-y-4">
+            <div className="grid gap-4">
+              {dashboardData.paymentLogs.map((payment) => (
+                <Card key={payment.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <CreditCard className="h-8 w-8 text-green-600" />
+                        <div>
+                          <h4 className="font-semibold">{payment.serviceName}</h4>
+                          <p className="text-sm text-gray-600">Reference: {payment.reference}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-green-600">₦{parseFloat(payment.amount).toLocaleString()}</p>
+                        <Badge variant={payment.status === 'completed' ? 'default' : 'secondary'}>
+                          {payment.status}
+                        </Badge>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {new Date(payment.paidAt || payment.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {dashboardData.paymentLogs.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-16">
+                  <CreditCard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No Payment History</h3>
+                  <p className="text-gray-600">Your payment transactions will appear here.</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="messages" className="space-y-4">
+            <div className="grid gap-4">
+              {dashboardData.unreadMessages.map((message) => (
+                <Card key={message.id} className={`${!message.isRead ? 'border-blue-500 bg-blue-50' : ''}`}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-semibold">{message.subject}</h4>
+                          {!message.isRead && (
+                            <Badge variant="default" className="text-xs">New</Badge>
+                          )}
+                        </div>
+                        <p className="text-gray-700 mb-2">{message.message}</p>
+                        <p className="text-sm text-gray-500">
+                          From: {message.senderType === 'admin' ? 'Project Team' : 'You'} • 
+                          {new Date(message.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <MessageSquare className="h-5 w-5 text-gray-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {dashboardData.unreadMessages.length === 0 && (
+              <Card>
+                <CardContent className="text-center py-16">
+                  <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">No Messages</h3>
+                  <p className="text-gray-600">Messages from your project team will appear here.</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertContactSchema, insertBookingSchema, insertInquirySchema, projects, projectUpdates, messages, bookings } from "@shared/schema";
+import { insertContactSchema, insertBookingSchema, insertInquirySchema, projects, projectUpdates, messages, bookings, users, clientSessions } from "@shared/schema";
 import { z } from "zod";
 import { Request, Response } from 'express';
 import axios from 'axios';
@@ -9,12 +9,13 @@ import bcrypt from 'bcryptjs';
 import { runMigrations } from "./migrate";
 import { db } from "./db";
 import { eq, desc, and } from "drizzle-orm";
+import crypto from 'crypto';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Run database migrations first
   try {
     await runMigrations();
-  } catch (error: any) { // Added :any for safety, though console.error handles unknown well
+  } catch (error: any) {
     console.error('Failed to run migrations:', error);
   }
 
@@ -46,31 +47,318 @@ export async function registerRoutes(app: Express): Promise<Server> {
         response: randomResponse,
         timestamp: new Date().toISOString()
       });
-    } catch (error) { // This catch block doesn't access error properties, so 'unknown' is fine
+    } catch (error) {
       console.error('Chat error:', error);
       res.status(500).json({ error: 'Failed to process chat message' });
     }
   });
 
-  // Main booking form submission endpoint
+  // Client Registration
+  app.post('/api/auth/register', async (req: Request, res: Response) => {
+    try {
+      const { email, password, firstName, lastName, phone } = req.body;
+
+      if (!email || !password || !firstName || !lastName) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: 'User already exists' });
+      }
+
+      // Create user
+      const user = await storage.createUser({
+        email,
+        password,
+        firstName,
+        lastName,
+        phone
+      });
+
+      // Create session
+      const sessionToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+      await storage.createClientSession({
+        userId: user.id,
+        sessionToken,
+        expiresAt,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] || ''
+      });
+
+      const { password: _, ...safeUser } = user;
+      res.json({ 
+        success: true, 
+        user: safeUser, 
+        sessionToken,
+        message: 'Registration successful'
+      });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ error: 'Failed to register user' });
+    }
+  });
+
+  // Client Login
+  app.post('/api/auth/login', async (req: Request, res: Response) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required' });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+
+      if (!user.isActive) {
+        return res.status(401).json({ error: 'Account is deactivated' });
+      }
+
+      // Create session
+      const sessionToken = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+      await storage.createClientSession({
+        userId: user.id,
+        sessionToken,
+        expiresAt,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'] || ''
+      });
+
+      // Update last login
+      await storage.updateUserLastLogin(user.id);
+
+      const { password: _, ...safeUser } = user;
+      res.json({ 
+        success: true, 
+        user: safeUser, 
+        sessionToken,
+        message: 'Login successful'
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ error: 'Failed to login' });
+    }
+  });
+
+  // Verify Session
+  app.post('/api/auth/verify', async (req: Request, res: Response) => {
+    try {
+      const { sessionToken } = req.body;
+
+      if (!sessionToken) {
+        return res.status(400).json({ error: 'Session token required' });
+      }
+
+      const session = await storage.getClientSession(sessionToken);
+      if (!session || !session.isActive || new Date() > new Date(session.expiresAt)) {
+        return res.status(401).json({ error: 'Invalid or expired session' });
+      }
+
+      const user = await storage.getUserById(session.userId);
+      if (!user || !user.isActive) {
+        return res.status(401).json({ error: 'User not found or inactive' });
+      }
+
+      const { password: _, ...safeUser } = user;
+      res.json({ success: true, user: safeUser });
+    } catch (error) {
+      console.error('Session verification error:', error);
+      res.status(500).json({ error: 'Failed to verify session' });
+    }
+  });
+
+  // Logout
+  app.post('/api/auth/logout', async (req: Request, res: Response) => {
+    try {
+      const { sessionToken } = req.body;
+
+      if (sessionToken) {
+        await storage.deactivateClientSession(sessionToken);
+      }
+
+      res.json({ success: true, message: 'Logged out successfully' });
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({ error: 'Failed to logout' });
+    }
+  });
+
+  // Track Project by ID
+  app.get('/api/track-project/:projectId', async (req: Request, res: Response) => {
+    try {
+      const { projectId } = req.params;
+      const project = await storage.getProjectById(parseInt(projectId));
+
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+
+      // Get project updates and messages
+      const updates = await storage.getProjectUpdates(project.id);
+      const messages = await storage.getProjectMessages(project.id);
+
+      res.json({
+        project,
+        updates: updates.filter(u => u.isVisibleToClient),
+        messages,
+        hasAccess: true
+      });
+    } catch (error) {
+      console.error('Track project error:', error);
+      res.status(500).json({ error: 'Failed to track project' });
+    }
+  });
+
+  // Get User Dashboard Data
+  app.get('/api/user/dashboard/:sessionToken', async (req: Request, res: Response) => {
+    try {
+      const { sessionToken } = req.params;
+
+      const session = await storage.getClientSession(sessionToken);
+      if (!session || !session.isActive || new Date() > new Date(session.expiresAt)) {
+        return res.status(401).json({ error: 'Invalid or expired session' });
+      }
+
+      const user = await storage.getUserById(session.userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Get user projects
+      const projects = await storage.getProjectsByClientEmail(user.email);
+
+      // Get user bookings
+      const bookings = await storage.getBookingsByEmail(user.email);
+
+      // Get user payment logs
+      const paymentLogs = await storage.getPaymentLogsByEmail(user.email);
+
+      // Get unread messages
+      const unreadMessages = await storage.getUnreadMessagesForUser(user.id);
+
+      res.json({
+        user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName, phone: user.phone },
+        projects,
+        bookings,
+        paymentLogs,
+        unreadMessages,
+        stats: {
+          totalProjects: projects.length,
+          activeProjects: projects.filter(p => ['planning', 'in-progress', 'testing'].includes(p.status)).length,
+          completedProjects: projects.filter(p => p.status === 'completed').length,
+          totalSpent: paymentLogs.reduce((sum, log) => sum + parseFloat(log.amount), 0)
+        }
+      });
+    } catch (error) {
+      console.error('Dashboard error:', error);
+      res.status(500).json({ error: 'Failed to load dashboard' });
+    }
+  });
+
+  // Send Message from Admin to Client
+  app.post('/api/admin/send-message', async (req: Request, res: Response) => {
+    try {
+      const { projectId, clientEmail, subject, message, adminId } = req.body;
+
+      if (!projectId || !clientEmail || !subject || !message) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      // Get client user
+      const client = await storage.getUserByEmail(clientEmail);
+      if (!client) {
+        return res.status(404).json({ error: 'Client not found' });
+      }
+
+      // Create message
+      const newMessage = await storage.createMessage({
+        projectId: parseInt(projectId),
+        senderId: adminId || 1,
+        senderType: 'admin',
+        recipientId: client.id,
+        recipientType: 'client',
+        subject,
+        message
+      });
+
+      // Create notification
+      await storage.createNotification({
+        userId: client.id,
+        type: 'message_received',
+        title: `New message: ${subject}`,
+        message: `You have received a new message regarding your project.`,
+        data: { messageId: newMessage.id, projectId }
+      });
+
+      res.json({ success: true, message: newMessage });
+    } catch (error) {
+      console.error('Send message error:', error);
+      res.status(500).json({ error: 'Failed to send message' });
+    }
+  });
+
+  // Mark Messages as Read
+  app.put('/api/user/messages/mark-read', async (req: Request, res: Response) => {
+    try {
+      const { messageIds, sessionToken } = req.body;
+
+      const session = await storage.getClientSession(sessionToken);
+      if (!session) {
+        return res.status(401).json({ error: 'Invalid session' });
+      }
+
+      await storage.markMessagesAsRead(messageIds);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Mark messages read error:', error);
+      res.status(500).json({ error: 'Failed to mark messages as read' });
+    }
+  });
+
+  // Main booking form submission endpoint - Updated to create user if not exists
   app.post('/api/booking', async (req, res) => {
     try {
       console.log('Received booking request:', req.body);
       const validatedData = insertBookingSchema.parse(req.body);
       console.log('Validated booking data:', validatedData);
 
+      // Check if user exists, if not create one
+      let user = await storage.getUserByEmail(validatedData.email);
+      if (!user) {
+        // Create user account
+        const [firstName, ...lastNameParts] = validatedData.name.split(' ');
+        const lastName = lastNameParts.join(' ') || '';
+
+        user = await storage.createUser({
+          email: validatedData.email,
+          password: await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 12), // Random password
+          firstName,
+          lastName,
+          phone: validatedData.phone
+        });
+      }
+
       // Store booking submission with default payment status
       const bookingDataWithDefaults = {
         ...validatedData,
-        paymentStatus: 'pending' // Ensure payment status is set
+        paymentStatus: 'pending'
       };
 
       const booking = await storage.createBooking(bookingDataWithDefaults);
       console.log('Created booking:', booking);
-
-      // Verify booking was created by fetching it back
-      const verifyBooking = await storage.getBookingById(booking.id);
-      console.log('Verified booking exists:', verifyBooking);
 
       // Create a project record for this booking
       const project = await storage.createProject({
@@ -81,16 +369,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         priority: 'medium',
         clientEmail: validatedData.email,
         budget: validatedData.budget || 'TBD',
-        estimatedTime: 40, // Default 40 hours
+        estimatedTime: 40,
         notes: `Project type: ${validatedData.projectType}, Timeline: ${validatedData.timeline}, Budget: ${validatedData.budget}`
       });
-      console.log('Created project:', project);
+
+      // Create welcome notification
+      await storage.createNotification({
+        userId: user.id,
+        type: 'project_created',
+        title: 'Project Created Successfully',
+        message: `Your project "${project.name}" has been created. Project ID: ${project.id}`,
+        data: { projectId: project.id, bookingId: booking.id }
+      });
 
       res.json({ 
         success: true, 
         message: 'Booking submitted successfully',
         bookingId: booking.id,
-        projectId: project.id
+        projectId: project.id,
+        userId: user.id
       });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -101,7 +398,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else {
         console.error('Booking error details:', error);
-        console.error('Full error stack:', error.stack);
         res.status(500).json({ 
           error: 'Internal server error',
           details: error.message
@@ -113,10 +409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contact form submission endpoint
   app.post('/api/contact', async (req, res) => {
     try {
-      // Validate request body
       const validatedData = insertContactSchema.parse(req.body);
-
-      // Store contact submission
       const contact = await storage.createContact(validatedData);
 
       res.json({ 
@@ -124,7 +417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Contact form submitted successfully',
         id: contact.id 
       });
-    } catch (error) { // This catch block handles ZodError specifically or logs generally
+    } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
           error: 'Validation error', 
@@ -173,8 +466,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-
-
 
   // Update booking endpoint
   app.put('/api/bookings/:id', async (req, res) => {
@@ -258,11 +549,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('Retrieved bookings count:', bookings.length);
-      console.log('Sample booking data:', bookings.length > 0 ? JSON.stringify(bookings[0], null, 2) : 'No bookings found');
       res.json(bookings);
     } catch (error) {
       console.error('Get bookings error:', error);
-      console.error('Full error details:', error);
       res.status(500).json({ 
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error'
@@ -279,7 +568,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Message is required' });
       }
 
-      // Gemini AI integration
       const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
         return res.status(500).json({ 
@@ -417,11 +705,11 @@ User question: ${message}`;
       const text = response.text();
 
       res.json({ response: text });
-    } catch (error: any) { // UPDATED: Added :any because error.message is accessed
+    } catch (error: any) {
       console.error('Chat error:', error);
       res.status(500).json({ 
         error: 'Failed to process chat message',
-        details: error.message // Accessing error.message
+        details: error.message
       });
     }
   });
@@ -437,7 +725,7 @@ User question: ${message}`;
         message: 'Inquiry submitted successfully',
         id: inquiry.id
       });
-    } catch (error) { // This catch block handles ZodError specifically or logs generally
+    } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
           error: 'Validation error', 
@@ -530,9 +818,9 @@ User question: ${message}`;
       };
 
       res.json(settingsObject);
-    } catch (error: any) { // UPDATED: Added :any because error.code is accessed
+    } catch (error: any) {
       console.error('Get settings error:', error);
-      if (error.code === '42P01') { // Accessing error.code
+      if (error.code === '42P01') {
         // Return empty settings if table doesn't exist
         res.json({
           seoTitle: '',
@@ -693,7 +981,7 @@ User question: ${message}`;
       }
 
       const newUser = await storage.createAdminUser({ username, email, password, role });
-      const { password: _, ...safeUser } = newUser; // eslint-disable-line @typescript-eslint/no-unused-vars
+      const { password: _, ...safeUser } = newUser;
 
       res.json({ success: true, user: safeUser });
     } catch (error) {
@@ -1164,7 +1452,7 @@ User question: ${message}`;
         data: paystackResponse.data.data
       });
 
-    } catch (error: any) { // This was already correctly :any
+    } catch (error: any) {
       console.error('Paystack initiation error:', error.response ? error.response.data : error.message);
       if (error.response) {
         return res.status(error.response.status || 400).json({
@@ -1289,7 +1577,7 @@ User question: ${message}`;
         }
       });
 
-    } catch (error: any) { // This was already correctly :any
+    } catch (error: any) {
       console.error('Payment verification process error:', error.response ? error.response.data : error.message);
 
       if (error.response) {
@@ -1297,7 +1585,7 @@ User question: ${message}`;
           success: false,
           message: error.response.data?.message || 'Error verifying payment with Paystack.'
         });
-}
+      }
 
       res.status(500).json({
         success: false,
