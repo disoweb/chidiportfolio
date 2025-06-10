@@ -1,12 +1,18 @@
-import { pgTable, text, serial, timestamp, varchar, numeric, json, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, varchar, numeric, json, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users Table
+// Users Table - Client users who book services
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  phone: text("phone"),
+  isActive: boolean("is_active").default(true),
+  emailVerified: boolean("email_verified").default(false),
+  lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
@@ -145,10 +151,91 @@ export const paymentLogs = pgTable("payment_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Messages Table - for communication between admin and clients
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  senderId: integer("sender_id"), // admin user id or client user id
+  senderType: varchar("sender_type", { length: 10 }).notNull(), // 'admin' or 'client'
+  recipientId: integer("recipient_id"),
+  recipientType: varchar("recipient_type", { length: 10 }).notNull(), // 'admin' or 'client'
+  subject: text("subject"),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  attachments: json("attachments"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Notifications Table - for system notifications
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  adminUserId: integer("admin_user_id").references(() => adminUsers.id),
+  type: varchar("type", { length: 50 }).notNull(), // 'project_update', 'payment_received', 'message_received', etc.
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  data: json("data"), // additional data for the notification
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Project Updates Table - for tracking project progress updates
+export const projectUpdates = pgTable("project_updates", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  updatedBy: integer("updated_by").references(() => adminUsers.id).notNull(),
+  updateType: varchar("update_type", { length: 50 }).notNull(), // 'status_change', 'progress_update', 'milestone', 'note'
+  title: text("title").notNull(),
+  description: text("description"),
+  oldValue: text("old_value"),
+  newValue: text("new_value"),
+  attachments: json("attachments"),
+  isVisibleToClient: boolean("is_visible_to_client").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Team Members Table - for managing team roles and permissions
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  adminUserId: integer("admin_user_id").references(() => adminUsers.id).notNull(),
+  role: varchar("role", { length: 50 }).default('team_member'), // 'owner', 'admin', 'project_manager', 'team_member'
+  permissions: json("permissions"), // array of permission strings
+  departmentId: integer("department_id").references(() => departments.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// Departments Table - for organizing team members
+export const departments = pgTable("departments", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  managerId: integer("manager_id").references(() => adminUsers.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// Client Sessions Table - for managing client login sessions
+export const clientSessions = pgTable("client_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  sessionToken: text("session_token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Zod Schemas
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
+  email: true,
   password: true,
+  firstName: true,
+  lastName: true,
+  phone: true,
 });
 
 export const insertContactSchema = createInsertSchema(contacts).pick({
@@ -237,6 +324,59 @@ export const insertPaymentLogSchema = createInsertSchema(paymentLogs).pick({
   projectDetails: true,
 });
 
+export const insertMessageSchema = createInsertSchema(messages).pick({
+  projectId: true,
+  senderId: true,
+  senderType: true,
+  recipientId: true,
+  recipientType: true,
+  subject: true,
+  message: true,
+  attachments: true,
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).pick({
+  userId: true,
+  adminUserId: true,
+  type: true,
+  title: true,
+  message: true,
+  data: true,
+});
+
+export const insertProjectUpdateSchema = createInsertSchema(projectUpdates).pick({
+  projectId: true,
+  updatedBy: true,
+  updateType: true,
+  title: true,
+  description: true,
+  oldValue: true,
+  newValue: true,
+  attachments: true,
+  isVisibleToClient: true,
+});
+
+export const insertTeamMemberSchema = createInsertSchema(teamMembers).pick({
+  adminUserId: true,
+  role: true,
+  permissions: true,
+  departmentId: true,
+});
+
+export const insertDepartmentSchema = createInsertSchema(departments).pick({
+  name: true,
+  description: true,
+  managerId: true,
+});
+
+export const insertClientSessionSchema = createInsertSchema(clientSessions).pick({
+  userId: true,
+  sessionToken: true,
+  expiresAt: true,
+  ipAddress: true,
+  userAgent: true,
+});
+
 // Type Definitions
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -258,6 +398,20 @@ export type Project = typeof projects.$inferSelect;
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type PaymentLog = typeof paymentLogs.$inferSelect;
 export type InsertPaymentLog = z.infer<typeof insertPaymentLogSchema>;
+
+// New table type definitions
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type ProjectUpdate = typeof projectUpdates.$inferSelect;
+export type InsertProjectUpdate = z.infer<typeof insertProjectUpdateSchema>;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+export type Department = typeof departments.$inferSelect;
+export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
+export type ClientSession = typeof clientSessions.$inferSelect;
+export type InsertClientSession = z.infer<typeof insertClientSessionSchema>;
 
 // Additional Utility Types
 export type BookingWithTransaction = Booking & {
