@@ -130,8 +130,8 @@ async function seedAdminUser() {
       await client.query('COMMIT');
       console.log('\n=== ACCOUNT SUMMARY ===');
       console.log('ADMIN ACCOUNTS:');
-      console.log('1. Username: admin, Email: admin@chidiogara.dev, Password: AdminPass123!');
-      console.log('2. Username: manager, Email: manager@chidiogara.dev, Password: ManagerPass123!');
+      console.log('1. Username: admin, Email: admin@chidiogara.dev, Password: admin123');
+      console.log('2. Username: manager, Email: manager@chidiogara.dev, Password: manager123');
       console.log('\nUSER ACCOUNTS:');
       console.log('1. Username: client1, Email: client1@example.com, Password: Client123!');
       console.log('2. Username: client2, Email: client2@example.com, Password: Client456!');
