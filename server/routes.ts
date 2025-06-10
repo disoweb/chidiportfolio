@@ -17,7 +17,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error: any) { // Added :any for safety, though console.error handles unknown well
     console.error('Failed to run migrations:', error);
   }
-  
+
   // Initialize default settings on startup
   await storage.initializeDefaultSettings();
 
@@ -69,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'planning',
         priority: 'medium',
         clientEmail: validatedData.email,
-        budget: validatedData.budget,
+        budget: validatedData.budget || 'TBD',
         estimatedTime: 40, // Default 40 hours
         notes: `Project type: ${validatedData.projectType}, Timeline: ${validatedData.timeline}, Budget: ${validatedData.budget}`
       });
@@ -259,9 +259,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { search, paymentStatus } = req.query;
       let bookings;
-      
+
       console.log('Fetching bookings with search:', search, 'paymentStatus:', paymentStatus);
-      
+
       if (search || paymentStatus) {
         bookings = await storage.searchBookings(
           search as string || '', 
@@ -270,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         bookings = await storage.getAllBookings();
       }
-      
+
       console.log('Retrieved bookings count:', bookings.length);
       res.json(bookings);
     } catch (error) {
@@ -466,9 +466,9 @@ User question: ${message}`;
     try {
       const { search, status } = req.query;
       let inquiries;
-      
+
       console.log('Fetching inquiries with search:', search, 'status:', status);
-      
+
       if (search || status) {
         inquiries = await storage.searchInquiries(
           search as string || '', 
@@ -477,7 +477,7 @@ User question: ${message}`;
       } else {
         inquiries = await storage.getAllInquiries();
       }
-      
+
       console.log('Retrieved inquiries count:', inquiries.length);
       res.json(inquiries);
     } catch (error) {
@@ -492,7 +492,7 @@ User question: ${message}`;
       const { status } = req.body;
 
       const updatedInquiry = await storage.updateInquiry(parseInt(id), { status });
-      
+
       if (!updatedInquiry) {
         return res.status(404).json({ error: 'Inquiry not found' });
       }
@@ -524,7 +524,7 @@ User question: ${message}`;
   app.get('/api/admin/settings', async (req: Request, res: Response) => {
     try {
       const settings = await storage.getAllSiteSettings();
-      
+
       // Convert to object format for frontend compatibility
       const settingsObject = {
         seoTitle: settings.find(s => s.key === 'seo_title')?.value || '',
@@ -539,7 +539,7 @@ User question: ${message}`;
           twitter: settings.find(s => s.key === 'twitter_url')?.value || ''
         }
       };
-      
+
       res.json(settingsObject);
     } catch (error: any) { // UPDATED: Added :any because error.code is accessed
       console.error('Get settings error:', error);
@@ -567,7 +567,7 @@ User question: ${message}`;
   app.put('/api/admin/settings', async (req: Request, res: Response) => {
     try {
       const settingsData = req.body;
-      
+
       // Update each setting in the database
       await storage.upsertSiteSetting('seo_title', settingsData.seoTitle, 'seo');
       await storage.upsertSiteSetting('seo_description', settingsData.seoDescription, 'seo');
@@ -578,7 +578,7 @@ User question: ${message}`;
       await storage.upsertSiteSetting('linkedin_url', settingsData.socialLinks.linkedin, 'social');
       await storage.upsertSiteSetting('github_url', settingsData.socialLinks.github, 'social');
       await storage.upsertSiteSetting('twitter_url', settingsData.socialLinks.twitter, 'social');
-      
+
       res.json({ success: true, message: 'Settings updated successfully' });
     } catch (error) {
       console.error('Update settings error:', error);
@@ -611,11 +611,11 @@ User question: ${message}`;
     try {
       const { id } = req.params;
       const project = await storage.getProjectById(parseInt(id));
-      
+
       if (!project) {
         return res.status(404).json({ error: 'Project not found' });
       }
-      
+
       res.json(project);
     } catch (error) {
       console.error('Get project error:', error);
@@ -627,11 +627,11 @@ User question: ${message}`;
     try {
       const { id } = req.params;
       const updatedProject = await storage.updateProject(parseInt(id), req.body);
-      
+
       if (!updatedProject) {
         return res.status(404).json({ error: 'Project not found' });
       }
-      
+
       res.json({ success: true, project: updatedProject });
     } catch (error) {
       console.error('Update project error:', error);
@@ -643,11 +643,11 @@ User question: ${message}`;
     try {
       const { id } = req.params;
       const success = await storage.deleteProject(parseInt(id));
-      
+
       if (!success) {
         return res.status(404).json({ error: 'Project not found' });
       }
-      
+
       res.json({ success: true, message: 'Project deleted successfully' });
     } catch (error) {
       console.error('Delete project error:', error);
@@ -696,16 +696,16 @@ User question: ${message}`;
   app.post('/api/admin/users', async (req: Request, res: Response) => {
     try {
       const { username, email, password, role } = req.body;
-      
+
       // Check if user already exists
       const existingUser = await storage.getAdminByUsername(username) || await storage.getAdminByEmail(email);
       if (existingUser) {
         return res.status(400).json({ error: 'User already exists' });
       }
-      
+
       const newUser = await storage.createAdminUser({ username, email, password, role });
       const { password: _, ...safeUser } = newUser; // eslint-disable-line @typescript-eslint/no-unused-vars
-      
+
       res.json({ success: true, user: safeUser });
     } catch (error) {
       console.error('Create admin user error:', error);
@@ -717,13 +717,13 @@ User question: ${message}`;
     try {
       const { id } = req.params;
       const updateData = req.body;
-      
+
       const updatedUser = await storage.updateAdminUser(parseInt(id), updateData);
-      
+
       if (!updatedUser) {
         return res.status(404).json({ error: 'User not found' });
       }
-      
+
       const { password, ...safeUser } = updatedUser;
       res.json({ success: true, user: safeUser });
     } catch (error) {
@@ -752,7 +752,7 @@ User question: ${message}`;
   app.post('/api/admin/login', async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
-      
+
       console.log('Login attempt for username:', username);
 
       if (!username || !password) {
@@ -764,7 +764,7 @@ User question: ${message}`;
       console.log('Total admin users in database:', allAdmins.length);
 
       const admin = await storage.getAdminByUsername(username);
-      
+
       if (!admin) {
         console.log('Admin user not found:', username);
         console.log('Available admin usernames:', allAdmins.map(a => a.username));
@@ -779,7 +779,7 @@ User question: ${message}`;
         role: admin.role,
         lastLogin: admin.lastLogin
       });
-      
+
       if (!admin.isActive) {
         console.log('Admin account is not active');
         return res.status(401).json({ error: 'Invalid credentials or account disabled' });
@@ -788,7 +788,7 @@ User question: ${message}`;
       console.log('Comparing passwords...');
       const isValidPassword = await bcrypt.compare(password, admin.password);
       console.log('Password comparison result:', isValidPassword);
-      
+
       if (!isValidPassword) {
         console.log('Password mismatch for user:', username);
         return res.status(401).json({ error: 'Invalid credentials' });
@@ -832,11 +832,11 @@ User question: ${message}`;
       const { id } = req.params;
       const users = await storage.getAllAdminUsers();
       const user = users.find(u => u.id === parseInt(id));
-      
+
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
-      
+
       // Remove password from response
       const { password, ...safeUser } = user;
       res.json(safeUser);
@@ -851,15 +851,14 @@ User question: ${message}`;
     try {
       const { id } = req.params;
       const { currentPassword, newPassword } = req.body;
-      
+
       if (!currentPassword || !newPassword) {
         return res.status(400).json({ error: 'Current password and new password are required' });
       }
 
       // Get current user
-      const users = await storage.getAllAdminUsers();
-      const user = users.find(u => u.id === parseInt(id));
-      
+      const users = await storage.getAllAdminUsers();      const user = users.find(u => u.id === parseInt(id));
+
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
@@ -874,11 +873,11 @@ User question: ${message}`;
       const updatedUser = await storage.updateAdminUser(parseInt(id), { 
         password: newPassword 
       });
-      
+
       if (!updatedUser) {
         return res.status(500).json({ error: 'Failed to update password' });
       }
-      
+
       res.json({ success: true, message: 'Password changed successfully' });
     } catch (error) {
       console.error('Change password error:', error);
@@ -890,14 +889,14 @@ User question: ${message}`;
   app.post('/api/seed-admin', async (req, res) => {
     try {
       console.log('Manual admin seeding requested...');
-      
+
       // Check current admin users
       const allAdmins = await storage.getAllAdminUsers();
       console.log('Current admin users:', allAdmins.map(a => ({ id: a.id, username: a.username, email: a.email })));
-      
+
       // Check if admin already exists
       const existingAdmin = await storage.getAdminByUsername('admin');
-      
+
       if (existingAdmin) {
         console.log('Admin already exists, updating password...');
         const hashedPassword = await bcrypt.hash('admin123', 12);
@@ -905,9 +904,9 @@ User question: ${message}`;
           password: hashedPassword,
           isActive: true
         });
-        
+
         console.log('Admin password updated successfully:', updated?.username);
-        
+
         return res.json({ 
           message: 'Admin account already exists - password updated',
           credentials: {
@@ -951,7 +950,7 @@ User question: ${message}`;
         .from(projects)
         .where(eq(projects.clientEmail, email))
         .orderBy(desc(projects.createdAt));
-      
+
       res.json(clientProjects);
     } catch (error) {
       console.error('Get client projects error:', error);
@@ -971,7 +970,7 @@ User question: ${message}`;
           eq(projectUpdates.isVisibleToClient, true)
         ))
         .orderBy(desc(projectUpdates.createdAt));
-      
+
       res.json(updates);
     } catch (error) {
       console.error('Get project updates error:', error);
@@ -984,7 +983,7 @@ User question: ${message}`;
     try {
       const { id } = req.params;
       const { title, description, updateType, isVisibleToClient = true } = req.body;
-      
+
       const [update] = await db
         .insert(projectUpdates)
         .values({
@@ -1009,7 +1008,7 @@ User question: ${message}`;
     try {
       const { id } = req.params;
       const { status, progress, notes } = req.body;
-      
+
       const [updatedProject] = await db
         .update(projects)
         .set({ 
@@ -1050,7 +1049,7 @@ User question: ${message}`;
         .from(messages)
         .where(eq(messages.projectId, parseInt(id)))
         .orderBy(desc(messages.createdAt));
-      
+
       res.json(projectMessages);
     } catch (error) {
       console.error('Get project messages error:', error);
@@ -1063,7 +1062,7 @@ User question: ${message}`;
     try {
       const { id } = req.params;
       const { senderId, senderType, recipientId, recipientType, subject, message } = req.body;
-      
+
       const [newMessage] = await db
         .insert(messages)
         .values({
@@ -1104,7 +1103,7 @@ User question: ${message}`;
         .from(bookings)
         .leftJoin(projects, eq(bookings.id, projects.bookingId))
         .orderBy(desc(bookings.createdAt));
-      
+
       res.json(bookingsWithProjects);
     } catch (error) {
       console.error('Get bookings with projects error:', error);
@@ -1242,7 +1241,7 @@ User question: ${message}`;
         // Create or update project
         const existingProject = await storage.getProjectByBookingId(parseInt(bookingId));
         const booking = await storage.getBookingById(parseInt(bookingId));
-        
+
         if (!existingProject && booking) {
           await storage.createProject({
             bookingId: parseInt(bookingId),

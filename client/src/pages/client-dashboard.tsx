@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarDays, Clock, DollarSign, MessageSquare, User, Mail } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 interface Project {
   id: number;
@@ -181,209 +184,211 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Project Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back! Here's an overview of your projects.</p>
-          <div className="flex items-center gap-2 mt-2">
-            <Mail className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-500">{clientEmail}</span>
+    <QueryClientProvider client={queryClient}>
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Project Dashboard</h1>
+            <p className="text-gray-600 mt-2">Welcome back! Here's an overview of your projects.</p>
+            <div className="flex items-center gap-2 mt-2">
+              <Mail className="h-4 w-4 text-gray-500" />
+              <span className="text-sm text-gray-500">{clientEmail}</span>
+            </div>
           </div>
-        </div>
 
-        {projects.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <h3 className="text-lg font-semibold mb-2">No Projects Found</h3>
-              <p className="text-gray-600 text-center mb-4">
-                We couldn't find any projects associated with this email address.
-              </p>
-              <Button onClick={() => window.location.href = '/#booking'}>
-                Book a New Project
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map((project: Project) => (
-              <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{project.name}</CardTitle>
-                    <Badge variant={getPriorityColor(project.priority)}>
-                      {project.priority}
-                    </Badge>
-                  </div>
-                  <CardDescription className="line-clamp-2">
-                    {project.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${getStatusColor(project.status)}`} />
-                      <span className="text-sm font-medium capitalize">{project.status}</span>
+          {projects.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <h3 className="text-lg font-semibold mb-2">No Projects Found</h3>
+                <p className="text-gray-600 text-center mb-4">
+                  We couldn't find any projects associated with this email address.
+                </p>
+                <Button onClick={() => window.location.href = '/#booking'}>
+                  Book a New Project
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {projects.map((project: Project) => (
+                <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{project.name}</CardTitle>
+                      <Badge variant={getPriorityColor(project.priority)}>
+                        {project.priority}
+                      </Badge>
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span>Progress</span>
-                        <span>{project.progress}%</span>
+                    <CardDescription className="line-clamp-2">
+                      {project.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${getStatusColor(project.status)}`} />
+                        <span className="text-sm font-medium capitalize">{project.status}</span>
                       </div>
-                      <Progress value={project.progress} className="h-2" />
-                    </div>
 
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        <span>{project.assignedTo}</span>
+                      <div>
+                        <div className="flex justify-between text-sm mb-2">
+                          <span>Progress</span>
+                          <span>{project.progress}%</span>
+                        </div>
+                        <Progress value={project.progress} className="h-2" />
                       </div>
-                      {project.budget && (
+
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          <span>{project.budget}</span>
+                          <User className="h-4 w-4" />
+                          <span>{project.assignedTo}</span>
+                        </div>
+                        {project.budget && (
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-4 w-4" />
+                            <span>{project.budget}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {project.dueDate && (
+                        <div className="flex items-center gap-1 text-sm text-gray-600">
+                          <CalendarDays className="h-4 w-4" />
+                          <span>Due: {new Date(project.dueDate).toLocaleDateString()}</span>
                         </div>
                       )}
-                    </div>
 
-                    {project.dueDate && (
-                      <div className="flex items-center gap-1 text-sm text-gray-600">
-                        <CalendarDays className="h-4 w-4" />
-                        <span>Due: {new Date(project.dueDate).toLocaleDateString()}</span>
-                      </div>
-                    )}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setSelectedProject(project)}
+                          >
+                            View Details
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>{project.name}</DialogTitle>
+                            <DialogDescription>{project.description}</DialogDescription>
+                          </DialogHeader>
 
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          className="w-full"
-                          onClick={() => setSelectedProject(project)}
-                        >
-                          View Details
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>{project.name}</DialogTitle>
-                          <DialogDescription>{project.description}</DialogDescription>
-                        </DialogHeader>
-                        
-                        <Tabs defaultValue="overview" className="w-full">
-                          <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="overview">Overview</TabsTrigger>
-                            <TabsTrigger value="updates">Updates</TabsTrigger>
-                            <TabsTrigger value="messages">Messages</TabsTrigger>
-                          </TabsList>
-                          
-                          <TabsContent value="overview" className="space-y-4">
-                            <div className="grid gap-4 md:grid-cols-2">
-                              <div>
-                                <h4 className="font-semibold mb-2">Project Status</h4>
-                                <div className="flex items-center gap-2">
-                                  <div className={`w-3 h-3 rounded-full ${getStatusColor(project.status)}`} />
-                                  <span className="capitalize">{project.status}</span>
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <h4 className="font-semibold mb-2">Progress</h4>
-                                <div className="space-y-2">
-                                  <Progress value={project.progress} />
-                                  <span className="text-sm text-gray-600">{project.progress}% complete</span>
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <h4 className="font-semibold mb-2">Assigned To</h4>
-                                <p>{project.assignedTo}</p>
-                              </div>
-                              
-                              {project.budget && (
+                          <Tabs defaultValue="overview" className="w-full">
+                            <TabsList className="grid w-full grid-cols-3">
+                              <TabsTrigger value="overview">Overview</TabsTrigger>
+                              <TabsTrigger value="updates">Updates</TabsTrigger>
+                              <TabsTrigger value="messages">Messages</TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="overview" className="space-y-4">
+                              <div className="grid gap-4 md:grid-cols-2">
                                 <div>
-                                  <h4 className="font-semibold mb-2">Budget</h4>
-                                  <p>{project.budget}</p>
+                                  <h4 className="font-semibold mb-2">Project Status</h4>
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-3 h-3 rounded-full ${getStatusColor(project.status)}`} />
+                                    <span className="capitalize">{project.status}</span>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h4 className="font-semibold mb-2">Progress</h4>
+                                  <div className="space-y-2">
+                                    <Progress value={project.progress} />
+                                    <span className="text-sm text-gray-600">{project.progress}% complete</span>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h4 className="font-semibold mb-2">Assigned To</h4>
+                                  <p>{project.assignedTo}</p>
+                                </div>
+
+                                {project.budget && (
+                                  <div>
+                                    <h4 className="font-semibold mb-2">Budget</h4>
+                                    <p>{project.budget}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </TabsContent>
+
+                            <TabsContent value="updates" className="space-y-4">
+                              <h4 className="font-semibold">Project Updates</h4>
+                              {projectUpdates.length === 0 ? (
+                                <p className="text-gray-600">No updates available yet.</p>
+                              ) : (
+                                <div className="space-y-3">
+                                  {projectUpdates.map((update: ProjectUpdate) => (
+                                    <Card key={update.id}>
+                                      <CardContent className="pt-4">
+                                        <div className="flex justify-between items-start mb-2">
+                                          <h5 className="font-medium">{update.title}</h5>
+                                          <span className="text-xs text-gray-500">
+                                            {new Date(update.createdAt).toLocaleDateString()}
+                                          </span>
+                                        </div>
+                                        <p className="text-sm text-gray-600">{update.description}</p>
+                                      </CardContent>
+                                    </Card>
+                                  ))}
                                 </div>
                               )}
-                            </div>
-                          </TabsContent>
-                          
-                          <TabsContent value="updates" className="space-y-4">
-                            <h4 className="font-semibold">Project Updates</h4>
-                            {projectUpdates.length === 0 ? (
-                              <p className="text-gray-600">No updates available yet.</p>
-                            ) : (
-                              <div className="space-y-3">
-                                {projectUpdates.map((update: ProjectUpdate) => (
-                                  <Card key={update.id}>
-                                    <CardContent className="pt-4">
-                                      <div className="flex justify-between items-start mb-2">
-                                        <h5 className="font-medium">{update.title}</h5>
-                                        <span className="text-xs text-gray-500">
-                                          {new Date(update.createdAt).toLocaleDateString()}
-                                        </span>
-                                      </div>
-                                      <p className="text-sm text-gray-600">{update.description}</p>
-                                    </CardContent>
-                                  </Card>
-                                ))}
-                              </div>
-                            )}
-                          </TabsContent>
-                          
-                          <TabsContent value="messages" className="space-y-4">
-                            <div className="space-y-4">
-                              <h4 className="font-semibold">Project Communication</h4>
-                              
-                              <div className="space-y-3 max-h-60 overflow-y-auto">
-                                {messages.map((message: Message) => (
-                                  <Card key={message.id}>
-                                    <CardContent className="pt-4">
-                                      <div className="flex justify-between items-start mb-2">
-                                        <h5 className="font-medium">{message.subject}</h5>
-                                        <div className="text-xs text-gray-500">
-                                          <div>{message.senderType === 'admin' ? 'Team' : 'You'}</div>
-                                          <div>{new Date(message.createdAt).toLocaleDateString()}</div>
+                            </TabsContent>
+
+                            <TabsContent value="messages" className="space-y-4">
+                              <div className="space-y-4">
+                                <h4 className="font-semibold">Project Communication</h4>
+
+                                <div className="space-y-3 max-h-60 overflow-y-auto">
+                                  {messages.map((message: Message) => (
+                                    <Card key={message.id}>
+                                      <CardContent className="pt-4">
+                                        <div className="flex justify-between items-start mb-2">
+                                          <h5 className="font-medium">{message.subject}</h5>
+                                          <div className="text-xs text-gray-500">
+                                            <div>{message.senderType === 'admin' ? 'Team' : 'You'}</div>
+                                            <div>{new Date(message.createdAt).toLocaleDateString()}</div>
+                                          </div>
                                         </div>
-                                      </div>
-                                      <p className="text-sm text-gray-600">{message.message}</p>
-                                    </CardContent>
-                                  </Card>
-                                ))}
-                              </div>
-                              
-                              <div className="border-t pt-4">
-                                <h5 className="font-medium mb-3">Send Message</h5>
-                                <div className="space-y-3">
-                                  <Input
-                                    placeholder="Subject"
-                                    value={newMessage.subject}
-                                    onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
-                                  />
-                                  <Textarea
-                                    placeholder="Your message..."
-                                    value={newMessage.message}
-                                    onChange={(e) => setNewMessage(prev => ({ ...prev, message: e.target.value }))}
-                                  />
-                                  <Button onClick={sendMessage}>
-                                    <MessageSquare className="h-4 w-4 mr-2" />
-                                    Send Message
-                                  </Button>
+                                        <p className="text-sm text-gray-600">{message.message}</p>
+                                      </CardContent>
+                                    </Card>
+                                  ))}
+                                </div>
+
+                                <div className="border-t pt-4">
+                                  <h5 className="font-medium mb-3">Send Message</h5>
+                                  <div className="space-y-3">
+                                    <Input
+                                      placeholder="Subject"
+                                      value={newMessage.subject}
+                                      onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
+                                    />
+                                    <Textarea
+                                      placeholder="Your message..."
+                                      value={newMessage.message}
+                                      onChange={(e) => setNewMessage(prev => ({ ...prev, message: e.target.value }))}
+                                    />
+                                    <Button onClick={sendMessage}>
+                                      <MessageSquare className="h-4 w-4 mr-2" />
+                                      Send Message
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </TabsContent>
-                        </Tabs>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                            </TabsContent>
+                          </Tabs>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </QueryClientProvider>
   );
 }
