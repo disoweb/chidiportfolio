@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -21,7 +21,7 @@ export async function runMigrations() {
     try {
       const migrationPath = join(__dirname, 'migrations', file);
 
-      if (fs.existsSync(migrationPath)) {
+      if (existsSync(migrationPath)) {
         const migrationSQL = readFileSync(migrationPath, 'utf8');
         const statements = migrationSQL.split(';').map(stmt => stmt.trim()).filter(stmt => stmt.length > 0);
 
