@@ -103,7 +103,7 @@ export function Booking() {
 
         // Redirect to client dashboard after successful booking
         setTimeout(() => {
-          window.location.href = `/client-dashboard?email=${encodeURIComponent(formData.email)}`;
+          window.location.href = `/client/dashboard?email=${encodeURIComponent(formData.email)}`;
         }, 2000);
 
         reset();

@@ -7,11 +7,11 @@ import Home from "@/pages/home";
 import AdminLogin from "@/pages/admin-login";
 import Admin from "@/pages/admin";
 import CreateAdmin from "@/pages/create-admin";
+import ClientDashboard from "@/pages/client-dashboard";
 import NotFound from "@/pages/not-found";
 import CaseStudy from "@/pages/case-study";
 import ProjectDetails from "@/pages/project-details";
 import PaymentCallback from "@/pages/payment-callback";
-import ClientDashboard from "@/pages/client-dashboard";
 import "./index.css";
 
 const queryClient = new QueryClient({

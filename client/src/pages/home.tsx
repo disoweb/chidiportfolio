@@ -21,54 +21,74 @@ export default function Home() {
 
   useEffect(() => {
     if (settings && !loading) {
+      console.log('Updating SEO with settings:', settings);
+      
       // Update document title
-      document.title = settings.seoTitle || "Chidi Ogara - Senior Fullstack Developer";
+      const newTitle = settings.seoTitle || "Chidi Ogara - Senior Fullstack Developer";
+      if (document.title !== newTitle) {
+        document.title = newTitle;
+        console.log('Updated title to:', newTitle);
+      }
 
       // Update meta description
-      let metaDescription = document.querySelector('meta[name="description"]');
+      let metaDescription = document.querySelector('meta[name="description"]') as HTMLMetaElement;
       if (!metaDescription) {
         metaDescription = document.createElement('meta');
         metaDescription.setAttribute('name', 'description');
         document.head.appendChild(metaDescription);
       }
-      metaDescription.setAttribute('content', settings.seoDescription || 'Professional fullstack web developer specializing in React, Node.js, and modern web technologies.');
+      const newDescription = settings.seoDescription || 'Professional fullstack web developer specializing in React, Node.js, and modern web technologies.';
+      if (metaDescription.content !== newDescription) {
+        metaDescription.setAttribute('content', newDescription);
+        console.log('Updated description to:', newDescription);
+      }
 
       // Update meta keywords
-      let metaKeywords = document.querySelector('meta[name="keywords"]');
+      let metaKeywords = document.querySelector('meta[name="keywords"]') as HTMLMetaElement;
       if (!metaKeywords) {
         metaKeywords = document.createElement('meta');
         metaKeywords.setAttribute('name', 'keywords');
         document.head.appendChild(metaKeywords);
       }
-      metaKeywords.setAttribute('content', settings.seoKeywords || 'fullstack developer, web development, React, Node.js, TypeScript');
+      const newKeywords = settings.seoKeywords || 'fullstack developer, web development, React, Node.js, TypeScript';
+      if (metaKeywords.content !== newKeywords) {
+        metaKeywords.setAttribute('content', newKeywords);
+        console.log('Updated keywords to:', newKeywords);
+      }
 
       // Update Open Graph title
-      let ogTitle = document.querySelector('meta[property="og:title"]');
+      let ogTitle = document.querySelector('meta[property="og:title"]') as HTMLMetaElement;
       if (!ogTitle) {
         ogTitle = document.createElement('meta');
         ogTitle.setAttribute('property', 'og:title');
         document.head.appendChild(ogTitle);
       }
-      ogTitle.setAttribute('content', settings.seoTitle || "Chidi Ogara - Senior Fullstack Developer");
+      if (ogTitle.content !== newTitle) {
+        ogTitle.setAttribute('content', newTitle);
+      }
 
       // Update Open Graph description
-      let ogDescription = document.querySelector('meta[property="og:description"]');
+      let ogDescription = document.querySelector('meta[property="og:description"]') as HTMLMetaElement;
       if (!ogDescription) {
         ogDescription = document.createElement('meta');
         ogDescription.setAttribute('property', 'og:description');
         document.head.appendChild(ogDescription);
       }
-      ogDescription.setAttribute('content', settings.seoDescription || 'Professional fullstack web developer specializing in React, Node.js, and modern web technologies.');
+      if (ogDescription.content !== newDescription) {
+        ogDescription.setAttribute('content', newDescription);
+      }
 
       // Update Open Graph image
       if (settings.ogImage) {
-        let ogImage = document.querySelector('meta[property="og:image"]');
+        let ogImage = document.querySelector('meta[property="og:image"]') as HTMLMetaElement;
         if (!ogImage) {
           ogImage = document.createElement('meta');
           ogImage.setAttribute('property', 'og:image');
           document.head.appendChild(ogImage);
         }
-        ogImage.setAttribute('content', settings.ogImage);
+        if (ogImage.content !== settings.ogImage) {
+          ogImage.setAttribute('content', settings.ogImage);
+        }
       }
     }
   }, [settings, loading]);
