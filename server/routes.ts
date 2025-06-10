@@ -972,18 +972,28 @@ User question: ${message}`;
 
   app.post('/api/admin/users', async (req: Request, res: Response) => {
     try {
-      const { username, email, password, role } = req.body;
+      const { username, email, password, role = 'team_member' } = req.body;
+
+      if (!username || !email || !password) {
+        return res.status(400).json({ error: 'Username, email, and password are required' });
+      }
+
+      // Validate role
+      const allowedRoles = ['admin', 'project_manager', 'team_member', 'developer', 'designer'];
+      if (!allowedRoles.includes(role)) {
+        return res.status(400).json({ error: 'Invalid role specified' });
+      }
 
       // Check if user already exists
       const existingUser = await storage.getAdminByUsername(username) || await storage.getAdminByEmail(email);
       if (existingUser) {
-        return res.status(400).json({ error: 'User already exists' });
+        return res.status(400).json({ error: 'User already exists with this username or email' });
       }
 
       const newUser = await storage.createAdminUser({ username, email, password, role });
       const { password: _, ...safeUser } = newUser;
 
-      res.json({ success: true, user: safeUser });
+      res.json({ success: true, user: safeUser, message: 'Admin user created successfully' });
     } catch (error) {
       console.error('Create admin user error:', error);
       res.status(500).json({ error: 'Failed to create admin user' });

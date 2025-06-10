@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { MessageCircle, X, Send, Bot, User } from "lucide-react";
+import { MessageCircle, X, Send, Bot, User, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { apiRequest } from "@/lib/queryClient";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRef, useEffect } from 'react';
 
 interface Message {
   id: string;
@@ -97,86 +99,154 @@ export function AIChatbot() {
     }
   };
 
-  const renderMessageWithButtons = (text: string) => {
-    // Pattern to match [Button Text](#section-id)
-    const buttonPattern = /\[([^\]]+)\]\(#([^)]+)\)/g;
+  const renderMessageWithButtons = (content: string) => {
+    const buttonRegex = /\[([^\]]+)\]\(#([^)]+)\)/g;
     const parts = [];
     let lastIndex = 0;
     let match;
 
-    while ((match = buttonPattern.exec(text)) !== null) {
-      // Ensure match has required parts
-      if (!match[1] || !match[2]) continue;
-
+    while ((match = buttonRegex.exec(content)) !== null) {
       // Add text before the button
       if (match.index > lastIndex) {
-        parts.push(text.slice(lastIndex, match.index));
+        parts.push(content.slice(lastIndex, match.index));
       }
 
-      // Add the button
+      // Add the button with safe navigation
+      const buttonText = match[1] || 'Click here';
+      const buttonHref = match[2] || '';
+
       parts.push(
         <button
-            key={match.index}
-            onClick={() => handleNavigation(match[2] || '')}
-            className="inline-flex items-center px-3 py-1 mx-1 bg-blue-600 text-white text-xs rounded-full hover:bg-blue-700 transition-colors"
+            key={`btn-${match.index}-${buttonHref}`}
+            onClick={() => handleNavigation(buttonHref)}
+            className="inline-flex items-center px-3 py-1 mx-1 my-1 bg-blue-600 text-white text-xs rounded-full hover:bg-blue-700 transition-colors break-words"
           >
-          {match[1]}
+          {buttonText}
         </button>
       );
 
-      lastIndex = match.index + match[0].length;
+      lastIndex = buttonRegex.lastIndex;
     }
 
-    // Add remaining text after the last button
-    if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex));
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push(content.slice(lastIndex));
     }
 
-    return parts.length > 0 ? parts : text;
+    return parts.length > 0 ? parts : [content];
+  };
+
+  const [currentInput, setCurrentInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!currentInput.trim() || isLoading) {
+      return;
+    }
+
+    const userMessage = {
+      role: 'user',
+      content: currentInput.trim(),
+    };
+
+    setMessages(prevMessages => [...prevMessages, userMessage]);
+    setCurrentInput('');
+    setIsLoading(true);
+
+    try {
+      const response = await apiRequest("POST", "/api/ai_chat", {
+        message: currentInput.trim(),
+        context: "web_development_portfolio",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const assistantMessage = {
+          role: 'assistant',
+          content: data.response,
+        };
+        setMessages(prevMessages => [...prevMessages, assistantMessage]);
+      } else {
+        console.error("Failed to fetch:", response.status);
+        setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Failed to get response.' }]);
+      }
+    } catch (error) {
+      console.error("An error occurred:", error);
+      setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: 'Failed to connect to the server.' }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <>
       {/* Chat Button */}
-      <Button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-4 md:bottom-8 md:right-8 z-50 p-3 md:p-4 rounded-full shadow-lg bg-blue-600 hover:bg-blue-700 text-white"
-        size="icon"
+      <motion.div
+        className={`fixed bottom-4 right-4 z-50 ${isOpen ? 'hidden' : 'block'}`}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 20 }}
       >
-        {isOpen ? (
-          <X className="w-5 h-5 md:w-6 md:h-6" />
-        ) : (
-          <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
-        )}
-      </Button>
+        <Button
+          onClick={() => setIsOpen(true)}
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+        >
+          <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
+        </Button>
+      </motion.div>
 
-      {/* Chat Window */}
-      {isOpen && (
-        <div className="fixed inset-x-4 bottom-20 top-20 md:bottom-24 md:right-8 md:top-auto md:left-auto md:w-96 md:h-96 bg-white rounded-lg shadow-2xl border border-gray-200 z-40 flex flex-col">
-          {/* Header */}
-          <div className="p-3 md:p-4 border-b border-gray-200 bg-blue-600 text-white rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-sm md:text-base">
-                  Chidi's AI Assistant
-                </h3>
-                <p className="text-xs md:text-sm text-blue-100">
-                  Ask me anything about Chidi's work!
-                </p>
+      {/* Chat Interface */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="fixed bottom-2 right-2 left-2 sm:bottom-6 sm:right-6 sm:left-auto z-50 w-auto sm:w-96 h-[calc(100vh-1rem)] sm:h-[500px] bg-white rounded-lg shadow-2xl border overflow-hidden"
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 sm:p-4 flex justify-between items-center">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-sm sm:text-base truncate">Digital Chidi AI</h3>
+                <p className="text-xs sm:text-sm opacity-90 truncate">Ask me anything!</p>
               </div>
-              <Button
-                onClick={() => setIsOpen(false)}
-                variant="ghost"
-                size="sm"
-                className="md:hidden text-white hover:bg-blue-700"
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setMessages([]);
+                    setCurrentInput('');
+                  }}
+                  className="text-white hover:bg-white/20 p-1 sm:p-2"
+                  title="Clear chat"
+                >
+                  <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsOpen(false)}
+                  className="text-white hover:bg-white/20 p-1 sm:p-2"
+                >
+                  <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+              </div>
             </div>
-          </div>
 
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-3 md:p-4 overflow-y-auto">
+            {/* Messages */}
+            <ScrollArea className="flex-1 p-3 md:p-4 overflow-y-auto">
             <div className="space-y-3 md:space-y-4">
               {messages.map((message) => (
                 <div
@@ -232,65 +302,8 @@ export function AIChatbot() {
             </div>
           </ScrollArea>
 
-          {/* Programming Illustrations */}
-          {!isLoading && messages.length <= 3 && (
-            <div className="px-4 pb-2">
-              <div className="flex justify-center space-x-4 opacity-30">
-                <div className="text-center">
-                  <div className="w-8 h-8 mx-auto mb-1 text-blue-400">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0L19.2 12l-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" />
-                    </svg>
-                  </div>
-                  <div className="text-xs text-gray-400">Code</div>
-                </div>
-                <div className="text-center">
-                  <div className="w-8 h-8 mx-auto mb-1 text-green-400">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2L2 7v10c0 5.55 3.84 9.739 9 9.899C16.16 26.739 20 22.55 20 17V7l-8-5z" />
-                    </svg>
-                  </div>
-                  <div className="text-xs text-gray-400">Secure</div>
-                </div>
-                <div className="text-center">
-                  <div className="w-8 h-8 mx-auto mb-1 text-purple-400">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
-                      <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
-                    </svg>
-                  </div>
-                  <div className="text-xs text-gray-400">Fast</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Loading Indicator */}
-          {isLoading && (
-            <div className="flex justify-start px-4 pb-2">
-              <div className="flex items-start space-x-2">
-                <div className="p-2 rounded-full bg-gray-100">
-                  <Bot className="w-4 h-4 text-blue-600" />
-                </div>
-                <div className="bg-gray-100 p-3 rounded-2xl">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "0.1s" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "0.2s" }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Input */}
-          <div className="p-4 border-t border-gray-100">
+            {/* Input */}
+            <div className="p-4 border-t border-gray-100">
             <div className="flex space-x-2">
               <Input
                 value={inputValue}
@@ -309,8 +322,9 @@ export function AIChatbot() {
               </Button>
             </div>
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

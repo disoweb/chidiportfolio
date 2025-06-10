@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { 
   contacts, bookings, transactions, orders, adminUsers, siteSettings, inquiries, projects, paymentLogs,
+  users, clientSessions, messages, notifications, projectUpdates,
   type Contact, type InsertContact,
   type Booking, type InsertBooking,
   type Transaction, type InsertTransaction,
@@ -281,6 +282,178 @@ class DatabaseStorage {
     }
   }
 
+  // User management methods
+  async createUser(userData: any): Promise<any> {
+    try {
+      const hashedPassword = await bcrypt.hash(userData.password, 12);
+      
+      const [user] = await db
+        .insert(users)
+        .values({
+          email: userData.email,
+          password: hashedPassword,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          phone: userData.phone || null,
+          isActive: true,
+          emailVerified: false
+        })
+        .returning();
+
+      return user;
+    } catch (error) {
+      console.error('Create user error:', error);
+      throw error;
+    }
+  }
+
+  async getUserByEmail(email: string): Promise<any> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email));
+      return user;
+    } catch (error) {
+      console.error('Get user by email error:', error);
+      return null;
+    }
+  }
+
+  async getUserById(id: number): Promise<any> {
+    try {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, id));
+      return user;
+    } catch (error) {
+      console.error('Get user by ID error:', error);
+      return null;
+    }
+  }
+
+  async updateUserLastLogin(userId: number): Promise<void> {
+    try {
+      await db
+        .update(users)
+        .set({ lastLogin: new Date() })
+        .where(eq(users.id, userId));
+    } catch (error) {
+      console.error('Update user last login error:', error);
+    }
+  }
+
+  // Client session methods
+  async createClientSession(sessionData: any): Promise<any> {
+    try {
+      const [session] = await db
+        .insert(clientSessions)
+        .values(sessionData)
+        .returning();
+      return session;
+    } catch (error) {
+      console.error('Create client session error:', error);
+      throw error;
+    }
+  }
+
+  async getClientSession(sessionToken: string): Promise<any> {
+    try {
+      const [session] = await db
+        .select()
+        .from(clientSessions)
+        .where(eq(clientSessions.sessionToken, sessionToken));
+      return session;
+    } catch (error) {
+      console.error('Get client session error:', error);
+      return null;
+    }
+  }
+
+  async deactivateClientSession(sessionToken: string): Promise<void> {
+    try {
+      await db
+        .update(clientSessions)
+        .set({ isActive: false })
+        .where(eq(clientSessions.sessionToken, sessionToken));
+    } catch (error) {
+      console.error('Deactivate client session error:', error);
+    }
+  }
+
+  async getBookingsByEmail(email: string): Promise<Booking[]> {
+    try {
+      const result = await db
+        .select()
+        .from(bookings)
+        .where(eq(bookings.email, email))
+        .orderBy(desc(bookings.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Get bookings by email error:', error);
+      return [];
+    }
+  }
+
+  async getPaymentLogsByEmail(email: string): Promise<PaymentLog[]> {
+    try {
+      const result = await db
+        .select()
+        .from(paymentLogs)
+        .where(eq(paymentLogs.customerEmail, email))
+        .orderBy(desc(paymentLogs.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Get payment logs by email error:', error);
+      return [];
+    }
+  }
+
+  async getUnreadMessagesForUser(userId: number): Promise<any[]> {
+    try {
+      const result = await db
+        .select()
+        .from(messages)
+        .where(and(
+          eq(messages.recipientId, userId),
+          eq(messages.recipientType, 'client'),
+          eq(messages.isRead, false)
+        ))
+        .orderBy(desc(messages.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Get unread messages error:', error);
+      return [];
+    }
+  }
+
+  async markMessagesAsRead(messageIds: number[]): Promise<void> {
+    try {
+      for (const id of messageIds) {
+        await db
+          .update(messages)
+          .set({ isRead: true })
+          .where(eq(messages.id, id));
+      }
+    } catch (error) {
+      console.error('Mark messages as read error:', error);
+    }
+  }
+
+  async createNotification(notificationData: any): Promise<any> {
+    try {
+      const [notification] = await db
+        .insert(notifications)
+        .values(notificationData)
+        .returning();
+      return notification;
+    } catch (error) {
+      console.error('Create notification error:', error);
+      throw error;
+    }
+  }
+
   async getProjectsByClientEmail(clientEmail: string): Promise<Project[]> {
     try {
       const result = await db
@@ -297,9 +470,12 @@ class DatabaseStorage {
 
   async getProjectUpdates(projectId: number): Promise<any[]> {
     try {
-      // Return empty array for now as we don't have projectUpdates table implemented
-      console.log('Getting project updates for project:', projectId);
-      return [];
+      const result = await db
+        .select()
+        .from(projectUpdates)
+        .where(eq(projectUpdates.projectId, projectId))
+        .orderBy(desc(projectUpdates.createdAt));
+      return result;
     } catch (error) {
       console.error('Get project updates error:', error);
       return [];
@@ -308,9 +484,12 @@ class DatabaseStorage {
 
   async getProjectMessages(projectId: number): Promise<any[]> {
     try {
-      // Return empty array for now as we don't have messages table implemented  
-      console.log('Getting project messages for project:', projectId);
-      return [];
+      const result = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.projectId, projectId))
+        .orderBy(desc(messages.createdAt));
+      return result;
     } catch (error) {
       console.error('Get project messages error:', error);
       return [];
@@ -319,9 +498,11 @@ class DatabaseStorage {
 
   async createMessage(messageData: any): Promise<any> {
     try {
-      // Return mock message for now as we don't have messages table implemented
-      console.log('Creating message:', messageData);
-      return { id: 1, ...messageData, createdAt: new Date() };
+      const [message] = await db
+        .insert(messages)
+        .values(messageData)
+        .returning();
+      return message;
     } catch (error) {
       console.error('Create message error:', error);
       throw error;

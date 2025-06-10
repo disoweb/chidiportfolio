@@ -15,7 +15,7 @@ export function Booking() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [formData, setFormData] = useState<BookingForm>({
+  const [formData, setFormData<BookingForm>] = useState({
     name: '',
     email: '',
     phone: '',
