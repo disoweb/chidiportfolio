@@ -871,13 +871,13 @@ User question: ${message}`;
       res.json(projects);
     } catch (error) {
       console.error('Get projects error:', error);
-      res.status(500.json({ error: 'Failed to fetch projects' });
+      res.status(500).json({ error: 'Failed to fetch projects' });
     }
   });
 
   app.post('/api/projects', async (req: Request, res: Response) => {
     try {
-      const project = await storage.createProject(req.body);
+            const project = await storage.createProject(req.body);
       res.json({ success: true, project });
     } catch (error) {
       console.error('Create project error:', error);
