@@ -54,7 +54,7 @@ async function seedAdminUser() {
         {
           username: 'admin',
           email: 'admin@chidiogara.dev',
-          password: 'AdminPass123!',
+          password: 'admin123',
           role: 'admin',
           firstName: 'Admin',
           lastName: 'User'
@@ -62,7 +62,7 @@ async function seedAdminUser() {
         {
           username: 'manager',
           email: 'manager@chidiogara.dev',
-          password: 'ManagerPass123!',
+          password: 'manager123',
           role: 'manager',
           firstName: 'Project',
           lastName: 'Manager'

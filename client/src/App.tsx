@@ -34,10 +34,10 @@ function App() {
               <Route path="/admin/login" component={AdminLogin} />
               <Route path="/admin" component={Admin} />
               <Route path="/admin/create" component={CreateAdmin} />
+              <Route path="/client/dashboard" component={ClientDashboard} />
+              <Route path="/payment/callback" component={PaymentCallback} />
               <Route path="/case-study/:id" component={CaseStudy} />
               <Route path="/project/:id" component={ProjectDetails} />
-              <Route path="/payment/callback" component={PaymentCallback} />
-              <Route path="/client/dashboard" component={ClientDashboard} />
               <Route component={NotFound} />
             </Switch>
             <Toaster />
