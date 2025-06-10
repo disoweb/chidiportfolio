@@ -643,10 +643,13 @@ class DatabaseStorage {
       const adminUsers = await this.getAllAdminUsers();
       if (adminUsers.length === 0) {
         console.log('No admin users found, creating default admin...');
+        // Hash the password before storing it
+        const hashedPassword = await bcrypt.hash('admin123', 12);
+
         await this.createAdminUser({
           username: 'admin',
           email: 'admin@chidiogara.dev',
-          password: 'admin123',
+          password: hashedPassword, // Store the hashed password
           role: 'admin'
         });
         console.log('Default admin user created successfully');
