@@ -97,9 +97,15 @@ export function Booking() {
       if (result.success) {
         toast({
           title: "Booking Submitted Successfully!",
-          description: "We'll get back to you within 24 hours.",
+          description: "We'll get back to you within 24 hours. Check your project dashboard for updates.",
         });
         setSubmissionStatus('success');
+        
+        // Redirect to client dashboard after successful booking
+        setTimeout(() => {
+          window.location.href = `/client-dashboard?email=${encodeURIComponent(formData.email)}`;
+        }, 2000);
+        
         reset();
       } else {
         console.error('Booking submission failed:', result);

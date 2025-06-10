@@ -69,9 +69,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'planning',
         priority: 'medium',
         clientEmail: validatedData.email,
-        budget: validatedData.budget,
+        budget: validatedData.budget ? validatedData.budget.replace(/[^0-9.-]/g, '') : null,
         estimatedTime: 40, // Default 40 hours
-        notes: `Project type: ${validatedData.projectType}, Timeline: ${validatedData.timeline}`
+        notes: `Project type: ${validatedData.projectType}, Timeline: ${validatedData.timeline}, Budget: ${validatedData.budget}`
       });
 
       res.json({ 

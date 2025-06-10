@@ -8,6 +8,7 @@ import Home from '@/pages/home';
 import AdminDashboard from '@/pages/admin';
 import AdminLogin from '@/pages/admin-login';
 import CreateAdmin from "./pages/create-admin";
+import ClientDashboard from '@/pages/client-dashboard';
 import NotFound from '@/pages/not-found';
 import CaseStudy from '@/pages/case-study';
 import ProjectDetails from '@/pages/project-details';
@@ -53,6 +54,7 @@ function App() {
             <Route path="/admin" component={AdminDashboard} />
             <Route path="/admin/login" component={AdminLogin} />
             <Route path="/create-admin" component={CreateAdmin} />
+            <Route path="/client-dashboard" component={ClientDashboard} />
             <Route path="/project/:id" component={ProjectDetails} />
             <Route path="/case-study/:id" component={CaseStudy} />
             <Route path="/payment/callback" component={PaymentCallback} />
