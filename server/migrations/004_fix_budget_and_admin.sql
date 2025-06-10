@@ -16,10 +16,6 @@ CREATE TABLE IF NOT EXISTS admin_users (
 );
 
 -- Create default admin user if none exists
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM admin_users WHERE username = 'admin') THEN
-    INSERT INTO admin_users (username, email, password, role, is_active)
-    VALUES ('admin', 'admin@chidiogara.dev', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewPh0aQQ95Z8xOy6', 'admin', 'true');
-  END IF;
-END $$;
+INSERT INTO admin_users (username, email, password, role, is_active)
+VALUES ('admin', 'admin@chidiogara.dev', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewPh0aQQ95Z8xOy6', 'admin', 'true')
+ON CONFLICT (username) DO NOTHING;

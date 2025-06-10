@@ -1,73 +1,51 @@
-import { Route, Switch } from 'wouter';
-import { useEffect } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from '@/lib/queryClient';
-import { Toaster } from '@/components/ui/toaster';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { ThemeProvider } from '@/components/ui/theme-provider';
-import { useSiteSettings } from '@/hooks/use-site-settings';
-import Home from '@/pages/home';
-import AdminDashboard from '@/pages/admin';
-import AdminLogin from '@/pages/admin-login';
-import CreateAdmin from "./pages/create-admin";
-import ClientDashboard from '@/pages/client-dashboard';
-import NotFound from '@/pages/not-found';
-import CaseStudy from '@/pages/case-study';
-import ProjectDetails from '@/pages/project-details';
-import PaymentCallback from '@/pages/payment-callback';
+import { Switch, Route } from "wouter";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
+import Home from "@/pages/home";
+import AdminLogin from "@/pages/admin-login";
+import Admin from "@/pages/admin";
+import CreateAdmin from "@/pages/create-admin";
+import NotFound from "@/pages/not-found";
+import CaseStudy from "@/pages/case-study";
+import ProjectDetails from "@/pages/project-details";
+import PaymentCallback from "@/pages/payment-callback";
+import ClientDashboard from "@/pages/client-dashboard";
+import "./index.css";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 function App() {
-  const { settings } = useSiteSettings();
-
-  useEffect(() => {
-    if (settings) {
-      document.title = settings.seoTitle;
-
-      // Update meta description
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', settings.seoDescription);
-      } else {
-        const meta = document.createElement('meta');
-        meta.name = 'description';
-        meta.content = settings.seoDescription;
-        document.head.appendChild(meta);
-      }
-
-      // Update meta keywords
-      const metaKeywords = document.querySelector('meta[name="keywords"]');
-      if (metaKeywords) {
-        metaKeywords.setAttribute('content', settings.seoKeywords);
-      } else {
-        const meta = document.createElement('meta');
-        meta.name = 'keywords';
-        meta.content = settings.seoKeywords;
-        document.head.appendChild(meta);
-      }
-    }
-  }, [settings]);
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <TooltipProvider>
-          <div className="min-h-screen bg-background text-foreground">
+          <div className="min-h-screen bg-background font-sans antialiased">
             <Switch>
               <Route path="/" component={Home} />
-              <Route path="/admin" component={AdminDashboard} />
               <Route path="/admin/login" component={AdminLogin} />
-              <Route path="/create-admin" component={CreateAdmin} />
-              <Route path="/client-dashboard" component={ClientDashboard} />
-              <Route path="/project/:id" component={ProjectDetails} />
+              <Route path="/admin" component={Admin} />
+              <Route path="/admin/create" component={CreateAdmin} />
               <Route path="/case-study/:id" component={CaseStudy} />
+              <Route path="/project/:id" component={ProjectDetails} />
               <Route path="/payment/callback" component={PaymentCallback} />
+              <Route path="/client/dashboard" component={ClientDashboard} />
               <Route component={NotFound} />
             </Switch>
+            <Toaster />
           </div>
-          <Toaster />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
 }
+
 export default App;

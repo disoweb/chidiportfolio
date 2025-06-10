@@ -14,7 +14,8 @@ export async function runMigrations() {
     '002_add_project_management.sql',
     '003_add_messaging_and_notifications.sql',
     '003_fix_admin_boolean.sql',
-    '004_fix_budget_and_admin.sql'
+    '004_fix_budget_and_admin.sql',
+    '005_fix_users_table.sql'
   ];
 
   console.log('Running database migrations...');

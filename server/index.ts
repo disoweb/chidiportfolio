@@ -124,41 +124,8 @@ async function seedAdminUser() {
         }
       }
 
-      // Create regular user accounts
-      for (const user of userAccounts) {
-        const checkUserQuery = 'SELECT id, username, email FROM users WHERE username = $1';
-        const existingUser = await client.query(checkUserQuery, [user.username]);
-        
-        if (existingUser.rows.length === 0) {
-          const hashedPassword = await bcrypt.default.hash(user.password, 12);
-          const insertUserQuery = `
-            INSERT INTO users (username, email, password, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, NOW(), NOW())
-            RETURNING id, username, email
-          `;
-          
-          const newUser = await client.query(insertUserQuery, [
-            user.username,
-            user.email,
-            hashedPassword,
-            true
-          ]);
-          
-          console.log(`User account created: ${user.username} (${user.email}) - Password: ${user.password}`);
-        } else {
-          // Update existing user password
-          const hashedPassword = await bcrypt.default.hash(user.password, 12);
-          const updateUserQuery = `
-            UPDATE users 
-            SET password = $1, is_active = $2, updated_at = NOW()
-            WHERE username = $3
-            RETURNING id, username, email
-          `;
-          
-          await client.query(updateUserQuery, [hashedPassword, true, user.username]);
-          console.log(`User account updated: ${user.username} (${user.email}) - Password: ${user.password}`);
-        }
-      }
+      // Create regular user accounts (skip for now until table is fixed)
+      console.log('Skipping user account creation until table structure is fixed by migrations');
       
       await client.query('COMMIT');
       console.log('\n=== ACCOUNT SUMMARY ===');
