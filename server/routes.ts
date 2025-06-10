@@ -58,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Received booking request:', req.body);
       const validatedData = insertBookingSchema.parse(req.body);
       console.log('Validated booking data:', validatedData);
-      
+
       // Store booking submission
       const booking = await storage.createBooking(validatedData);
       console.log('Created booking:', booking);
@@ -164,7 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  
+
 
   // Update booking endpoint
   app.put('/api/bookings/:id', async (req, res) => {
@@ -764,14 +764,14 @@ User question: ${message}`;
       console.log('Comparing passwords...');
       console.log('Provided password:', password);
       console.log('Stored hash:', admin.password);
-      
+
       const isValidPassword = await bcrypt.compare(password, admin.password);
       console.log('Password comparison result:', isValidPassword);
 
       if (!isValidPassword) {
         console.log('Password mismatch for user:', username);
         console.log('Attempting direct comparison...');
-        
+
         // Fallback: if bcrypt fails, try direct comparison for development
         if (password === 'admin123' && admin.username === 'admin') {
           console.log('Using fallback authentication');
@@ -855,7 +855,8 @@ User question: ${message}`;
       // Verify current password
       const isValidPassword = await bcrypt.compare(currentPassword, user.password);
       if (!isValidPassword) {
-        return res.status(400).json({ error: 'Current password is incorrect' });
+        return res.status(400).```python
+json({ error: 'Current password is incorrect' });
       }
 
       // Update password
@@ -1291,6 +1292,177 @@ User question: ${message}`;
       });
     }
   });
+
+  // Admin profile endpoint
+    app.get('/api/admin/users/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        const user = await storage.getAdminUserById(parseInt(id));
+
+        if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json(user);
+      } catch (error) {
+        console.error('Failed to get admin user:', error);
+        res.status(500).json({ error: 'Failed to get user' });
+      }
+    });
+
+    // Get all admin users (team members)
+    app.get('/api/admin/users', async (req, res) => {
+      try {
+        const users = await storage.getAllAdminUsers();
+        res.json(users);
+      } catch (error) {
+        console.error('Failed to get admin users:', error);
+        res.status(500).json({ error: 'Failed to get users' });
+      }
+    });
+
+    // Create new admin user (team member)
+    app.post('/api/admin/users', async (req, res) => {
+      try {
+        const { username, email, password, role } = req.body;
+
+        if (!username || !email || !password) {
+          return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const user = await storage.createAdminUser({
+          username,
+          email,
+          password: hashedPassword,
+          role: role || 'team_member'
+        });
+
+        res.status(201).json({ success: true, user });
+      } catch (error) {
+        console.error('Failed to create admin user:', error);
+        res.status(500).json({ error: 'Failed to create user' });
+      }
+    });
+
+    // Delete admin user
+    app.delete('/api/admin/users/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        await storage.deleteAdminUser(parseInt(id));
+        res.json({ success: true, message: 'User deleted successfully' });
+      } catch (error) {
+        console.error('Failed to delete admin user:', error);
+        res.status(500).json({ error: 'Failed to delete user' });
+      }
+    });
+
+    // Projects endpoints
+    app.get('/api/projects', async (req, res) => {
+      try {
+        const projects = await storage.getAllProjects();
+        res.json(projects);
+      } catch (error) {
+        console.error('Failed to get projects:', error);
+        res.status(500).json({ error: 'Failed to get projects' });
+      }
+    });
+
+    app.post('/api/projects', async (req, res) => {
+      try {
+        const projectData = req.body;
+        const project = await storage.createProject(projectData);
+        res.status(201).json({ success: true, project });
+      } catch (error) {
+        console.error('Failed to create project:', error);
+        res.status(500).json({ error: 'Failed to create project' });
+      }
+    });
+
+    app.put('/api/projects/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        const updateData = req.body;
+        const project = await storage.updateProject(parseInt(id), updateData);
+        res.json({ success: true, project });
+      } catch (error) {
+        console.error('Failed to update project:', error);
+        res.status(500).json({ error: 'Failed to update project' });
+      }
+    });
+
+    app.delete('/api/projects/:id', async (req, res) => {
+      try {
+        const { id } = req.params;
+        await storage.deleteProject(parseInt(id));
+        res.json({ success: true, message: 'Project deleted successfully' });
+      } catch (error) {
+        console.error('Failed to delete project:', error);
+        res.status(500).json({ error: 'Failed to delete project' });
+      }
+    });
+
+    // Client projects endpoint
+    app.get('/api/client/projects/:email', async (req, res) => {
+      try {
+        const { email } = req.params;
+        const projects = await storage.getProjectsByClientEmail(decodeURIComponent(email));
+        res.json(projects);
+      } catch (error) {
+        console.error('Failed to get client projects:', error);
+        res.status(500).json({ error: 'Failed to get projects' });
+      }
+    });
+
+    // Project updates endpoints
+    app.get('/api/projects/:id/updates', async (req, res) => {
+      try {
+        const { id } = req.params;
+        const updates = await storage.getProjectUpdates(parseInt(id));
+        res.json(updates);
+      } catch (error) {
+        console.error('Failed to get project updates:', error);
+        res.status(500).json({ error: 'Failed to get updates' });
+      }
+    });
+
+    // Project messages endpoints
+    app.get('/api/projects/:id/messages', async (req, res) => {
+      try {
+        const { id } = req.params;
+        const messages = await storage.getProjectMessages(parseInt(id));
+        res.json(messages);
+      } catch (error) {
+        console.error('Failed to get project messages:', error);
+        res.status(500).json({ error: 'Failed to get messages' });
+      }
+    });
+
+    app.post('/api/projects/:id/messages', async (req, res) => {
+      try {
+        const { id } = req.params;
+        const messageData = {
+          ...req.body,
+          projectId: parseInt(id)
+        };
+        const message = await storage.createMessage(messageData);
+        res.status(201).json({ success: true, message });
+      } catch (error) {
+        console.error('Failed to create message:', error);
+        res.status(500).json({ error: 'Failed to create message' });
+      }
+    });
+
+    // Payment logs endpoint
+    app.get('/api/payment-logs', async (req, res) => {
+      try {
+        const logs = await storage.getAllPaymentLogs();
+        res.json(logs);
+      } catch (error) {
+        console.error('Failed to get payment logs:', error);
+        res.status(500).json({ error: 'Failed to get payment logs' });
+      }
+    });
 
   const httpServer = createServer(app);
   return httpServer;

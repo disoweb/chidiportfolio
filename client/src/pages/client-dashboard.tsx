@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,29 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, Clock, DollarSign, MessageSquare, User, Mail } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
-
-// Fallback function if apiRequest fails
-const safeFetch = async (method: string, url: string, body?: any) => {
-  try {
-    return await apiRequest(method, url, body);
-  } catch (error) {
-    console.error('API request failed, using fetch fallback:', error);
-    const options: RequestInit = {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    };
-    if (body) {
-      options.body = JSON.stringify(body);
-    }
-    return fetch(url, options);
-  }
-};
+import { CalendarDays, Clock, DollarSign, MessageSquare, User, Mail, CheckCircle, AlertCircle, Briefcase, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
 
 interface Project {
   id: number;
@@ -79,30 +59,37 @@ export default function ClientDashboard() {
     }
   }, []);
 
-  const { data: projects = [], isLoading: loadingProjects, error: projectsError } = useQuery({
+  const { data: projects = [], isLoading: loadingProjects, error: projectsError, refetch } = useQuery({
     queryKey: ['/api/client/projects', clientEmail],
     queryFn: async () => {
       try {
-        const response = await safeFetch('GET', `/api/client/projects/${encodeURIComponent(clientEmail)}`);
+        const response = await fetch(`/api/client/projects/${encodeURIComponent(clientEmail)}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.json();
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error('Failed to fetch projects:', error);
         return [];
       }
     },
     enabled: !!clientEmail,
-    retry: 3,
+    retry: 2,
     retryDelay: 1000,
   });
 
   const { data: projectUpdates = [] } = useQuery({
     queryKey: ['/api/projects/updates', selectedProject?.id],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/projects/${selectedProject?.id}/updates`);
-      return response.json();
+      try {
+        const response = await fetch(`/api/projects/${selectedProject?.id}/updates`);
+        if (!response.ok) return [];
+        return response.json();
+      } catch (error) {
+        console.error('Failed to fetch project updates:', error);
+        return [];
+      }
     },
     enabled: !!selectedProject?.id,
   });
@@ -110,8 +97,14 @@ export default function ClientDashboard() {
   const { data: messages = [] } = useQuery({
     queryKey: ['/api/projects/messages', selectedProject?.id],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/projects/${selectedProject?.id}/messages`);
-      return response.json();
+      try {
+        const response = await fetch(`/api/projects/${selectedProject?.id}/messages`);
+        if (!response.ok) return [];
+        return response.json();
+      } catch (error) {
+        console.error('Failed to fetch project messages:', error);
+        return [];
+      }
     },
     enabled: !!selectedProject?.id,
   });
@@ -127,20 +120,28 @@ export default function ClientDashboard() {
     }
 
     try {
-      await apiRequest('POST', `/api/projects/${selectedProject.id}/messages`, {
-        senderId: 0, // Client ID (would be from auth)
-        senderType: 'client',
-        recipientId: 1, // Admin ID
-        recipientType: 'admin',
-        subject: newMessage.subject,
-        message: newMessage.message,
+      const response = await fetch(`/api/projects/${selectedProject.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderId: 0, // Client ID (would be from auth)
+          senderType: 'client',
+          recipientId: 1, // Admin ID
+          recipientType: 'admin',
+          subject: newMessage.subject,
+          message: newMessage.message,
+        })
       });
 
-      setNewMessage({ subject: '', message: '' });
-      toast({
-        title: "Message Sent",
-        description: "Your message has been sent to the project manager.",
-      });
+      if (response.ok) {
+        setNewMessage({ subject: '', message: '' });
+        toast({
+          title: "Message Sent",
+          description: "Your message has been sent to the project manager.",
+        });
+      } else {
+        throw new Error('Failed to send message');
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -155,6 +156,7 @@ export default function ClientDashboard() {
       case 'completed': return 'bg-green-500';
       case 'in-progress': return 'bg-blue-500';
       case 'testing': return 'bg-yellow-500';
+      case 'planning': return 'bg-purple-500';
       case 'on-hold': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
@@ -169,29 +171,47 @@ export default function ClientDashboard() {
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return CheckCircle;
+      case 'in-progress': return Clock;
+      case 'testing': return AlertCircle;
+      case 'planning': return Target;
+      case 'on-hold': return AlertCircle;
+      default: return Clock;
+    }
+  };
+
   if (!clientEmail) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Client Access</CardTitle>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-gray-900">Client Access</CardTitle>
             <CardDescription>Enter your email to access your project dashboard</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <Input
-                placeholder="your.email@example.com"
-                value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-              />
+              <div>
+                <Input
+                  placeholder="your.email@example.com"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  className="text-center"
+                />
+              </div>
               <Button 
                 className="w-full"
                 onClick={() => {
                   if (clientEmail) {
                     localStorage.setItem('clientEmail', clientEmail);
-                    window.location.search = `?email=${encodeURIComponent(clientEmail)}`;
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('email', clientEmail);
+                    window.history.replaceState({}, '', url.toString());
+                    window.location.reload();
                   }
                 }}
+                disabled={!clientEmail}
               >
                 Access Dashboard
               </Button>
@@ -204,24 +224,39 @@ export default function ClientDashboard() {
 
   if (loadingProjects) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-600">Loading your projects...</p>
+        </div>
       </div>
     );
   }
 
   if (projectsError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Error</CardTitle>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl font-bold text-red-600">Error</CardTitle>
             <CardDescription>Failed to load your projects. Please try again.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => window.location.reload()} className="w-full">
-              Retry
-            </Button>
+            <div className="space-y-4">
+              <Button onClick={() => refetch()} className="w-full">
+                Retry
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  localStorage.removeItem('clientEmail');
+                  window.location.reload();
+                }} 
+                className="w-full"
+              >
+                Change Email
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -229,92 +264,121 @@ export default function ClientDashboard() {
   }
 
   return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Project Dashboard</h1>
-            <p className="text-gray-600 mt-2">Welcome back! Here's an overview of your projects.</p>
-            <div className="flex items-center gap-2 mt-2">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-6 lg:py-8 max-w-6xl">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Project Dashboard</h1>
+            <p className="text-gray-600 mb-4">Welcome back! Here's an overview of your projects with us.</p>
+            <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-500">{clientEmail}</span>
+              <span className="text-sm text-gray-700 font-medium">{clientEmail}</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  localStorage.removeItem('clientEmail');
+                  window.location.reload();
+                }}
+                className="ml-auto"
+              >
+                Change Email
+              </Button>
             </div>
           </div>
+        </div>
 
-          {projects.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <h3 className="text-lg font-semibold mb-2">No Projects Found</h3>
-                <p className="text-gray-600 text-center mb-4">
-                  We couldn't find any projects associated with this email address.
-                </p>
-                <Button onClick={() => window.location.href = '/#booking'}>
-                  Book a New Project
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project: Project) => (
-                <Card key={project.id} className="cursor-pointer hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{project.name}</CardTitle>
-                      <Badge variant={getPriorityColor(project.priority)}>
-                        {project.priority}
-                      </Badge>
+        {projects.length === 0 ? (
+          <Card className="shadow-lg">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                <Briefcase className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No Projects Found</h3>
+              <p className="text-gray-600 text-center mb-6 max-w-md">
+                We couldn't find any projects associated with this email address. If you have recently booked a service, it may take some time to appear here.
+              </p>
+              <Button onClick={() => window.location.href = '/#booking'} size="lg">
+                Book a New Project
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project: Project) => {
+              const StatusIcon = getStatusIcon(project.status);
+              
+              return (
+                <Card key={project.id} className="cursor-pointer hover:shadow-xl transition-all duration-300 border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg mb-2 line-clamp-1">{project.name}</CardTitle>
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant={getPriorityColor(project.priority)} className="text-xs">
+                            {project.priority} priority
+                          </Badge>
+                          <div className="flex items-center gap-1">
+                            <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`} />
+                            <span className="text-xs text-muted-foreground capitalize">{project.status}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <StatusIcon className="w-5 h-5 text-gray-400" />
                     </div>
                     <CardDescription className="line-clamp-2">
                       {project.description}
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${getStatusColor(project.status)}`} />
-                        <span className="text-sm font-medium capitalize">{project.status}</span>
-                      </div>
-
                       <div>
                         <div className="flex justify-between text-sm mb-2">
-                          <span>Progress</span>
-                          <span>{project.progress}%</span>
+                          <span className="font-medium">Progress</span>
+                          <span className="text-blue-600 font-semibold">{project.progress}%</span>
                         </div>
                         <Progress value={project.progress} className="h-2" />
                       </div>
 
-                      <div className="flex items-center gap-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          <span>{project.assignedTo}</span>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <User className="h-3 w-3 text-gray-400" />
+                          <span className="text-xs text-muted-foreground truncate">{project.assignedTo}</span>
                         </div>
                         {project.budget && (
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="h-4 w-4" />
-                            <span>{project.budget}</span>
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="h-3 w-3 text-gray-400" />
+                            <span className="text-xs text-muted-foreground">{project.budget}</span>
                           </div>
                         )}
                       </div>
 
                       {project.dueDate && (
-                        <div className="flex items-center gap-1 text-sm text-gray-600">
-                          <CalendarDays className="h-4 w-4" />
-                          <span>Due: {new Date(project.dueDate).toLocaleDateString()}</span>
+                        <div className="flex items-center gap-2 text-sm">
+                          <CalendarDays className="h-3 w-3 text-gray-400" />
+                          <span className="text-xs text-muted-foreground">
+                            Due: {new Date(project.dueDate).toLocaleDateString()}
+                          </span>
                         </div>
                       )}
 
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button
-                            variant="outline"
+                            variant="default"
                             className="w-full"
                             onClick={() => setSelectedProject(project)}
                           >
                             View Details
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
                           <DialogHeader>
-                            <DialogTitle>{project.name}</DialogTitle>
+                            <DialogTitle className="flex items-center gap-2">
+                              <Briefcase className="w-5 h-5" />
+                              {project.name}
+                            </DialogTitle>
                             <DialogDescription>{project.description}</DialogDescription>
                           </DialogHeader>
 
@@ -325,113 +389,186 @@ export default function ClientDashboard() {
                               <TabsTrigger value="messages">Messages</TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="overview" className="space-y-4">
-                              <div className="grid gap-4 md:grid-cols-2">
-                                <div>
-                                  <h4 className="font-semibold mb-2">Project Status</h4>
-                                  <div className="flex items-center gap-2">
-                                    <div className={`w-3 h-3 rounded-full ${getStatusColor(project.status)}`} />
-                                    <span className="capitalize">{project.status}</span>
-                                  </div>
+                            <div className="max-h-[60vh] overflow-y-auto">
+                              <TabsContent value="overview" className="space-y-6">
+                                <div className="grid gap-6 md:grid-cols-2">
+                                  <Card>
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-base">Project Status</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="flex items-center gap-3">
+                                        <div className={`w-4 h-4 rounded-full ${getStatusColor(project.status)}`} />
+                                        <span className="capitalize font-medium">{project.status}</span>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+
+                                  <Card>
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-base">Progress</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="space-y-2">
+                                        <Progress value={project.progress} />
+                                        <span className="text-sm text-gray-600">{project.progress}% complete</span>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+
+                                  <Card>
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-base">Team</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="flex items-center gap-2">
+                                        <User className="w-4 h-4 text-gray-400" />
+                                        <span>{project.assignedTo}</span>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+
+                                  {project.budget && (
+                                    <Card>
+                                      <CardHeader className="pb-3">
+                                        <CardTitle className="text-base">Budget</CardTitle>
+                                      </CardHeader>
+                                      <CardContent>
+                                        <div className="flex items-center gap-2">
+                                          <DollarSign className="w-4 h-4 text-gray-400" />
+                                          <span>{project.budget}</span>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  )}
                                 </div>
 
-                                <div>
-                                  <h4 className="font-semibold mb-2">Progress</h4>
-                                  <div className="space-y-2">
-                                    <Progress value={project.progress} />
-                                    <span className="text-sm text-gray-600">{project.progress}% complete</span>
-                                  </div>
-                                </div>
+                                {(project.startDate || project.dueDate) && (
+                                  <Card>
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-base">Timeline</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="grid gap-2 md:grid-cols-2">
+                                        {project.startDate && (
+                                          <div>
+                                            <p className="text-sm text-muted-foreground">Start Date</p>
+                                            <p className="font-medium">{new Date(project.startDate).toLocaleDateString()}</p>
+                                          </div>
+                                        )}
+                                        {project.dueDate && (
+                                          <div>
+                                            <p className="text-sm text-muted-foreground">Due Date</p>
+                                            <p className="font-medium">{new Date(project.dueDate).toLocaleDateString()}</p>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                )}
+                              </TabsContent>
 
-                                <div>
-                                  <h4 className="font-semibold mb-2">Assigned To</h4>
-                                  <p>{project.assignedTo}</p>
-                                </div>
-
-                                {project.budget && (
-                                  <div>
-                                    <h4 className="font-semibold mb-2">Budget</h4>
-                                    <p>{project.budget}</p>
+                              <TabsContent value="updates" className="space-y-4">
+                                <h4 className="font-semibold">Project Updates</h4>
+                                {projectUpdates.length === 0 ? (
+                                  <Card>
+                                    <CardContent className="flex flex-col items-center justify-center py-8">
+                                      <AlertCircle className="w-8 h-8 text-gray-400 mb-2" />
+                                      <p className="text-gray-600 text-center">No updates available yet.</p>
+                                      <p className="text-sm text-gray-500 text-center mt-1">Check back later for project updates.</p>
+                                    </CardContent>
+                                  </Card>
+                                ) : (
+                                  <div className="space-y-3">
+                                    {projectUpdates.map((update: ProjectUpdate) => (
+                                      <Card key={update.id}>
+                                        <CardContent className="pt-4">
+                                          <div className="flex justify-between items-start mb-2">
+                                            <h5 className="font-medium">{update.title}</h5>
+                                            <span className="text-xs text-gray-500">
+                                              {new Date(update.createdAt).toLocaleDateString()}
+                                            </span>
+                                          </div>
+                                          <p className="text-sm text-gray-600">{update.description}</p>
+                                          <Badge variant="outline" className="mt-2 text-xs">
+                                            {update.updateType}
+                                          </Badge>
+                                        </CardContent>
+                                      </Card>
+                                    ))}
                                   </div>
                                 )}
-                              </div>
-                            </TabsContent>
+                              </TabsContent>
 
-                            <TabsContent value="updates" className="space-y-4">
-                              <h4 className="font-semibold">Project Updates</h4>
-                              {projectUpdates.length === 0 ? (
-                                <p className="text-gray-600">No updates available yet.</p>
-                              ) : (
-                                <div className="space-y-3">
-                                  {projectUpdates.map((update: ProjectUpdate) => (
-                                    <Card key={update.id}>
-                                      <CardContent className="pt-4">
-                                        <div className="flex justify-between items-start mb-2">
-                                          <h5 className="font-medium">{update.title}</h5>
-                                          <span className="text-xs text-gray-500">
-                                            {new Date(update.createdAt).toLocaleDateString()}
-                                          </span>
-                                        </div>
-                                        <p className="text-sm text-gray-600">{update.description}</p>
-                                      </CardContent>
-                                    </Card>
-                                  ))}
-                                </div>
-                              )}
-                            </TabsContent>
+                              <TabsContent value="messages" className="space-y-4">
+                                <div className="space-y-4">
+                                  <h4 className="font-semibold">Project Communication</h4>
 
-                            <TabsContent value="messages" className="space-y-4">
-                              <div className="space-y-4">
-                                <h4 className="font-semibold">Project Communication</h4>
-
-                                <div className="space-y-3 max-h-60 overflow-y-auto">
-                                  {messages.map((message: Message) => (
-                                    <Card key={message.id}>
-                                      <CardContent className="pt-4">
-                                        <div className="flex justify-between items-start mb-2">
-                                          <h5 className="font-medium">{message.subject}</h5>
-                                          <div className="text-xs text-gray-500">
-                                            <div>{message.senderType === 'admin' ? 'Team' : 'You'}</div>
-                                            <div>{new Date(message.createdAt).toLocaleDateString()}</div>
-                                          </div>
-                                        </div>
-                                        <p className="text-sm text-gray-600">{message.message}</p>
-                                      </CardContent>
-                                    </Card>
-                                  ))}
-                                </div>
-
-                                <div className="border-t pt-4">
-                                  <h5 className="font-medium mb-3">Send Message</h5>
-                                  <div className="space-y-3">
-                                    <Input
-                                      placeholder="Subject"
-                                      value={newMessage.subject}
-                                      onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
-                                    />
-                                    <Textarea
-                                      placeholder="Your message..."
-                                      value={newMessage.message}
-                                      onChange={(e) => setNewMessage(prev => ({ ...prev, message: e.target.value }))}
-                                    />
-                                    <Button onClick={sendMessage}>
-                                      <MessageSquare className="h-4 w-4 mr-2" />
-                                      Send Message
-                                    </Button>
+                                  <div className="space-y-3 max-h-60 overflow-y-auto">
+                                    {messages.length === 0 ? (
+                                      <Card>
+                                        <CardContent className="flex flex-col items-center justify-center py-8">
+                                          <MessageSquare className="w-8 h-8 text-gray-400 mb-2" />
+                                          <p className="text-gray-600 text-center">No messages yet.</p>
+                                          <p className="text-sm text-gray-500 text-center mt-1">Start a conversation with your project team.</p>
+                                        </CardContent>
+                                      </Card>
+                                    ) : (
+                                      messages.map((message: Message) => (
+                                        <Card key={message.id}>
+                                          <CardContent className="pt-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                              <h5 className="font-medium">{message.subject}</h5>
+                                              <div className="text-xs text-gray-500 text-right">
+                                                <div>{message.senderType === 'admin' ? 'Team' : 'You'}</div>
+                                                <div>{new Date(message.createdAt).toLocaleDateString()}</div>
+                                              </div>
+                                            </div>
+                                            <p className="text-sm text-gray-600">{message.message}</p>
+                                          </CardContent>
+                                        </Card>
+                                      ))
+                                    )}
                                   </div>
+
+                                  <Card>
+                                    <CardHeader className="pb-3">
+                                      <CardTitle className="text-base">Send Message</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                      <div className="space-y-3">
+                                        <Input
+                                          placeholder="Subject"
+                                          value={newMessage.subject}
+                                          onChange={(e) => setNewMessage(prev => ({ ...prev, subject: e.target.value }))}
+                                        />
+                                        <Textarea
+                                          placeholder="Your message..."
+                                          value={newMessage.message}
+                                          onChange={(e) => setNewMessage(prev => ({ ...prev, message: e.target.value }))}
+                                          rows={3}
+                                        />
+                                        <Button onClick={sendMessage} className="w-full">
+                                          <MessageSquare className="h-4 w-4 mr-2" />
+                                          Send Message
+                                        </Button>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
                                 </div>
-                              </div>
-                            </TabsContent>
+                              </TabsContent>
+                            </div>
                           </Tabs>
                         </DialogContent>
                       </Dialog>
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          )}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+    </div>
   );
 }

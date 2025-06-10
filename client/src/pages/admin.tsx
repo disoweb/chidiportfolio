@@ -14,9 +14,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { 
   Mail, Phone, Calendar, Settings, Globe, Search, Shield, Edit, Trash2, Eye, Plus, 
   DollarSign, Clock, User, Target, Users, Building2, MessageSquare, Bell, 
-  UserPlus, FileText, Activity, TrendingUp, Menu, X
+  UserPlus, FileText, Activity, TrendingUp, Menu, X, BarChart3, PieChart,
+  CheckCircle, AlertCircle, Timer, Briefcase
 } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 interface Inquiry {
   id: string;
@@ -360,6 +361,9 @@ export default function AdminDashboard() {
         setProjects(projects.map(project =>
           project.id === id ? result.project : project
         ));
+        setIsProjectModalOpen(false);
+        setSelectedProject(null);
+        setProjectFormData({});
       }
     } catch (error) {
       console.error('Failed to update project:', error);
@@ -433,15 +437,32 @@ export default function AdminDashboard() {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, color = "blue" }: { title: string; value: string | number; icon: any; color?: string }) => (
-    <Card className="hover:shadow-md transition-shadow">
+  const StatCard = ({ title, value, icon: Icon, color = "blue", trend }: { 
+    title: string; 
+    value: string | number; 
+    icon: any; 
+    color?: string;
+    trend?: { value: string; positive: boolean }
+  }) => (
+    <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className={`text-2xl font-bold text-${color}-600`}>{value}</p>
+            <div className="flex items-center space-x-2">
+              <p className={`text-2xl sm:text-3xl font-bold text-${color}-600`}>{value}</p>
+              {trend && (
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  trend.positive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {trend.value}
+                </span>
+              )}
+            </div>
           </div>
-          <Icon className={`w-8 h-8 text-${color}-600`} />
+          <div className={`p-3 bg-${color}-100 rounded-full`}>
+            <Icon className={`w-6 h-6 sm:w-8 sm:h-8 text-${color}-600`} />
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -449,34 +470,40 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white border-b px-4 py-3 flex items-center justify-between">
-        <h1 className="text-xl font-bold">Admin Dashboard</h1>
+      <div className="lg:hidden bg-white border-b shadow-sm px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-xs text-gray-600">Welcome back, {adminProfile.username}</p>
+        </div>
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="p-2">
               <Menu className="w-5 h-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="right" className="w-72">
-            <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">Menu</h2>
-                <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(false)}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-              
+          <SheetContent side="right" className="w-72 p-0">
+            <SheetHeader className="p-6 border-b">
+              <SheetTitle>Menu</SheetTitle>
+            </SheetHeader>
+            <div className="p-6 space-y-4">
               <div className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
+                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <User className="w-8 h-8 p-1.5 bg-blue-100 text-blue-600 rounded-full" />
+                  <div>
+                    <p className="font-medium text-sm">{adminProfile.username}</p>
+                    <p className="text-xs text-gray-600">{adminProfile.role}</p>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
                   <Shield className="w-4 h-4 mr-2" />
                   Logout
                 </Button>
@@ -486,77 +513,171 @@ export default function AdminDashboard() {
         </Sheet>
       </div>
 
-      <div className="container mx-auto px-4 py-4 lg:py-8">
+      <div className="container mx-auto px-4 py-4 lg:py-8 max-w-7xl">
         {/* Desktop Header */}
         <div className="hidden lg:flex mb-8 justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600">Manage your business operations</p>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+            <p className="text-gray-600 text-lg">Welcome back, {adminProfile.username}! Here's what's happening today.</p>
           </div>
-          <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            Logout
-          </Button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 px-4 py-2 bg-white rounded-lg border">
+              <User className="w-8 h-8 p-1.5 bg-blue-100 text-blue-600 rounded-full" />
+              <div>
+                <p className="font-medium text-sm">{adminProfile.username}</p>
+                <p className="text-xs text-gray-600">{adminProfile.role}</p>
+              </div>
+            </div>
+            <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-8 h-auto">
-            <TabsTrigger value="overview" className="text-xs lg:text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="bookings" className="text-xs lg:text-sm">Bookings</TabsTrigger>
-            <TabsTrigger value="projects" className="text-xs lg:text-sm">Projects</TabsTrigger>
-            <TabsTrigger value="payments" className="text-xs lg:text-sm">Payments</TabsTrigger>
-            <TabsTrigger value="team" className="text-xs lg:text-sm">Team</TabsTrigger>
-            <TabsTrigger value="inquiries" className="text-xs lg:text-sm">Inquiries</TabsTrigger>
-            <TabsTrigger value="profile" className="text-xs lg:text-sm">Profile</TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs lg:text-sm">Settings</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 h-auto bg-white shadow-sm">
+              <TabsTrigger value="overview" className="text-xs lg:text-sm py-3">
+                <BarChart3 className="w-4 h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Overview</span>
+              </TabsTrigger>
+              <TabsTrigger value="bookings" className="text-xs lg:text-sm py-3">
+                <Calendar className="w-4 h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Bookings</span>
+              </TabsTrigger>
+              <TabsTrigger value="projects" className="text-xs lg:text-sm py-3">
+                <Briefcase className="w-4 h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Projects</span>
+              </TabsTrigger>
+              <TabsTrigger value="payments" className="text-xs lg:text-sm py-3">
+                <DollarSign className="w-4 h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Payments</span>
+              </TabsTrigger>
+              <TabsTrigger value="team" className="text-xs lg:text-sm py-3">
+                <Users className="w-4 h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Team</span>
+              </TabsTrigger>
+              <TabsTrigger value="inquiries" className="text-xs lg:text-sm py-3">
+                <MessageSquare className="w-4 h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Inquiries</span>
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="text-xs lg:text-sm py-3">
+                <User className="w-4 h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Profile</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="text-xs lg:text-sm py-3">
+                <Settings className="w-4 h-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Settings</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard title="Total Bookings" value={bookings.length} icon={Calendar} />
-              <StatCard title="Active Projects" value={projects.filter(p => p.status === 'in-progress').length} icon={Target} color="green" />
-              <StatCard title="Team Members" value={teamMembers.length} icon={Users} color="purple" />
-              <StatCard title="Total Revenue" value={`₦${payments.reduce((sum, p) => sum + Number(p.amount || 0), 0).toLocaleString()}`} icon={DollarSign} color="green" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+              <StatCard 
+                title="Total Bookings" 
+                value={bookings.length} 
+                icon={Calendar} 
+                color="blue"
+                trend={{ value: "+12%", positive: true }}
+              />
+              <StatCard 
+                title="Active Projects" 
+                value={projects.filter(p => p.status === 'in-progress').length} 
+                icon={Target} 
+                color="green"
+                trend={{ value: "+5%", positive: true }}
+              />
+              <StatCard 
+                title="Team Members" 
+                value={teamMembers.length} 
+                icon={Users} 
+                color="purple"
+              />
+              <StatCard 
+                title="Total Revenue" 
+                value={`₦${payments.reduce((sum, p) => sum + Number(p.amount || 0), 0).toLocaleString()}`} 
+                icon={DollarSign} 
+                color="emerald"
+                trend={{ value: "+23%", positive: true }}
+              />
             </div>
 
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {bookings.slice(0, 5).map((booking) => (
-                    <div key={booking.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <div>
-                        <p className="font-medium">{booking.name}</p>
-                        <p className="text-sm text-muted-foreground">{booking.service}</p>
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Recent Activity */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {bookings.slice(0, 5).map((booking) => (
+                      <div key={booking.id} className="flex items-center justify-between py-3 border-b last:border-0">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{booking.name}</p>
+                            <p className="text-xs text-muted-foreground">{booking.service}</p>
+                          </div>
+                        </div>
+                        <Badge className={getStatusColor(booking.paymentStatus)}>
+                          {booking.paymentStatus}
+                        </Badge>
                       </div>
-                      <Badge className={getStatusColor(booking.paymentStatus)}>
-                        {booking.paymentStatus}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Project Status Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="w-5 h-5" />
+                    Project Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {[
+                      { status: 'completed', count: projects.filter(p => p.status === 'completed').length, color: 'bg-green-500' },
+                      { status: 'in-progress', count: projects.filter(p => p.status === 'in-progress').length, color: 'bg-blue-500' },
+                      { status: 'planning', count: projects.filter(p => p.status === 'planning').length, color: 'bg-purple-500' },
+                      { status: 'on-hold', count: projects.filter(p => p.status === 'on-hold').length, color: 'bg-red-500' }
+                    ].map((item) => (
+                      <div key={item.status} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-3 h-3 rounded-full ${item.color}`} />
+                          <span className="text-sm capitalize">{item.status}</span>
+                        </div>
+                        <span className="font-medium">{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Bookings Tab */}
           <TabsContent value="bookings" className="space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard title="Total Bookings" value={bookings.length} icon={Calendar} />
               <StatCard title="Pending Payment" value={bookings.filter(b => b.paymentStatus === 'pending').length} icon={Clock} color="orange" />
-              <StatCard title="Paid Bookings" value={bookings.filter(b => b.paymentStatus === 'completed').length} icon={DollarSign} color="green" />
+              <StatCard title="Paid Bookings" value={bookings.filter(b => b.paymentStatus === 'completed').length} icon={CheckCircle} color="green" />
               <StatCard title="This Month" value={bookings.filter(b => new Date(b.createdAt).getMonth() === new Date().getMonth()).length} icon={TrendingUp} color="purple" />
             </div>
 
             {/* Filters */}
-            <Card>
+            <Card className="shadow-sm">
               <CardContent className="p-4">
                 <div className="flex flex-col lg:flex-row gap-4">
                   <div className="relative flex-1">
@@ -586,17 +707,22 @@ export default function AdminDashboard() {
             {/* Bookings List */}
             <div className="space-y-4">
               {filteredBookings.map((booking) => (
-                <Card key={booking.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
+                <Card key={booking.id} className="hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-lg">{booking.name}</h3>
-                          <Badge className={getStatusColor(booking.paymentStatus)}>
-                            {booking.paymentStatus}
-                          </Badge>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <User className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg">{booking.name}</h3>
+                            <Badge className={getStatusColor(booking.paymentStatus)}>
+                              {booking.paymentStatus}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="space-y-1 text-sm text-muted-foreground">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4" />
                             <span>{booking.email}</span>
@@ -610,6 +736,10 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             <span>{new Date(booking.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="w-4 h-4" />
+                            <span>{booking.service}</span>
                           </div>
                         </div>
                         <div className="mt-3">
@@ -641,7 +771,7 @@ export default function AdminDashboard() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                This will permanently delete the booking.
+                                This will permanently delete the booking for {booking.name}.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -665,8 +795,8 @@ export default function AdminDashboard() {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
                 <StatCard title="Total Projects" value={projects.length} icon={Target} />
-                <StatCard title="In Progress" value={projects.filter(p => p.status === 'in-progress').length} icon={Clock} color="blue" />
-                <StatCard title="Completed" value={projects.filter(p => p.status === 'completed').length} icon={DollarSign} color="green" />
+                <StatCard title="In Progress" value={projects.filter(p => p.status === 'in-progress').length} icon={Timer} color="blue" />
+                <StatCard title="Completed" value={projects.filter(p => p.status === 'completed').length} icon={CheckCircle} color="green" />
                 <StatCard title="Planning" value={projects.filter(p => p.status === 'planning').length} icon={FileText} color="purple" />
               </div>
               <Button onClick={() => setIsProjectModalOpen(true)} className="w-full lg:w-auto">
@@ -675,29 +805,40 @@ export default function AdminDashboard() {
               </Button>
             </div>
 
-            {/* Projects List */}
-            <div className="grid gap-4 lg:grid-cols-2">
+            {/* Projects Grid */}
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
               {filteredProjects.map((project) => (
-                <Card key={project.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
+                <Card key={project.id} className="hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-lg">{project.name}</h3>
-                        <Badge className={getStatusColor(project.status)}>
-                          {project.status}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-1">{project.name}</h3>
+                          <Badge className={getStatusColor(project.status)}>
+                            {project.status}
+                          </Badge>
+                        </div>
+                        <Badge variant={project.priority === 'high' ? 'destructive' : project.priority === 'medium' ? 'default' : 'secondary'}>
+                          {project.priority}
                         </Badge>
                       </div>
+                      
                       <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+                      
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>Progress</span>
-                          <span>{project.progress}%</span>
+                          <span className="font-medium">{project.progress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${project.progress}%` }}></div>
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                            style={{ width: `${project.progress}%` }}
+                          />
                         </div>
                       </div>
-                      <div className="space-y-1 text-sm text-muted-foreground">
+                      
+                      <div className="space-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
                           <span>{project.clientEmail}</span>
@@ -706,13 +847,29 @@ export default function AdminDashboard() {
                           <DollarSign className="w-4 h-4" />
                           <span>{project.budget || 'Not set'}</span>
                         </div>
+                        {project.dueDate && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            <span>Due: {new Date(project.dueDate).toLocaleDateString()}</span>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => { setSelectedProject(project); setProjectFormData(project); setIsProjectModalOpen(true); }}>
+                      
+                      <div className="flex gap-2 pt-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => { 
+                            setSelectedProject(project); 
+                            setProjectFormData(project); 
+                            setIsProjectModalOpen(true); 
+                          }}
+                        >
                           <Edit className="w-4 h-4 mr-1" />
                           Edit
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" className="flex-1">
                           <Eye className="w-4 h-4 mr-1" />
                           View
                         </Button>
@@ -729,7 +886,7 @@ export default function AdminDashboard() {
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
                 <StatCard title="Team Members" value={teamMembers.length} icon={Users} />
-                <StatCard title="Active" value={teamMembers.filter(m => m.isActive).length} icon={User} color="green" />
+                <StatCard title="Active" value={teamMembers.filter(m => m.isActive).length} icon={CheckCircle} color="green" />
                 <StatCard title="Admins" value={teamMembers.filter(m => m.role === 'admin').length} icon={Shield} color="purple" />
               </div>
               <Button onClick={() => setIsTeamModalOpen(true)} className="w-full lg:w-auto">
@@ -738,36 +895,52 @@ export default function AdminDashboard() {
               </Button>
             </div>
 
-            {/* Team Members List */}
-            <div className="grid gap-4 lg:grid-cols-2">
+            {/* Team Members Grid */}
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
               {teamMembers.map((member) => (
-                <Card key={member.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
+                <Card key={member.id} className="hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold text-lg">{member.username}</h3>
-                          <p className="text-sm text-muted-foreground">{member.email}</p>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                            <User className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg">{member.username}</h3>
+                            <p className="text-sm text-muted-foreground">{member.email}</p>
+                          </div>
                         </div>
                         <Badge className={member.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
                           {member.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </div>
-                      <div className="space-y-1 text-sm">
-                        <p><span className="font-medium">Role:</span> {member.role}</p>
-                        <p><span className="font-medium">Joined:</span> {new Date(member.createdAt).toLocaleDateString()}</p>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Role:</span>
+                          <span className="font-medium capitalize">{member.role}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Joined:</span>
+                          <span>{new Date(member.createdAt).toLocaleDateString()}</span>
+                        </div>
                         {member.lastLogin && (
-                          <p><span className="font-medium">Last Login:</span> {new Date(member.lastLogin).toLocaleDateString()}</p>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Last Login:</span>
+                            <span>{new Date(member.lastLogin).toLocaleDateString()}</span>
+                          </div>
                         )}
                       </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
+                      
+                      <div className="flex gap-2 pt-2">
+                        <Button size="sm" variant="outline" className="flex-1">
                           <Edit className="w-4 h-4 mr-1" />
                           Edit
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive">
+                            <Button size="sm" variant="destructive" className="flex-1">
                               <Trash2 className="w-4 h-4 mr-1" />
                               Delete
                             </Button>
@@ -776,7 +949,7 @@ export default function AdminDashboard() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete Team Member</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to remove {member.username} from the team?
+                                Are you sure you want to remove {member.username} from the team? This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -797,7 +970,7 @@ export default function AdminDashboard() {
 
           {/* Payments Tab */}
           <TabsContent value="payments" className="space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard title="Total Payments" value={payments.length} icon={DollarSign} color="green" />
               <StatCard title="Total Revenue" value={`₦${payments.reduce((sum, p) => sum + Number(p.amount || 0), 0).toLocaleString()}`} icon={TrendingUp} color="green" />
               <StatCard title="This Month" value={payments.filter(p => new Date(p.createdAt).getMonth() === new Date().getMonth()).length} icon={Calendar} color="blue" />
@@ -807,17 +980,22 @@ export default function AdminDashboard() {
             {/* Payments List */}
             <div className="space-y-4">
               {filteredPayments.map((payment) => (
-                <Card key={payment.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
+                <Card key={payment.id} className="hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-lg">₦{Number(payment.amount).toLocaleString()}</h3>
-                          <Badge className="bg-green-100 text-green-800">
-                            {payment.status}
-                          </Badge>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <DollarSign className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg">₦{Number(payment.amount).toLocaleString()}</h3>
+                            <Badge className="bg-green-100 text-green-800">
+                              {payment.status}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="space-y-1 text-sm text-muted-foreground">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4" />
                             <span>{payment.customerEmail}</span>
@@ -830,9 +1008,10 @@ export default function AdminDashboard() {
                             <Calendar className="w-4 h-4" />
                             <span>Paid: {new Date(payment.paidAt || payment.createdAt).toLocaleDateString()}</span>
                           </div>
-                        </div>
-                        <div className="mt-3">
-                          <p className="text-sm font-medium">Reference: {payment.reference}</p>
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            <span>Ref: {payment.reference}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -844,15 +1023,15 @@ export default function AdminDashboard() {
 
           {/* Inquiries Tab */}
           <TabsContent value="inquiries" className="space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard title="Total Inquiries" value={inquiries.length} icon={MessageSquare} />
               <StatCard title="New" value={inquiries.filter(i => i.status === 'new').length} icon={Bell} color="blue" />
               <StatCard title="In Progress" value={inquiries.filter(i => i.status === 'in-progress').length} icon={Clock} color="orange" />
-              <StatCard title="Completed" value={inquiries.filter(i => i.status === 'completed').length} icon={Target} color="green" />
+              <StatCard title="Completed" value={inquiries.filter(i => i.status === 'completed').length} icon={CheckCircle} color="green" />
             </div>
 
             {/* Filters */}
-            <Card>
+            <Card className="shadow-sm">
               <CardContent className="p-4">
                 <div className="flex flex-col lg:flex-row gap-4">
                   <div className="relative flex-1">
@@ -882,17 +1061,22 @@ export default function AdminDashboard() {
             {/* Inquiries List */}
             <div className="space-y-4">
               {filteredInquiries.map((inquiry) => (
-                <Card key={inquiry.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
+                <Card key={inquiry.id} className="hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-4 lg:p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-lg">{inquiry.name}</h3>
-                          <Badge className={getStatusColor(inquiry.status)}>
-                            {inquiry.status}
-                          </Badge>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                            <MessageSquare className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg">{inquiry.name}</h3>
+                            <Badge className={getStatusColor(inquiry.status)}>
+                              {inquiry.status}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="space-y-1 text-sm text-muted-foreground">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
                           <div className="flex items-center gap-2">
                             <Mail className="w-4 h-4" />
                             <span>{inquiry.email}</span>
@@ -907,10 +1091,13 @@ export default function AdminDashboard() {
                             <Calendar className="w-4 h-4" />
                             <span>{new Date(inquiry.createdAt).toLocaleDateString()}</span>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <Briefcase className="w-4 h-4" />
+                            <span>{inquiry.service}</span>
+                          </div>
                         </div>
-                        <div className="mt-3">
-                          <p className="text-sm font-medium">Service: {inquiry.service}</p>
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{inquiry.message}</p>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <p className="text-sm text-gray-700 line-clamp-2">{inquiry.message}</p>
                         </div>
                       </div>
                       <div className="flex flex-row lg:flex-col gap-2">
@@ -918,7 +1105,7 @@ export default function AdminDashboard() {
                           size="sm"
                           variant={inquiry.status === 'new' ? 'default' : 'outline'}
                           onClick={() => updateInquiryStatus(inquiry.id, 'new')}
-                          className="text-xs"
+                          className="flex-1 lg:flex-none text-xs"
                         >
                           New
                         </Button>
@@ -926,7 +1113,7 @@ export default function AdminDashboard() {
                           size="sm"
                           variant={inquiry.status === 'in-progress' ? 'default' : 'outline'}
                           onClick={() => updateInquiryStatus(inquiry.id, 'in-progress')}
-                          className="text-xs"
+                          className="flex-1 lg:flex-none text-xs"
                         >
                           Progress
                         </Button>
@@ -934,7 +1121,7 @@ export default function AdminDashboard() {
                           size="sm"
                           variant={inquiry.status === 'completed' ? 'default' : 'outline'}
                           onClick={() => updateInquiryStatus(inquiry.id, 'completed')}
-                          className="text-xs"
+                          className="flex-1 lg:flex-none text-xs"
                         >
                           Done
                         </Button>
@@ -949,7 +1136,7 @@ export default function AdminDashboard() {
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
+              <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="w-5 h-5" />
@@ -989,7 +1176,7 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="w-5 h-5" />
@@ -1037,7 +1224,7 @@ export default function AdminDashboard() {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
-            <Card>
+            <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings className="w-5 h-5" />
@@ -1257,8 +1444,33 @@ export default function AdminDashboard() {
                   onChange={(e) => setProjectFormData({...projectFormData, clientEmail: e.target.value})}
                 />
               </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="project-budget">Budget</Label>
+                  <Input
+                    id="project-budget"
+                    value={projectFormData.budget || ''}
+                    onChange={(e) => setProjectFormData({...projectFormData, budget: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="project-progress">Progress (%)</Label>
+                  <Input
+                    id="project-progress"
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={projectFormData.progress || 0}
+                    onChange={(e) => setProjectFormData({...projectFormData, progress: parseInt(e.target.value) || 0})}
+                  />
+                </div>
+              </div>
               <div className="flex flex-col lg:flex-row justify-end gap-2">
-                <Button variant="outline" onClick={() => { setIsProjectModalOpen(false); setSelectedProject(null); setProjectFormData({}); }}>
+                <Button variant="outline" onClick={() => { 
+                  setIsProjectModalOpen(false); 
+                  setSelectedProject(null); 
+                  setProjectFormData({}); 
+                }}>
                   Cancel
                 </Button>
                 <Button onClick={() => selectedProject ? updateProject(selectedProject.id, projectFormData) : createProject()}>
@@ -1319,7 +1531,10 @@ export default function AdminDashboard() {
                 </Select>
               </div>
               <div className="flex flex-col lg:flex-row justify-end gap-2">
-                <Button variant="outline" onClick={() => { setIsTeamModalOpen(false); setTeamFormData({ username: '', email: '', password: '', role: 'team_member' }); }}>
+                <Button variant="outline" onClick={() => { 
+                  setIsTeamModalOpen(false); 
+                  setTeamFormData({ username: '', email: '', password: '', role: 'team_member' }); 
+                }}>
                   Cancel
                 </Button>
                 <Button onClick={createTeamMember}>
