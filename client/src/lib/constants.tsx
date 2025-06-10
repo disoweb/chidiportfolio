@@ -42,8 +42,8 @@ export const services: Service[] = [
       "Full-stack web applications built with modern tech. Perfect for businesses needing custom solutions.",
     icon: "Globe",
     features: [
-      "React/Next.js Frontend Development",
-      "Node.js/PHP Backend APIs",
+      "Frontend Development",
+      "Backend APIs",
       "Database Design & Integration",
       "Authentication & Security",
       "Responsive Design",
@@ -110,20 +110,20 @@ export const projects: Project[] = [
     id: "biometric-voting",
     title: "Automated Biometric Voting Machine",
     description:
-      "Revolutionary voting system integrating biometric authentication with secure data management. Successfully piloted in 2016 with 99.8% accuracy rate.",
+      "I designed and built a revolutionary biometric voting system suitable for deployment in a typical Nigeria general elections",
     image:
       "https://images.unsplash.com/photo-1586671267731-da2cf3ceeb80?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
     technologies: [
       "Embedded Systems",
-      "Biometric APIs",
+      "Biometrics",
       "Secure Database",
-      "Real-time Processing",
+      "Social Impact",
     ],
     featured: true,
     metrics: [
-      { label: "Accuracy", value: "99.8%" },
+      { label: "Uptime", value: "99.99%" },
       { label: "Security", value: "99.92%" },
-      { label: "Fraud Protection", value: "89.23%" },
+     
     ],
   },
   {

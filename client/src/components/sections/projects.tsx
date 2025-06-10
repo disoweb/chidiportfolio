@@ -13,9 +13,9 @@ interface Project {
   technologies: string[];
   metrics?: Array<{ label: string; value: string }>;
 
-  category: string;    // added
-  demo?: string;       // added optional
-  github?: string;     // added optional
+  category: string;    
+  demo?: string;       
+  github?: string;     
 }
 
 export function Projects() {
@@ -38,7 +38,7 @@ export function Projects() {
             Featured Projects
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-            Innovative solutions that demonstrate technical expertise and real-world impact
+            These are some of my Innovative solutions that demonstrate my technical expertise and real-world impact
           </p>
         </div>
 
@@ -79,10 +79,10 @@ export function Projects() {
                     <div className="grid grid-cols-3 gap-4 mb-6">
                       {featuredProject.metrics.map((metric) => (
                         <div key={metric.label} className="text-center">
-                          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                          <div className="text-1xl font-bold text-blue-600 dark:text-blue-400">
                             {metric.value}
                           </div>
-                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                          <div className="text-sm text-green-600 dark:text-slate-400">
                             {metric.label}
                           </div>
                         </div>
