@@ -29,6 +29,7 @@ export function Navbar() {
     { href: "skills", label: "Skills" },
     { href: "projects", label: "Portfolio" },
     { href: "contact", label: "Contact" },
+    { href: "/client/dashboard", label: "Client Portal" }, // Added Client Portal Link
   ];
 
   return (

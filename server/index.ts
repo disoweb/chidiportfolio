@@ -42,13 +42,13 @@ async function runMigrations() {
 async function seedAdminUser() {
   try {
     const bcrypt = await import('bcryptjs');
-    
+
     // Use a transaction to ensure atomicity
     const client = await pool.connect();
-    
+
     try {
       await client.query('BEGIN');
-      
+
       // Admin accounts to create
       const adminAccounts = [
         {
@@ -91,15 +91,15 @@ async function seedAdminUser() {
       for (const admin of adminAccounts) {
         const checkAdminQuery = 'SELECT id, username, email FROM admin_users WHERE username = $1';
         const existingAdmin = await client.query(checkAdminQuery, [admin.username]);
-        
+
         if (existingAdmin.rows.length === 0) {
-          const hashedPassword = await bcrypt.default.hash(admin.password, 12);
+          const hashedPassword = await bcrypt.default.hash(admin.password, 10);
           const insertAdminQuery = `
             INSERT INTO admin_users (username, email, password, role, is_active, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
             RETURNING id, username, email, role
           `;
-          
+
           const newAdmin = await client.query(insertAdminQuery, [
             admin.username,
             admin.email,
@@ -107,18 +107,18 @@ async function seedAdminUser() {
             admin.role,
             true
           ]);
-          
+
           console.log(`Admin account created: ${admin.username} (${admin.email}) - Password: ${admin.password}`);
         } else {
           // Update existing admin password
-          const hashedPassword = await bcrypt.default.hash(admin.password, 12);
+          const hashedPassword = await bcrypt.default.hash(admin.password, 10);
           const updateAdminQuery = `
             UPDATE admin_users 
             SET password = $1, is_active = $2, updated_at = NOW()
             WHERE username = $3
             RETURNING id, username, email, role
           `;
-          
+
           await client.query(updateAdminQuery, [hashedPassword, true, admin.username]);
           console.log(`Admin account updated: ${admin.username} (${admin.email}) - Password: ${admin.password}`);
         }
@@ -126,7 +126,7 @@ async function seedAdminUser() {
 
       // Create regular user accounts (skip for now until table is fixed)
       console.log('Skipping user account creation until table structure is fixed by migrations');
-      
+
       await client.query('COMMIT');
       console.log('\n=== ACCOUNT SUMMARY ===');
       console.log('ADMIN ACCOUNTS:');
@@ -136,7 +136,7 @@ async function seedAdminUser() {
       console.log('1. Username: client1, Email: client1@example.com, Password: Client123!');
       console.log('2. Username: client2, Email: client2@example.com, Password: Client456!');
       console.log('========================\n');
-      
+
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;

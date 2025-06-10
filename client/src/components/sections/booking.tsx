@@ -100,12 +100,12 @@ export function Booking() {
           description: "We'll get back to you within 24 hours. Check your project dashboard for updates.",
         });
         setSubmissionStatus('success');
-        
+
         // Redirect to client dashboard after successful booking
         setTimeout(() => {
           window.location.href = `/client-dashboard?email=${encodeURIComponent(formData.email)}`;
         }, 2000);
-        
+
         reset();
       } else {
         console.error('Booking submission failed:', result);
@@ -325,6 +325,15 @@ export function Booking() {
                     <p className="font-semibold">Booking Request Submitted Successfully!</p>
                     <p>We'll get back to you within 24 hours to schedule our consultation.</p>
                   </div>
+                </div>
+                <div className="mt-3">
+                  <a 
+                    href={`/client/dashboard?email=${encodeURIComponent(formData.email)}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <User className="w-4 h-4" />
+                    Access Your Project Dashboard
+                  </a>
                 </div>
               </div>
             )}
@@ -573,6 +582,15 @@ export function Booking() {
                     <p className="font-semibold">Booking Request Submitted Successfully!</p>
                     <p>We'll get back to you within 24 hours to schedule our consultation.</p>
                   </div>
+                </div>
+                <div className="mt-3">
+                  <a 
+                    href={`/client/dashboard?email=${encodeURIComponent(formData.email)}`}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    <User className="w-4 h-4" />
+                    Access Your Project Dashboard
+                  </a>
                 </div>
               </div>
             )}
