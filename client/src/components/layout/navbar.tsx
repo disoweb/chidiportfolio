@@ -29,7 +29,7 @@ export function Navbar() {
     { href: "skills", label: "Skills" },
     { href: "projects", label: "Portfolio" },
     { href: "contact", label: "Contact" },
-    { href: "/client/dashboard", label: "Client Portal" }, // Added Client Portal Link
+    { href: "/client/dashboard", label: "Client Portal" }, 
   ];
 
   return (
@@ -42,7 +42,11 @@ export function Navbar() {
               <Code className="w-5 h-5 text-white" />
             </div>
             <span className="text-2xl font-bold text-blue-600">Digital</span>
-            <span className="text-2xl font-bold text-green-600"> Chidi</span>.
+            <span className="text-2xl font-bold text-green-600"> Chidi</span>
+            <span className="text-4xl font-bold text-blue-600 transform translate-x-[-8px] translate-y-[-4px]">
+              .
+            </span>{" "}
+            {/* Adjust both axes */}
           </div>
 
           {/* Desktop Navigation */}
@@ -114,7 +118,7 @@ export function Navbar() {
                 onClick={() => scrollToSection("booking")}
                 className="bg-blue-600 hover:bg-blue-700 text-white w-full mt-4"
               >
-                Book Consultation
+                Book Private Consultation
               </Button>
             </div>
           </div>

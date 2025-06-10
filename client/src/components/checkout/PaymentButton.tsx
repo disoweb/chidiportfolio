@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Loader2, CreditCard } from 'lucide-react';
-// Error 1: Ensure this path is correct and the module exists.
-// Check tsconfig.json for '@/' alias and file system for the actual file.
 import { useToast } from '@/components/ui/use-toast';
 import { EmailModal } from './EmailModal';
 
@@ -20,7 +18,7 @@ export function PaymentButton({
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
   const { toast } = useToast();
-  const router = useRouter(); // router is initialized but not used in the provided snippet. Remove if not needed.
+  const router = useRouter();
 
   const initiatePayment = async () => {
     setLoading(true);
@@ -73,8 +71,8 @@ export function PaymentButton({
       <EmailModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        // FIX: Make the handler async to match the expected type Promise<void>
-        onEmailSubmit={async (submittedEmail) => { // Renamed 'email' to 'submittedEmail' to avoid conflict with state variable if any confusion.
+
+        onEmailSubmit={async (submittedEmail) => { 
           setEmail(submittedEmail);
           // Await initiatePayment if you need to ensure its completion before EmailModal considers this callback "done",
           // or if EmailModal does something after this promise resolves.

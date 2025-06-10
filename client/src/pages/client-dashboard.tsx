@@ -1,36 +1,50 @@
-
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { 
-  CalendarDays, 
-  Clock, 
-  DollarSign, 
-  MessageSquare, 
-  User, 
-  Mail, 
-  CheckCircle, 
-  AlertCircle, 
-  Briefcase, 
+import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
+  CalendarDays,
+  Clock,
+  DollarSign,
+  MessageSquare,
+  User,
+  Mail,
+  CheckCircle,
+  AlertCircle,
+  Briefcase,
   Target,
   LogOut,
   Search,
   CreditCard,
   Bell,
   Settings,
-  Eye
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+  Eye,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { AxiosError } from "axios";
 
+// Type definitions
 interface User {
   id: number;
   email: string;
@@ -85,224 +99,388 @@ interface Message {
   createdAt: string;
 }
 
+interface DashboardStats {
+  totalProjects: number;
+  activeProjects: number;
+  completedProjects: number;
+  totalSpent: number;
+}
+
 interface DashboardData {
   user: User;
   projects: Project[];
   bookings: Booking[];
   paymentLogs: PaymentLog[];
   unreadMessages: Message[];
-  stats: {
-    totalProjects: number;
-    activeProjects: number;
-    completedProjects: number;
-    totalSpent: number;
-  };
+  stats: DashboardStats;
 }
 
+interface AuthCredentials {
+  email: string;
+  password: string;
+}
+
+interface RegisterData extends AuthCredentials {
+  firstName: string;
+  lastName: string;
+  phone?: string;
+}
+
+// API error response type
+interface ApiErrorResponse {
+  error?: string;
+  message?: string;
+}
+
+// Constants
+const REFETCH_INTERVAL = 30000; // 30 seconds
+const MAX_PROJECT_DESCRIPTION_LENGTH = 100;
+
+/**
+ * Client Dashboard Component
+ *
+ * Provides a comprehensive view of client projects, bookings, payments, and messages
+ * with authentication and project tracking functionality.
+ */
 export default function ClientDashboard() {
-  const [sessionToken, setSessionToken] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
-  const [registerData, setRegisterData] = useState({ 
-    email: '', 
-    password: '', 
-    firstName: '', 
-    lastName: '', 
-    phone: '' 
+  const [sessionToken, setSessionToken] = useState<string>("");
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [loginData, setLoginData] = useState<AuthCredentials>({
+    email: "",
+    password: "",
   });
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [projectTrackingId, setProjectTrackingId] = useState('');
+  const [registerData, setRegisterData] = useState<RegisterData>({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+  });
+  const [isLoginMode, setIsLoginMode] = useState<boolean>(true);
+  const [projectTrackingId, setProjectTrackingId] = useState<string>("");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Check for existing session on load
+  /**
+   * Verify session token validity
+   */
+  const verifySession = useCallback(async (token: string) => {
+    try {
+      const response = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ sessionToken: token }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Session verification failed");
+      }
+
+      setIsAuthenticated(true);
+      setSessionToken(token);
+    } catch (error) {
+      handleAuthError(error);
+      localStorage.removeItem("clientSessionToken");
+      setIsAuthenticated(false);
+    }
+  }, []);
+
+  // Check for existing session on component mount
   useEffect(() => {
-    const token = localStorage.getItem('clientSessionToken');
+    const token = localStorage.getItem("clientSessionToken");
     if (token) {
       setSessionToken(token);
       verifySession(token);
     }
-  }, []);
+  }, [verifySession]);
 
-  const verifySession = async (token: string) => {
-    try {
-      const response = await fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionToken: token })
-      });
+  /**
+   * Handle authentication errors consistently
+   */
+  const handleAuthError = (error: unknown) => {
+    let errorMessage = "An authentication error occurred";
 
-      if (response.ok) {
-        setIsAuthenticated(true);
-        setSessionToken(token);
-      } else {
-        localStorage.removeItem('clientSessionToken');
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      localStorage.removeItem('clientSessionToken');
-      setIsAuthenticated(false);
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === "string") {
+      errorMessage = error;
     }
+
+    toast({
+      title: "Authentication Error",
+      description: errorMessage,
+      variant: "destructive",
+    });
   };
 
+  /**
+   * Login mutation handler
+   */
   const loginMutation = useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials)
+    mutationFn: async (credentials: AuthCredentials) => {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Login failed');
+        const errorData: ApiErrorResponse = await response.json();
+        throw new Error(errorData.error || "Login failed");
       }
 
       return response.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem('clientSessionToken', data.sessionToken);
+      localStorage.setItem("clientSessionToken", data.sessionToken);
       setSessionToken(data.sessionToken);
       setIsAuthenticated(true);
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${data.user.firstName}!`
+        description: `Welcome back, ${data.user.firstName}!`,
+        variant: "default",
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+      handleAuthError(error);
+    },
   });
 
+  /**
+   * Registration mutation handler
+   */
   const registerMutation = useMutation({
-    mutationFn: async (userData: any) => {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
+    mutationFn: async (userData: RegisterData) => {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Registration failed');
+        const errorData: ApiErrorResponse = await response.json();
+        throw new Error(errorData.error || "Registration failed");
       }
 
       return response.json();
     },
     onSuccess: (data) => {
-      localStorage.setItem('clientSessionToken', data.sessionToken);
+      localStorage.setItem("clientSessionToken", data.sessionToken);
       setSessionToken(data.sessionToken);
       setIsAuthenticated(true);
       toast({
         title: "Registration Successful",
-        description: `Welcome, ${data.user.firstName}!`
+        description: `Welcome, ${data.user.firstName}!`,
+        variant: "default",
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Registration Failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+      handleAuthError(error);
+    },
   });
 
-  const { data: dashboardData, isLoading } = useQuery<DashboardData>({
-    queryKey: ['dashboard', sessionToken],
+  /**
+   * Dashboard data query
+   */
+  const {
+    data: dashboardData,
+    isLoading,
+    error: dashboardError,
+  } = useQuery<DashboardData>({
+    queryKey: ["dashboard", sessionToken],
     queryFn: async () => {
-      const response = await fetch(`/api/user/dashboard/${sessionToken}`);
-      if (!response.ok) throw new Error('Failed to fetch dashboard data');
+      const response = await fetch(`/api/user/dashboard/${sessionToken}`, {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData: ApiErrorResponse = await response.json();
+        throw new Error(errorData.message || "Failed to fetch dashboard data");
+      }
+
       return response.json();
     },
     enabled: !!sessionToken && isAuthenticated,
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: REFETCH_INTERVAL,
+    retry: 2,
+    staleTime: 10000,
   });
 
+  /**
+   * Project tracking mutation
+   */
   const trackProjectMutation = useMutation({
     mutationFn: async (projectId: string) => {
-      const response = await fetch(`/api/track-project/${projectId}`);
-      if (!response.ok) throw new Error('Project not found');
+      const response = await fetch(`/api/track-project/${projectId}`, {
+        headers: {
+          Authorization: `Bearer ${sessionToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData: ApiErrorResponse = await response.json();
+        throw new Error(errorData.message || "Project not found");
+      }
+
       return response.json();
     },
     onSuccess: (data) => {
       setSelectedProject(data.project);
       toast({
         title: "Project Found",
-        description: `Tracking project: ${data.project.name}`
+        description: `Tracking project: ${data.project.name}`,
+        variant: "default",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Project Not Found",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
-  const logout = async () => {
+  /**
+   * Logout handler
+   */
+  const logout = useCallback(async () => {
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionToken })
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionToken}`,
+        },
+        body: JSON.stringify({ sessionToken }),
       });
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
-      localStorage.removeItem('clientSessionToken');
-      setSessionToken('');
+      // Clear all auth-related state
+      localStorage.removeItem("clientSessionToken");
+      setSessionToken("");
       setIsAuthenticated(false);
-      setLoginData({ email: '', password: '' });
-      setRegisterData({ email: '', password: '', firstName: '', lastName: '', phone: '' });
+      setLoginData({ email: "", password: "" });
+      setRegisterData({
+        email: "",
+        password: "",
+        firstName: "",
+        lastName: "",
+        phone: "",
+      });
       queryClient.clear();
+
       toast({
         title: "Logged Out",
-        description: "You have been successfully logged out."
+        description: "You have been successfully logged out.",
+        variant: "default",
       });
     }
-  };
+  }, [sessionToken, queryClient, toast]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'in-progress': return 'bg-blue-500';
-      case 'testing': return 'bg-yellow-500';
-      case 'planning': return 'bg-purple-500';
-      case 'on-hold': return 'bg-red-500';
-      default: return 'bg-gray-500';
+  /**
+   * Get color class for project status
+   */
+  const getStatusColor = useCallback((status: string): string => {
+    const statusColors: Record<string, string> = {
+      completed: "bg-green-500",
+      "in-progress": "bg-blue-500",
+      testing: "bg-yellow-500",
+      planning: "bg-purple-500",
+      "on-hold": "bg-red-500",
+      default: "bg-gray-500",
+    };
+
+    return statusColors[status] || statusColors.default;
+  }, []);
+
+  /**
+   * Get variant for priority badge
+   */
+  const getPriorityColor = useCallback((priority: string) => {
+    const priorityVariants: Record<string, string> = {
+      high: "destructive",
+      medium: "default",
+      low: "secondary",
+      default: "outline",
+    };
+
+    return priorityVariants[priority] || priorityVariants.default;
+  }, []);
+
+  /**
+   * Format date string
+   */
+  const formatDate = useCallback((dateString: string): string => {
+    try {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return dateString;
     }
-  };
+  }, []);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'destructive';
-      case 'medium': return 'default';
-      case 'low': return 'secondary';
-      default: return 'outline';
-    }
-  };
+  /**
+   * Format currency
+   */
+  const formatCurrency = useCallback((amount: string | number): string => {
+    const amountNumber =
+      typeof amount === "string" ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat("en-NG", {
+      style: "currency",
+      currency: "NGN",
+      minimumFractionDigits: 2,
+    }).format(amountNumber);
+  }, []);
 
+  /**
+   * Truncate text with ellipsis
+   */
+  const truncateText = useCallback(
+    (text: string, maxLength: number): string => {
+      return text.length > maxLength
+        ? `${text.substring(0, maxLength)}...`
+        : text;
+    },
+    [],
+  );
+
+  // Render authentication form if not authenticated
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-lg">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-gray-900">
-              {isLoginMode ? 'Client Login' : 'Create Account'}
+              {isLoginMode ? "Client Login" : "Create Account"}
             </CardTitle>
             <CardDescription>
-              {isLoginMode ? 'Access your project dashboard' : 'Sign up to track your projects'}
+              {isLoginMode
+                ? "Access your project dashboard"
+                : "Sign up to track your projects"}
             </CardDescription>
           </CardHeader>
+
           <CardContent className="space-y-4">
             {isLoginMode ? (
-              <div className="space-y-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  loginMutation.mutate(loginData);
+                }}
+                className="space-y-4"
+              >
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -310,9 +488,16 @@ export default function ClientDashboard() {
                     type="email"
                     placeholder="your.email@example.com"
                     value={loginData.email}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setLoginData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    required
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="password">Password</Label>
                   <Input
@@ -320,19 +505,34 @@ export default function ClientDashboard() {
                     type="password"
                     placeholder="Your password"
                     value={loginData.password}
-                    onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                    onChange={(e) =>
+                      setLoginData((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
+                    required
+                    minLength={6}
                   />
                 </div>
-                <Button 
+
+                <Button
+                  type="submit"
                   className="w-full"
-                  onClick={() => loginMutation.mutate(loginData)}
-                  disabled={loginMutation.isPending || !loginData.email || !loginData.password}
+                  disabled={loginMutation.isPending}
+                  loading={loginMutation.isPending}
                 >
-                  {loginMutation.isPending ? 'Logging in...' : 'Login'}
+                  {loginMutation.isPending ? "Logging in..." : "Login"}
                 </Button>
-              </div>
+              </form>
             ) : (
-              <div className="space-y-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  registerMutation.mutate(registerData);
+                }}
+                className="space-y-4"
+              >
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label htmlFor="firstName">First Name</Label>
@@ -340,19 +540,33 @@ export default function ClientDashboard() {
                       id="firstName"
                       placeholder="John"
                       value={registerData.firstName}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, firstName: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({
+                          ...prev,
+                          firstName: e.target.value,
+                        }))
+                      }
+                      required
                     />
                   </div>
+
                   <div>
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
                       placeholder="Doe"
                       value={registerData.lastName}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, lastName: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({
+                          ...prev,
+                          lastName: e.target.value,
+                        }))
+                      }
+                      required
                     />
                   </div>
                 </div>
+
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -360,18 +574,31 @@ export default function ClientDashboard() {
                     type="email"
                     placeholder="your.email@example.com"
                     value={registerData.email}
-                    onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setRegisterData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    required
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="phone">Phone (Optional)</Label>
                   <Input
                     id="phone"
                     placeholder="+1234567890"
                     value={registerData.phone}
-                    onChange={(e) => setRegisterData(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) =>
+                      setRegisterData((prev) => ({
+                        ...prev,
+                        phone: e.target.value,
+                      }))
+                    }
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="password">Password</Label>
                   <Input
@@ -379,17 +606,28 @@ export default function ClientDashboard() {
                     type="password"
                     placeholder="Create a password"
                     value={registerData.password}
-                    onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
+                    onChange={(e) =>
+                      setRegisterData((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
+                    required
+                    minLength={8}
                   />
                 </div>
-                <Button 
+
+                <Button
+                  type="submit"
                   className="w-full"
-                  onClick={() => registerMutation.mutate(registerData)}
-                  disabled={registerMutation.isPending || !registerData.email || !registerData.password || !registerData.firstName}
+                  disabled={registerMutation.isPending}
+                  loading={registerMutation.isPending}
                 >
-                  {registerMutation.isPending ? 'Creating Account...' : 'Sign Up'}
+                  {registerMutation.isPending
+                    ? "Creating Account..."
+                    : "Sign Up"}
                 </Button>
-              </div>
+              </form>
             )}
 
             <Separator />
@@ -406,7 +644,10 @@ export default function ClientDashboard() {
                 <Button
                   variant="outline"
                   onClick={() => trackProjectMutation.mutate(projectTrackingId)}
-                  disabled={!projectTrackingId || trackProjectMutation.isPending}
+                  disabled={
+                    !projectTrackingId || trackProjectMutation.isPending
+                  }
+                  loading={trackProjectMutation.isPending}
                 >
                   <Search className="w-4 h-4" />
                 </Button>
@@ -418,7 +659,9 @@ export default function ClientDashboard() {
               className="w-full"
               onClick={() => setIsLoginMode(!isLoginMode)}
             >
-              {isLoginMode ? 'Need an account? Sign up' : 'Already have an account? Login'}
+              {isLoginMode
+                ? "Need an account? Sign up"
+                : "Already have an account? Login"}
             </Button>
           </CardContent>
         </Card>
@@ -426,6 +669,7 @@ export default function ClientDashboard() {
     );
   }
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -437,14 +681,21 @@ export default function ClientDashboard() {
     );
   }
 
-  if (!dashboardData) {
+  // Error state
+  if (dashboardError || !dashboardData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <Card className="w-full max-w-md shadow-lg">
           <CardContent className="text-center p-6">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Error Loading Dashboard</h3>
-            <p className="text-gray-600 mb-4">Failed to load your dashboard data.</p>
+            <h3 className="text-xl font-semibold mb-2">
+              Error Loading Dashboard
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {dashboardError instanceof Error
+                ? dashboardError.message
+                : "Failed to load your dashboard data."}
+            </p>
             <Button onClick={logout}>Logout and Try Again</Button>
           </CardContent>
         </Card>
@@ -455,298 +706,440 @@ export default function ClientDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
+        {/* Header Section */}
+        <header className="mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Welcome back, {dashboardData.user.firstName}!</h1>
-                <p className="text-gray-600">Here's an overview of your projects and activities.</p>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  Welcome back, {dashboardData.user.firstName}!
+                </h1>
+                <p className="text-gray-600">
+                  Here's an overview of your projects and activities.
+                </p>
               </div>
+
               <div className="flex items-center gap-4">
                 {dashboardData.unreadMessages.length > 0 && (
-                  <div className="relative">
-                    <Bell className="h-6 w-6 text-gray-500" />
-                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  <Button variant="ghost" className="relative p-2">
+                    <Bell className="h-5 w-5 text-gray-500" />
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {dashboardData.unreadMessages.length}
                     </span>
-                  </div>
+                  </Button>
                 )}
-                <Button variant="outline" onClick={logout}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
+
+                <Button
+                  variant="outline"
+                  onClick={logout}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
                 </Button>
               </div>
             </div>
+
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <Mail className="h-4 w-4" />
-              {dashboardData.user.email}
+              <span>{dashboardData.user.email}</span>
+
               {dashboardData.user.phone && (
                 <>
                   <span>•</span>
-                  {dashboardData.user.phone}
+                  <span>{dashboardData.user.phone}</span>
                 </>
               )}
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Briefcase className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                  <p className="text-2xl font-bold text-gray-900">{dashboardData.stats.totalProjects}</p>
+        {/* Stats Overview Section */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatCard
+            icon={<Briefcase className="h-6 w-6 text-blue-600" />}
+            title="Total Projects"
+            value={dashboardData.stats.totalProjects}
+          />
+
+          <StatCard
+            icon={<Clock className="h-6 w-6 text-yellow-600" />}
+            title="Active Projects"
+            value={dashboardData.stats.activeProjects}
+          />
+
+          <StatCard
+            icon={<CheckCircle className="h-6 w-6 text-green-600" />}
+            title="Completed"
+            value={dashboardData.stats.completedProjects}
+          />
+
+          <StatCard
+            icon={<DollarSign className="h-6 w-6 text-emerald-600" />}
+            title="Total Spent"
+            value={formatCurrency(dashboardData.stats.totalSpent)}
+          />
+        </section>
+
+        {/* Main Content Section */}
+        <section>
+          <Tabs defaultValue="projects" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="projects">Projects</TabsTrigger>
+              <TabsTrigger value="bookings">Bookings</TabsTrigger>
+              <TabsTrigger value="payments">Payments</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
+            </TabsList>
+
+            {/* Projects Tab */}
+            <TabsContent value="projects" className="space-y-4">
+              {dashboardData.projects.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {dashboardData.projects.map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      project={project}
+                      onViewDetails={() => setSelectedProject(project)}
+                      getStatusColor={getStatusColor}
+                      getPriorityColor={getPriorityColor}
+                      formatDate={formatDate}
+                    />
+                  ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              ) : (
+                <EmptyState
+                  icon={<Briefcase className="w-16 h-16 text-gray-400" />}
+                  title="No Projects Yet"
+                  description="You don't have any projects yet. Book a service to get started!"
+                  action={
+                    <Button
+                      onClick={() => (window.location.href = "/#booking")}
+                    >
+                      Book a New Project
+                    </Button>
+                  }
+                />
+              )}
+            </TabsContent>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Clock className="h-8 w-8 text-yellow-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Active Projects</p>
-                  <p className="text-2xl font-bold text-gray-900">{dashboardData.stats.activeProjects}</p>
+            {/* Bookings Tab */}
+            <TabsContent value="bookings" className="space-y-4">
+              {dashboardData.bookings.length > 0 ? (
+                <div className="grid gap-4">
+                  {dashboardData.bookings.map((booking) => (
+                    <BookingCard
+                      key={booking.id}
+                      booking={booking}
+                      formatDate={formatDate}
+                    />
+                  ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              ) : (
+                <EmptyState
+                  icon={<CalendarDays className="w-16 h-16 text-gray-400" />}
+                  title="No Bookings Yet"
+                  description="Your service bookings will appear here."
+                />
+              )}
+            </TabsContent>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-gray-900">{dashboardData.stats.completedProjects}</p>
+            {/* Payments Tab */}
+            <TabsContent value="payments" className="space-y-4">
+              {dashboardData.paymentLogs.length > 0 ? (
+                <div className="grid gap-4">
+                  {dashboardData.paymentLogs.map((payment) => (
+                    <PaymentCard
+                      key={payment.id}
+                      payment={payment}
+                      formatCurrency={formatCurrency}
+                      formatDate={formatDate}
+                    />
+                  ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              ) : (
+                <EmptyState
+                  icon={<CreditCard className="w-16 h-16 text-gray-400" />}
+                  title="No Payment History"
+                  description="Your payment transactions will appear here."
+                />
+              )}
+            </TabsContent>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <DollarSign className="h-8 w-8 text-emerald-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Spent</p>
-                  <p className="text-2xl font-bold text-gray-900">₦{dashboardData.stats.totalSpent.toLocaleString()}</p>
+            {/* Messages Tab */}
+            <TabsContent value="messages" className="space-y-4">
+              {dashboardData.unreadMessages.length > 0 ? (
+                <div className="grid gap-4">
+                  {dashboardData.unreadMessages.map((message) => (
+                    <MessageCard
+                      key={message.id}
+                      message={message}
+                      formatDate={formatDate}
+                    />
+                  ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content */}
-        <Tabs defaultValue="projects" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="messages">Messages</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="projects" className="space-y-4">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {dashboardData.projects.map((project) => (
-                <Card key={project.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg mb-2">{project.name}</CardTitle>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge variant={getPriorityColor(project.priority)} className="text-xs">
-                            {project.priority} priority
-                          </Badge>
-                          <div className="flex items-center gap-1">
-                            <div className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`} />
-                            <span className="text-xs text-muted-foreground capitalize">{project.status}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-sm text-gray-500">#{project.id}</div>
-                    </div>
-                    <CardDescription className="line-clamp-2">
-                      {project.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="font-medium">Progress</span>
-                          <span className="text-blue-600 font-semibold">{project.progress}%</span>
-                        </div>
-                        <Progress value={project.progress} className="h-2" />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <User className="h-3 w-3 text-gray-400" />
-                          <span className="text-xs text-muted-foreground truncate">{project.assignedTo}</span>
-                        </div>
-                        {project.budget && (
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-3 w-3 text-gray-400" />
-                            <span className="text-xs text-muted-foreground">{project.budget}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {project.dueDate && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <CalendarDays className="h-3 w-3 text-gray-400" />
-                          <span className="text-xs text-muted-foreground">
-                            Due: {new Date(project.dueDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      )}
-
-                      <Button
-                        variant="default"
-                        className="w-full"
-                        onClick={() => setSelectedProject(project)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {dashboardData.projects.length === 0 && (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-16">
-                  <Briefcase className="w-16 h-16 text-gray-400 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Projects Yet</h3>
-                  <p className="text-gray-600 text-center mb-6">
-                    You don't have any projects yet. Book a service to get started!
-                  </p>
-                  <Button onClick={() => window.location.href = '/#booking'}>
-                    Book a New Project
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="bookings" className="space-y-4">
-            <div className="grid gap-4">
-              {dashboardData.bookings.map((booking) => (
-                <Card key={booking.id}>
-                  <CardContent className="p-6">
-                    <div className="grid md:grid-cols-4 gap-4">
-                      <div>
-                        <h4 className="font-semibold">{booking.service}</h4>
-                        <p className="text-sm text-gray-600">{booking.projectType}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Budget</p>
-                        <p className="font-medium">{booking.budget}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Timeline</p>
-                        <p className="font-medium">{booking.timeline}</p>
-                      </div>
-                      <div>
-                        <Badge variant={booking.paymentStatus === 'completed' ? 'default' : 'secondary'}>
-                          {booking.paymentStatus}
-                        </Badge>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {new Date(booking.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="payments" className="space-y-4">
-            <div className="grid gap-4">
-              {dashboardData.paymentLogs.map((payment) => (
-                <Card key={payment.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <CreditCard className="h-8 w-8 text-green-600" />
-                        <div>
-                          <h4 className="font-semibold">{payment.serviceName}</h4>
-                          <p className="text-sm text-gray-600">Reference: {payment.reference}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-green-600">₦{parseFloat(payment.amount).toLocaleString()}</p>
-                        <Badge variant={payment.status === 'completed' ? 'default' : 'secondary'}>
-                          {payment.status}
-                        </Badge>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {new Date(payment.paidAt || payment.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {dashboardData.paymentLogs.length === 0 && (
-              <Card>
-                <CardContent className="text-center py-16">
-                  <CreditCard className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Payment History</h3>
-                  <p className="text-gray-600">Your payment transactions will appear here.</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="messages" className="space-y-4">
-            <div className="grid gap-4">
-              {dashboardData.unreadMessages.map((message) => (
-                <Card key={message.id} className={`${!message.isRead ? 'border-blue-500 bg-blue-50' : ''}`}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h4 className="font-semibold">{message.subject}</h4>
-                          {!message.isRead && (
-                            <Badge variant="default" className="text-xs">New</Badge>
-                          )}
-                        </div>
-                        <p className="text-gray-700 mb-2">{message.message}</p>
-                        <p className="text-sm text-gray-500">
-                          From: {message.senderType === 'admin' ? 'Project Team' : 'You'} • 
-                          {new Date(message.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <MessageSquare className="h-5 w-5 text-gray-400" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {dashboardData.unreadMessages.length === 0 && (
-              <Card>
-                <CardContent className="text-center py-16">
-                  <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">No Messages</h3>
-                  <p className="text-gray-600">Messages from your project team will appear here.</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+              ) : (
+                <EmptyState
+                  icon={<MessageSquare className="w-16 h-16 text-gray-400" />}
+                  title="No Messages"
+                  description="Messages from your project team will appear here."
+                />
+              )}
+            </TabsContent>
+          </Tabs>
+        </section>
       </div>
     </div>
   );
 }
+
+// Sub-components for better organization
+
+interface StatCardProps {
+  icon: React.ReactNode;
+  title: string;
+  value: string | number;
+}
+
+const StatCard = ({ icon, title, value }: StatCardProps) => (
+  <Card>
+    <CardContent className="p-6">
+      <div className="flex items-center gap-4">
+        <div className="p-2 bg-opacity-10 bg-current rounded-lg">{icon}</div>
+        <div>
+          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="text-xl font-bold text-gray-900">
+            {typeof value === "number" ? value.toLocaleString() : value}
+          </p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+interface ProjectCardProps {
+  project: Project;
+  onViewDetails: () => void;
+  getStatusColor: (status: string) => string;
+  getPriorityColor: (priority: string) => string;
+  formatDate: (dateString: string) => string;
+}
+
+const ProjectCard = ({
+  project,
+  onViewDetails,
+  getStatusColor,
+  getPriorityColor,
+  formatDate,
+}: ProjectCardProps) => (
+  <Card className="hover:shadow-lg transition-shadow">
+    <CardHeader className="pb-4">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <CardTitle className="text-lg mb-2">{project.name}</CardTitle>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge
+              variant={getPriorityColor(project.priority)}
+              className="text-xs"
+            >
+              {project.priority} priority
+            </Badge>
+            <div className="flex items-center gap-1">
+              <div
+                className={`w-2 h-2 rounded-full ${getStatusColor(project.status)}`}
+              />
+              <span className="text-xs text-muted-foreground capitalize">
+                {project.status.replace("-", " ")}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="text-sm text-gray-500">#{project.id}</div>
+      </div>
+      <CardDescription className="line-clamp-2">
+        {truncateText(project.description, MAX_PROJECT_DESCRIPTION_LENGTH)}
+      </CardDescription>
+    </CardHeader>
+
+    <CardContent className="pt-0">
+      <div className="space-y-4">
+        <div>
+          <div className="flex justify-between text-sm mb-2">
+            <span className="font-medium">Progress</span>
+            <span className="text-blue-600 font-semibold">
+              {project.progress}%
+            </span>
+          </div>
+          <Progress value={project.progress} className="h-2" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <User className="h-3 w-3 text-gray-400" />
+            <span className="text-xs text-muted-foreground truncate">
+              {project.assignedTo}
+            </span>
+          </div>
+
+          {project.budget && (
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-3 w-3 text-gray-400" />
+              <span className="text-xs text-muted-foreground">
+                {project.budget}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {project.dueDate && (
+          <div className="flex items-center gap-2 text-sm">
+            <CalendarDays className="h-3 w-3 text-gray-400" />
+            <span className="text-xs text-muted-foreground">
+              Due: {formatDate(project.dueDate)}
+            </span>
+          </div>
+        )}
+
+        <Button variant="default" className="w-full" onClick={onViewDetails}>
+          <Eye className="h-4 w-4 mr-2" />
+          View Details
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+interface BookingCardProps {
+  booking: Booking;
+  formatDate: (dateString: string) => string;
+}
+
+const BookingCard = ({ booking, formatDate }: BookingCardProps) => (
+  <Card>
+    <CardContent className="p-6">
+      <div className="grid md:grid-cols-4 gap-4">
+        <div>
+          <h4 className="font-semibold">{booking.service}</h4>
+          <p className="text-sm text-gray-600">{booking.projectType}</p>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-600">Budget</p>
+          <p className="font-medium">{booking.budget}</p>
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-600">Timeline</p>
+          <p className="font-medium">{booking.timeline}</p>
+        </div>
+
+        <div>
+          <Badge
+            variant={
+              booking.paymentStatus === "completed" ? "default" : "secondary"
+            }
+          >
+            {booking.paymentStatus}
+          </Badge>
+          <p className="text-sm text-gray-600 mt-1">
+            {formatDate(booking.createdAt)}
+          </p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+interface PaymentCardProps {
+  payment: PaymentLog;
+  formatCurrency: (amount: string | number) => string;
+  formatDate: (dateString: string) => string;
+}
+
+const PaymentCard = ({
+  payment,
+  formatCurrency,
+  formatDate,
+}: PaymentCardProps) => (
+  <Card>
+    <CardContent className="p-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <CreditCard className="h-8 w-8 text-green-600" />
+          <div>
+            <h4 className="font-semibold">{payment.serviceName}</h4>
+            <p className="text-sm text-gray-600">
+              Reference: {payment.reference}
+            </p>
+          </div>
+        </div>
+
+        <div className="text-right">
+          <p className="text-lg font-bold text-green-600">
+            {formatCurrency(payment.amount)}
+          </p>
+          <Badge
+            variant={payment.status === "completed" ? "default" : "secondary"}
+          >
+            {payment.status}
+          </Badge>
+          <p className="text-sm text-gray-600 mt-1">
+            {formatDate(payment.paidAt || payment.createdAt)}
+          </p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+interface MessageCardProps {
+  message: Message;
+  formatDate: (dateString: string) => string;
+}
+
+const MessageCard = ({ message, formatDate }: MessageCardProps) => (
+  <Card className={!message.isRead ? "border-blue-500 bg-blue-50" : ""}>
+    <CardContent className="p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <h4 className="font-semibold">{message.subject}</h4>
+            {!message.isRead && (
+              <Badge variant="default" className="text-xs">
+                New
+              </Badge>
+            )}
+          </div>
+
+          <p className="text-gray-700 mb-2">{message.message}</p>
+
+          <p className="text-sm text-gray-500">
+            From: {message.senderType === "admin" ? "Project Team" : "You"} •
+            {formatDate(message.createdAt)}
+          </p>
+        </div>
+
+        <MessageSquare className="h-5 w-5 text-gray-400 flex-shrink-0" />
+      </div>
+    </CardContent>
+  </Card>
+);
+
+interface EmptyStateProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}
+
+const EmptyState = ({ icon, title, description, action }: EmptyStateProps) => (
+  <Card>
+    <CardContent className="flex flex-col items-center justify-center py-16">
+      {icon}
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <p className="text-gray-600 text-center mb-6 max-w-md mx-auto">
+        {description}
+      </p>
+      {action}
+    </CardContent>
+  </Card>
+);

@@ -155,7 +155,7 @@ export function Services() {
             What I Can <span className="gradient-text">Build For You</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            From simple websites to complex SaaS platforms, I deliver high-quality web solutions tailored to your business needs
+            I build high-quality web solutions tailored to your business needs
           </p>
         </div>
 

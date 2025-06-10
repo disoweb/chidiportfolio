@@ -15,16 +15,17 @@ export function Booking() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [formData, setFormData<BookingForm>] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    service: '',
-    projectType: '',
-    budget: '',
-    timeline: '',
-    message: ''
-  });
+const [formData, setFormData] = useState<BookingForm>({
+  name: '',
+  email: '',
+  phone: '',
+  service: '',
+  projectType: '',
+  budget: '',
+  timeline: '',
+  message: ''
+});
+
   const [submissionStatus, setSubmissionStatus] = useState<'' | 'success' | 'error'>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

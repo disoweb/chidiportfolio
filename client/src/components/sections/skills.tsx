@@ -1,3 +1,4 @@
+import React from 'react';
 import { 
   Code, 
   Database, 
@@ -81,6 +82,17 @@ const iconMap: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
 export function Skills() {
   const { elementRef, isIntersecting } = useIntersectionObserver();
 
+  React.useEffect(() => {
+    if (isIntersecting) {
+      const progressBars = document.querySelectorAll('.progress-bar-inner');
+      progressBars.forEach((bar) => {
+        const container = bar.parentElement;
+        const progress = container?.getAttribute('data-progress') || '0';
+        bar.style.width = `${progress}%`;
+      });
+    }
+  }, [isIntersecting]);
+
   return (
     <section 
       ref={elementRef}
@@ -99,7 +111,6 @@ export function Skills() {
           </p>
         </div>
         
-        {/* Skills Categories */}
         <div className="space-y-12">
           {skillCategories.map((category) => (
             <div key={category.title}>
@@ -109,9 +120,9 @@ export function Skills() {
               </h3>
               
               {category.title === 'Software Development' && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 software-development">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   {category.skills.map((skill) => (
-                    <div key={skill.name} className="skill-card bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg hover:shadow-xl border border-slate-200 dark:border-slate-700">
+                    <div key={skill.name} className="skill-card bg-white dark:bg-slate-800 p-4 rounded-lg shadow hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all duration-300">
                       <div className="text-center">
                         {skill.icon && (
                           <i className={`${skill.icon} text-3xl ${category.color} mb-2`} />
@@ -119,9 +130,9 @@ export function Skills() {
                         <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{skill.name}</h4>
                         <div
                           className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-2 overflow-hidden progress-bar-container"
-                          data-progress={isIntersecting ? skill.level : 0}
+                          data-progress={skill.level}
                         >
-                          <div className="progress-bar-inner" />
+                          <div className={`progress-bar-inner bg-blue-500-progress rounded-full`} />
                         </div>
                       </div>
                     </div>
@@ -130,9 +141,9 @@ export function Skills() {
               )}
               
               {category.title === 'Engineering' && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 engineering">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {category.skills.map((skill) => (
-                    <div key={skill.name} className="skill-card bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg hover:shadow-xl border border-slate-200 dark:border-slate-700">
+                    <div key={skill.name} className="skill-card bg-white dark:bg-slate-800 p-6 rounded-lg shadow hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all duration-300">
                       <div className="text-center">
                         {skill.name === 'Solar System Design' && <Sun className={`w-10 h-10 ${category.color} mx-auto mb-4`} />}
                         {skill.name === 'Microgrid Systems' && <Zap className={`w-10 h-10 ${category.color} mx-auto mb-4`} />}
@@ -143,9 +154,9 @@ export function Skills() {
                         )}
                         <div
                           className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden progress-bar-container"
-                          data-progress={isIntersecting ? skill.level : 0}
+                          data-progress={skill.level}
                         >
-                          <div className="progress-bar-inner" />
+                          <div className={`progress-bar-inner bg-orange-500-progress rounded-full`} />
                         </div>
                       </div>
                     </div>
@@ -154,18 +165,18 @@ export function Skills() {
               )}
               
               {category.title === 'Tools & Workflow' && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 tools">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   {category.skills.map((skill) => {
                     const IconComponent = iconMap[skill.name] || GitBranch;
                     return (
-                      <div key={skill.name} className="skill-card bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg hover:shadow-xl border border-slate-200 dark:border-slate-700 text-center">
+                      <div key={skill.name} className="skill-card bg-white dark:bg-slate-800 p-4 rounded-lg shadow hover:shadow-md border border-slate-200 dark:border-slate-700 transition-all duration-300 text-center">
                         <IconComponent className={`w-8 h-8 ${category.color} mx-auto mb-2`} />
                         <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{skill.name}</h4>
                         <div
                           className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-2 overflow-hidden progress-bar-container"
-                          data-progress={isIntersecting ? skill.level : 0}
+                          data-progress={skill.level}
                         >
-                          <div className="progress-bar-inner" />
+                          <div className={`progress-bar-inner bg-green-500-progress rounded-full`} />
                         </div>
                       </div>
                     );

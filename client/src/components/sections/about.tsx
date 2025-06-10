@@ -1,17 +1,16 @@
-
-import { Download, Award, Users, Code2, Lightbulb } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
+import { Download, Award, Users, Code2, Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 
 export function About() {
   const { elementRef, isIntersecting } = useIntersectionObserver();
 
   return (
-    <section 
+    <section
       ref={elementRef}
-      id="about" 
+      id="about"
       className={`py-10 bg-white transition-all duration-1000 ${
-        isIntersecting ? 'animate-fade-in' : 'opacity-0'
+        isIntersecting ? "animate-fade-in" : "opacity-0"
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -19,34 +18,44 @@ export function About() {
           {/* Left Column - Content */}
           <div>
             <div className="mb-8">
-              <p className="text-blue-600 font-semibold text-lg mb-4 tracking-wide">ABOUT ME</p>
+              <p className="text-blue-600 font-semibold text-lg mb-4 tracking-wide">
+                Who I Am
+              </p>
               <h2 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-6">
                 Strategic & <span className="text-blue-600">Innovative</span>
               </h2>
               <div className="space-y-6 text-lg text-gray-600 leading-relaxed">
                 <p>
-                  I'm a passionate <strong>Fullstack Developer</strong> with over 7 years of experience 
-                  building high-performance web applications that drive business growth. My expertise spans 
-                  the entire development lifecycle, from concept and design to deployment and optimization.
+                  I'm an experienced <strong>Fullstack Developer</strong> with
+                  over 7 years of experience building high-performance web
+                  applications that drive business growth. My expertise spans
+                  the entire development lifecycle, from concept and design to
+                  deployment and optimization.
                 </p>
                 <p>
-                  With a strong foundation in <strong>frontend & backend techn</strong>, I turn ideas into digital reality backed by robust, scalable architectures. I specialize in modern web
-                  frameworks with emphasis on strong security, performance, scalability and exceptional user experience.
+                  With a strong foundation in{" "}
+                  <strong>frontend & backend techn</strong>, I turn ideas into
+                  digital reality backed by robust, scalable architectures. I
+                  specialize in modern web frameworks with emphasis on strong
+                  security, performance, scalability and exceptional user
+                  experience.
                 </p>
                 <p>
-                  My background in engineering gives me a unique perspective to problem-solving, innovation and <strong>out-of-the-box</strong> thinking
+                  My background in engineering gives me a unique perspective to
+                  problem-solving, innovation and{" "}
+                  <strong>out-of-the-box</strong> thinking
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold">
+            <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start justify-center mb-8">
+              <Button className="!w-fit inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold">
                 <Download className="w-5 h-5 mr-2" />
                 Download Resume
               </Button>
-              <Button 
-                variant="outline" 
-                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-6 py-3 rounded-xl font-semibold"
+              <Button
+                variant="outline"
+                className="!w-fit inline-flex items-center border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-6 py-3 rounded-xl font-semibold"
               >
                 View Portfolio
               </Button>
@@ -59,12 +68,16 @@ export function About() {
                 <div className="text-sm text-green-600">Years Experience</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600 mb-2">100+</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">
+                  100+
+                </div>
                 <div className="text-sm text-green-600">Projects Delivered</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">98%</div>
-                <div className="text-sm text-green-600">Client Satisfaction</div>
+                <div className="text-sm text-green-600">
+                  Client Satisfaction
+                </div>
               </div>
             </div>
           </div>
@@ -91,7 +104,8 @@ export function About() {
                       <h4 className="font-semibold">Client-Focused</h4>
                     </div>
                     <p className="text-sm text-blue-100">
-                      Understanding business needs and translating them into technical solutions
+                      Understanding business needs and translating them into
+                      technical solutions
                     </p>
                   </div>
 
@@ -101,7 +115,8 @@ export function About() {
                       <h4 className="font-semibold">Quality First</h4>
                     </div>
                     <p className="text-sm text-blue-100">
-                      Clean, maintainable code with comprehensive testing and documentation
+                      Clean, maintainable code with comprehensive testing and
+                      documentation
                     </p>
                   </div>
 
@@ -111,7 +126,8 @@ export function About() {
                       <h4 className="font-semibold">Innovation</h4>
                     </div>
                     <p className="text-sm text-blue-100">
-                      Staying current with latest technologies and best practices
+                      Staying current with latest technologies and best
+                      practices
                     </p>
                   </div>
                 </div>
