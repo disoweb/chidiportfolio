@@ -95,8 +95,8 @@ async function seedAdminUser() {
         if (existingAdmin.rows.length === 0) {
           const hashedPassword = await bcrypt.default.hash(admin.password, 12);
           const insertAdminQuery = `
-            INSERT INTO admin_users (username, email, password, role, first_name, last_name, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+            INSERT INTO admin_users (username, email, password, role, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
             RETURNING id, username, email, role
           `;
           
@@ -105,8 +105,6 @@ async function seedAdminUser() {
             admin.email,
             hashedPassword,
             admin.role,
-            admin.firstName,
-            admin.lastName,
             true
           ]);
           
@@ -134,8 +132,8 @@ async function seedAdminUser() {
         if (existingUser.rows.length === 0) {
           const hashedPassword = await bcrypt.default.hash(user.password, 12);
           const insertUserQuery = `
-            INSERT INTO users (username, email, password, first_name, last_name, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+            INSERT INTO users (username, email, password, is_active, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, NOW(), NOW())
             RETURNING id, username, email
           `;
           
@@ -143,8 +141,6 @@ async function seedAdminUser() {
             user.username,
             user.email,
             hashedPassword,
-            user.firstName,
-            user.lastName,
             true
           ]);
           
