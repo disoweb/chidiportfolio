@@ -1,4 +1,25 @@
 import { db } from "./db";
+import bcrypt from "bcryptjs";
+import { eq, desc, asc, and } from "drizzle-orm";
+
+// Helper function to retry database operations
+async function retryDbOperation<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      if (attempt === maxRetries) throw error;
+
+      if (error.message?.includes('endpoint is disabled') || error.code === 'XX000') {
+        console.log(`Database sleeping, attempt ${attempt}/${maxRetries}, retrying in ${attempt * 2}s...`);
+        await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
 import { 
   contacts, bookings, transactions, orders, adminUsers, siteSettings, inquiries, projects, paymentLogs,
   users, clientSessions, messages, notifications, projectUpdates,
@@ -12,8 +33,7 @@ import {
   type Project, type InsertProject,
   type PaymentLog, type InsertPaymentLog
 } from "@shared/schema";
-import { eq, desc, and, like, or } from "drizzle-orm";
-import bcrypt from 'bcryptjs';
+import { like, or } from "drizzle-orm";
 
 class DatabaseStorage {
   // Contact methods
@@ -286,7 +306,7 @@ class DatabaseStorage {
   async createUser(userData: any): Promise<any> {
     try {
       const hashedPassword = await bcrypt.hash(userData.password, 12);
-      
+
       const [user] = await db
         .insert(users)
         .values({
@@ -379,6 +399,16 @@ class DatabaseStorage {
         .where(eq(clientSessions.sessionToken, sessionToken));
     } catch (error) {
       console.error('Deactivate client session error:', error);
+    }
+  }
+
+  async deleteClientSession(sessionToken: string): Promise<void> {
+    try {
+      await db
+        .delete(clientSessions)
+        .where(eq(clientSessions.sessionToken, sessionToken));
+    } catch (error) {
+      console.error('Delete client session error:', error);
     }
   }
 
@@ -943,6 +973,85 @@ class DatabaseStorage {
       } else {
         console.error('Error initializing default settings:', error);
       }
+    }
+  }
+
+  // Get all bookings
+  async getBookings() {
+    try {
+      return await retryDbOperation(() => 
+        db.select().from(bookings).orderBy(desc(bookings.createdAt))
+      );
+    } catch (error) {
+      console.error('Get bookings error:', error);
+      return [];
+    }
+  }
+
+  // Chat history methods
+  async saveChatMessage(data: any): Promise<any> {
+    try {
+      return await retryDbOperation(async () => {
+        const chatHistoryQuery = `
+          INSERT INTO chat_history (user_id, session_id, message, response, timestamp)
+          VALUES ($1, $2, $3, $4, NOW())
+          RETURNING *
+        `;
+        const result = await db.execute(chatHistoryQuery, [
+          data.userId || null,
+          data.sessionId,
+          data.message,
+          data.response
+        ]);
+        return result.rows[0];
+      });
+    } catch (error) {
+      console.error('Save chat message error:', error);
+      return null;
+    }
+  }
+
+  async getChatHistory(sessionId: string, userId?: number): Promise<any[]> {
+    try {
+      return await retryDbOperation(async () => {
+        let query = `
+          SELECT * FROM chat_history 
+          WHERE session_id = $1
+        `;
+        const params = [sessionId];
+
+        if (userId) {
+          query += ` OR user_id = $2`;
+          params.push(userId);
+        }
+
+        query += ` ORDER BY timestamp ASC LIMIT 50`;
+
+        const result = await db.execute(query, params);
+        return result.rows;
+      });
+    } catch (error) {
+      console.error('Get chat history error:', error);
+      return [];
+    }
+  }
+
+  // Project tracking methods
+  async getProjectByTrackingToken(token: string): Promise<any> {
+    try {
+      return await retryDbOperation(async () => {
+        const query = `
+          SELECT p.*, b.name as booking_name, b.email as booking_email
+          FROM projects p
+          LEFT JOIN bookings b ON p.booking_id = b.id
+          WHERE p.tracking_token = $1
+        `;
+        const result = await db.execute(query, [token]);
+        return result.rows[0];
+      });
+    } catch (error) {
+      console.error('Get project by tracking token error:', error);
+      return null;
     }
   }
 }

@@ -117,10 +117,10 @@ export function AIChatbot() {
 
       parts.push(
         <button
-            key={`btn-${match.index}-${buttonHref}`}
-            onClick={() => handleNavigation(buttonHref)}
-            className="inline-flex items-center px-3 py-1 mx-1 my-1 bg-blue-600 text-white text-xs rounded-full hover:bg-blue-700 transition-colors break-words"
-          >
+              key={match.index}
+              onClick={() => handleNavigation(match && match[2] ? match[2] : '')}
+              className="inline-flex items-center px-3 py-1 mx-1 bg-blue-600 text-white text-xs rounded-full hover:bg-blue-700 transition-colors break-words"
+            >
           {buttonText}
         </button>
       );

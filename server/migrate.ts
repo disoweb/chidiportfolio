@@ -14,7 +14,8 @@ export async function runMigrations() {
     '003_fix_admin_boolean.sql',
     '004_fix_budget_and_admin.sql',
     '005_fix_users_table.sql',
-    '006_reset_admin_password.sql'
+    '006_reset_admin_password.sql',
+    '007_create_missing_tables.sql'
   ];
 
   console.log('Running database migrations...');

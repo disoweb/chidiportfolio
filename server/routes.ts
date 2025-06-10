@@ -15,8 +15,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Run database migrations first
   try {
     await runMigrations();
-  } catch (error: any) {
-    console.error('Failed to run migrations:', error);
+  } catch (error) {
+    console.error('Migration error during startup:', error);
+    // Continue without migrations if database is sleeping
   }
 
   // Initialize default settings on startup
@@ -870,7 +871,7 @@ User question: ${message}`;
       res.json(projects);
     } catch (error) {
       console.error('Get projects error:', error);
-      res.status(500).json({ error: 'Failed to fetch projects' });
+      res.status(500.json({ error: 'Failed to fetch projects' });
     }
   });
 
