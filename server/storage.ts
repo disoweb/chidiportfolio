@@ -521,9 +521,15 @@ class DatabaseStorage {
 
   // Project methods
   async createProject(insertProject: InsertProject): Promise<Project> {
+    // Ensure budget is treated as text
+    const projectData = {
+      ...insertProject,
+      budget: insertProject.budget?.toString() || 'TBD'
+    };
+
     const [project] = await db
       .insert(projects)
-      .values(insertProject)
+      .values(projectData)
       .returning();
     return project;
   }
