@@ -54,7 +54,7 @@ async function seedAdminUser() {
         {
           username: 'admin',
           email: 'admin@chidiogara.dev',
-          password: 'admin123',
+          password: await bcrypt.default.hash('admin123', 12),
           role: 'admin',
           firstName: 'Admin',
           lastName: 'User'
@@ -62,7 +62,7 @@ async function seedAdminUser() {
         {
           username: 'manager',
           email: 'manager@chidiogara.dev',
-          password: 'manager123',
+          password: await bcrypt.default.hash('manager123', 12),
           role: 'manager',
           firstName: 'Project',
           lastName: 'Manager'
@@ -93,7 +93,6 @@ async function seedAdminUser() {
         const existingAdmin = await client.query(checkAdminQuery, [admin.username]);
 
         if (existingAdmin.rows.length === 0) {
-          const hashedPassword = await bcrypt.default.hash(admin.password, 10);
           const insertAdminQuery = `
             INSERT INTO admin_users (username, email, password, role, is_active, created_at, updated_at)
             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
@@ -103,15 +102,14 @@ async function seedAdminUser() {
           const newAdmin = await client.query(insertAdminQuery, [
             admin.username,
             admin.email,
-            hashedPassword,
+            admin.password, // Already hashed above
             admin.role,
             true
           ]);
 
-          console.log(`Admin account created: ${admin.username} (${admin.email}) - Password: ${admin.password}`);
+          console.log(`Admin account created: ${admin.username} (${admin.email}) - Password: admin123`);
         } else {
           // Update existing admin password
-          const hashedPassword = await bcrypt.default.hash(admin.password, 10);
           const updateAdminQuery = `
             UPDATE admin_users 
             SET password = $1, is_active = $2, updated_at = NOW()
@@ -119,8 +117,8 @@ async function seedAdminUser() {
             RETURNING id, username, email, role
           `;
 
-          await client.query(updateAdminQuery, [hashedPassword, true, admin.username]);
-          console.log(`Admin account updated: ${admin.username} (${admin.email}) - Password: ${admin.password}`);
+          await client.query(updateAdminQuery, [admin.password, true, admin.username]); // Already hashed above
+          console.log(`Admin account updated: ${admin.username} (${admin.email}) - Password: admin123`);
         }
       }
 

@@ -52,14 +52,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Booking form submission endpoint
+  // Main booking form submission endpoint
   app.post('/api/booking', async (req, res) => {
     try {
-      // Validate request body
+      console.log('Received booking request:', req.body);
       const validatedData = insertBookingSchema.parse(req.body);
-
+      console.log('Validated booking data:', validatedData);
+      
       // Store booking submission
       const booking = await storage.createBooking(validatedData);
+      console.log('Created booking:', booking);
 
       // Create a project record for this booking
       const project = await storage.createProject({
@@ -73,6 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estimatedTime: 40, // Default 40 hours
         notes: `Project type: ${validatedData.projectType}, Timeline: ${validatedData.timeline}, Budget: ${validatedData.budget}`
       });
+      console.log('Created project:', project);
 
       res.json({ 
         success: true, 
@@ -80,16 +83,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookingId: booking.id,
         projectId: project.id
       });
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
+        console.error('Validation error:', error.errors);
         res.status(400).json({ 
           error: 'Validation error', 
           details: error.errors 
         });
       } else {
-        console.error('Booking form error:', error);
+        console.error('Booking error details:', error);
         res.status(500).json({ 
-          error: 'Internal server error' 
+          error: 'Internal server error',
+          details: error.message
         });
       }
     }
@@ -159,36 +164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Booking form submission endpoint
-  app.post('/api/booking', async (req, res) => {
-    try {
-      console.log('Received booking request:', req.body);
-      const validatedData = insertBookingSchema.parse(req.body);
-      console.log('Validated booking data:', validatedData);
-      const booking = await storage.createBooking(validatedData);
-
-      res.json({ 
-        success: true, 
-        message: 'Booking submitted successfully',
-        id: booking.id,
-        booking: booking
-      });
-    } catch (error: any) { // UPDATED: Added :any because error.message is accessed
-      if (error instanceof z.ZodError) {
-        console.error('Validation error:', error.errors);
-        res.status(400).json({ 
-          error: 'Validation error', 
-          details: error.errors 
-        });
-      } else {
-        console.error('Booking error details:', error);
-        res.status(500).json({ 
-          error: 'Internal server error',
-          details: error.message // Accessing error.message
-        });
-      }
-    }
-  });
+  
 
   // Update booking endpoint
   app.put('/api/bookings/:id', async (req, res) => {

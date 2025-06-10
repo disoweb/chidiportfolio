@@ -10,6 +10,25 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarDays, Clock, DollarSign, MessageSquare, User, Mail } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+
+// Fallback function if apiRequest fails
+const safeFetch = async (method: string, url: string, body?: any) => {
+  try {
+    return await apiRequest(method, url, body);
+  } catch (error) {
+    console.error('API request failed, using fetch fallback:', error);
+    const options: RequestInit = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
+    return fetch(url, options);
+  }
+};
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -60,13 +79,23 @@ export default function ClientDashboard() {
     }
   }, []);
 
-  const { data: projects = [], isLoading: loadingProjects } = useQuery({
+  const { data: projects = [], isLoading: loadingProjects, error: projectsError } = useQuery({
     queryKey: ['/api/client/projects', clientEmail],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/client/projects/${encodeURIComponent(clientEmail)}`);
-      return response.json();
+      try {
+        const response = await safeFetch('GET', `/api/client/projects/${encodeURIComponent(clientEmail)}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+        return [];
+      }
     },
     enabled: !!clientEmail,
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const { data: projectUpdates = [] } = useQuery({
