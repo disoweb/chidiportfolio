@@ -201,13 +201,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/track-project/:projectId', async (req: Request, res: Response) => {
     try {
       const { projectId } = req.params;
+      // TODO: PERFORMANCE - Consider fetching project with related updates and messages in a single query
+      // if schema relations are defined. This currently involves multiple database calls (N+1 problem).
+      // Example (if relations are set up in Drizzle schema):
+      // const projectWithDetails = await db.query.projects.findFirst({
+      //   where: eq(projects.id, parseInt(projectId)),
+      //   with: {
+      //     projectUpdates: { where: eq(projectUpdates.isVisibleToClient, true) },
+      //     messages: true
+      //   }
+      // });
+      // if (!projectWithDetails) {
+      //   return res.status(404).json({ error: 'Project not found' });
+      // }
+      // const { projectUpdates: updates, messages, ...project } = projectWithDetails;
+
       const project = await storage.getProjectById(parseInt(projectId));
 
       if (!project) {
         return res.status(404).json({ error: 'Project not found' });
       }
 
-      // Get project updates and messages
+      // Get project updates and messages (current N+1 approach)
       const updates = await storage.getProjectUpdates(project.id);
       const messages = await storage.getProjectMessages(project.id);
 
@@ -237,6 +252,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
+
+      // TODO: PERFORMANCE - This endpoint makes multiple separate await calls to the database.
+      // For a dashboard, it might be acceptable if data sources are diverse.
+      // However, if these entities (projects, bookings, paymentLogs, messages) have direct
+      // relations to the user that can be expressed in the schema, some might be combinable
+      // into fewer queries using Drizzle's relational query capabilities (e.g., db.query.users.findFirst with `with`).
 
       // Get user projects
       const projects = await storage.getProjectsByClientEmail(user.email);
@@ -1047,19 +1068,18 @@ User question: ${message}`;
         return res.status(400).json({ error: 'Username and password are required' });
       }
 
-      // First check if admin table exists and has data
-      const allAdmins = await storage.getAllAdminUsers();
-      console.log('Total admin users in database:', allAdmins.length);
+      // const allAdmins = await storage.getAllAdminUsers(); // Removed: Unnecessary call for login logic
+      // console.log('Total admin users in database:', allAdmins.length);
 
       const admin = await storage.getAdminByUsername(username);
 
       if (!admin) {
         console.log('Admin user not found:', username);
-        console.log('Available admin usernames:', allAdmins.map(a => a.username));
+        // console.log('Available admin usernames:', allAdmins.map(a => a.username)); // Depends on removed allAdmins
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
-      console.log('Admin found:', { 
+      console.log('Admin found:', {
         id: admin.id, 
         username: admin.username, 
         email: admin.email,
@@ -1082,17 +1102,9 @@ User question: ${message}`;
 
       if (!isValidPassword) {
         console.log('Password mismatch for user:', username);
-        console.log('Attempting direct comparison...');
-
-        // Fallback: if bcrypt fails, try direct comparison for development
-        if (password === 'admin123' && admin.username === 'admin') {
-          console.log('Using fallback authentication');
-          // Update the password with proper hash
-          const hashedPassword = await bcrypt.hash('admin123', 12);
-          await storage.updateAdminUser(admin.id, { password: hashedPassword });
-        } else {
-          return res.status(401).json({ error: 'Invalid credentials' });
-        }
+        // Fallback logic removed for security and performance.
+        // Ensure passwords are correctly hashed upon creation/update.
+        return res.status(401).json({ error: 'Invalid credentials' });
       }
 
       // Update last login

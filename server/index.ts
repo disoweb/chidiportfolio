@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import compression from "compression";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic } from "./vite";
 import { createServer } from "http";
@@ -149,6 +150,7 @@ async function seedAdminUser() {
 }
 
 const app = express();
+app.use(compression()); // Add compression middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

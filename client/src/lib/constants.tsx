@@ -111,8 +111,7 @@ export const projects: Project[] = [
     title: "Automated Biometric Voting Machine",
     description:
       "I designed and built a revolutionary biometric voting system suitable for deployment in a typical Nigeria general elections",
-    image:
-      "https://images.unsplash.com/photo-1586671267731-da2cf3ceeb80?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+    image: "/assets/images/project-biometric-voting.webp", // Replaced Unsplash URL
     technologies: [
       "Embedded Systems",
       "Biometrics",
@@ -131,8 +130,7 @@ export const projects: Project[] = [
     title: "Multi-vendor E-commerce Platform",
     description:
       "Comprehensive e-commerce solution supporting multiple vendors, real-time inventory, and integrated payment processing.",
-    image:
-      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+    image: "/assets/images/project-ecommerce-platform.webp", // Replaced Unsplash URL
     technologies: ["React", "Node.js", "PostgreSQL", "Stripe", "AWS"],
     demoUrl: "#",
     githubUrl: "#",
@@ -147,8 +145,7 @@ export const projects: Project[] = [
     title: "Analytics SaaS Platform",
     description:
       "Real-time analytics platform with customizable dashboards, automated reporting, and multi-tenant architecture.",
-    image:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+    image: "/assets/images/project-saas-dashboard.webp", // Replaced Unsplash URL
     technologies: ["Next.js", "TypeScript", "PostgreSQL", "Chart.js", "Vercel"],
     demoUrl: "#",
     githubUrl: "#",
@@ -163,8 +160,7 @@ export const projects: Project[] = [
     title: "Financial Services API",
     description:
       "Secure API platform for financial transactions with real-time fraud detection and compliance monitoring.",
-    image:
-      "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400",
+    image: "/assets/images/project-fintech-api.webp", // Replaced Unsplash URL
     technologies: ["Node.js", "Express", "PostgreSQL", "JWT", "Docker"],
     githubUrl: "#",
     metrics: [

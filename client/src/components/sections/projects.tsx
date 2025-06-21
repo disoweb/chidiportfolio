@@ -108,6 +108,7 @@ export function Projects() {
                     src={featuredProject.image}
                     alt={`${featuredProject.title} screenshot`}
                     className="rounded-xl shadow-2xl w-full h-auto"
+                    loading="lazy" // Added lazy loading
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl" />
                 </div>
@@ -128,6 +129,7 @@ export function Projects() {
                   src={project.image}
                   alt={project.title}
                   className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy" // Added lazy loading
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
               </div>
