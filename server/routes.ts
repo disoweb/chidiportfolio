@@ -1589,7 +1589,7 @@ User question: ${message}`;
       const paymentRef = reference || trxref;
       
       if (!paymentRef) {
-        return res.redirect('/?payment=failed&error=no-reference');
+        return res.redirect('/payment/failed?error=no-reference');
       }
 
       // Verify payment automatically
@@ -1654,17 +1654,17 @@ User question: ${message}`;
           }
 
           // Redirect to success page
-          return res.redirect('/?payment=success&reference=' + String(paymentRef));
+          return res.redirect('/payment/success?reference=' + String(paymentRef));
         } else {
-          return res.redirect('/?payment=failed&error=payment-not-successful');
+          return res.redirect('/payment/failed?error=payment-not-successful');
         }
       } catch (verifyError) {
         console.error('Payment verification error:', verifyError);
-        return res.redirect('/?payment=failed&error=verification-failed');
+        return res.redirect('/payment/failed?error=verification-failed');
       }
     } catch (error) {
       console.error('Payment callback error:', error);
-      return res.redirect('/?payment=failed&error=callback-error');
+      return res.redirect('/payment/failed?error=callback-error');
     }
   });
 
