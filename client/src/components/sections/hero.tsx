@@ -45,7 +45,7 @@ export function Hero() {
     className="!w-fit inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-6 text-lg rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
   >
     <Calendar className="w-5 h-5 mr-2" />
-    Book Free Consultation
+   Hire Me
   </Button>
   <Button
     onClick={() => scrollToSection("services")}
