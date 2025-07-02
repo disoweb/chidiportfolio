@@ -1413,7 +1413,6 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="border-0 bg-white/60 backdrop-blur-sm">
                 <CardHeader className="pb-3">
-                  <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
                     <User className="w-5 h-5 text-blue-600" />
                     Profile Information
