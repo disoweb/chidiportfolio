@@ -1,19 +1,30 @@
-
 import { useParams, Link } from 'wouter';
-import { ArrowLeft, ExternalLink, Github, Calendar, Users, Target, MessageSquare, CheckCircle, Star, Code, Zap, TrendingUp } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Github, Calendar, Users, Target, MessageSquare, CheckCircle, Star, Code, Zap, TrendingUp, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { projects } from '@/lib/constants';
+import { useState } from 'react';
 
 export default function ProjectDetails() {
   const { id } = useParams<{ id: string }>();
   const project = projects.find(p => p.id === id);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const scrollToSection = (sectionId: string) => {
     // Navigate to home page and scroll to section
     window.location.href = `/#${sectionId}`;
+    setIsMenuOpen(false);
   };
+
+  const navItems = [
+    { href: "services", label: "Services" },
+    { href: "about", label: "About" },
+    { href: "skills", label: "Skills" },
+    { href: "projects", label: "Portfolio" },
+    { href: "contact", label: "Contact" },
+    { href: "/client/dashboard", label: "Client Portal" },
+  ];
 
   if (!project) {
     return (
@@ -35,45 +46,76 @@ export default function ProjectDetails() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       {/* Enhanced Header with Navigation */}
       <header className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Left: Back Button + Project Title */}
-            <div className="flex items-center space-x-4">
-              <Link href="/#projects">
-                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-blue-600">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Back to Portfolio</span>
-                  <span className="sm:hidden">Back</span>
-                </Button>
-              </Link>
-              <div className="hidden md:block">
-                <h1 className="text-lg font-semibold text-gray-900 truncate max-w-xs lg:max-w-md">
-                  {project.title}
-                </h1>
-                <p className="text-sm text-gray-500">{project.category}</p>
+            {/* Brand Logo */}
+            <Link href="/">
+              <div className="flex items-center space-x-2 cursor-pointer">
+                <div className="bg-blue-600 p-2 rounded-lg">
+                  <Code className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-2xl font-bold text-blue-600">Digital</span>
+                <span className="text-2xl font-bold text-green-600"> Chidi</span>
+                <span className="text-4xl font-bold text-blue-600 transform translate-x-[-8px] translate-y-[-4px]">
+                  .
+                </span>
               </div>
+            </Link>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              {navItems.map((item) => (
+                <button
+                  key={item.href}
+                  onClick={() => {
+                    if (item.href === "/client/dashboard") {
+                      window.location.href = item.href;
+                    } else {
+                      scrollToSection(item.href);
+                    }
+                  }}
+                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200"
+                >
+                  {item.label}
+                </button>
+              ))}
             </div>
 
-            {/* Right: Action Buttons */}
-            <div className="flex items-center space-x-3">
-              {project.demo && (
-                <Button asChild variant="outline" size="sm" className="hidden sm:flex">
-                  <a href={project.demo} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Live Demo
-                  </a>
-                </Button>
-              )}
-              <Button 
-                onClick={() => scrollToSection('booking')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm"
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="text-gray-600 hover:text-blue-600"
               >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Start Similar Project</span>
-                <span className="sm:hidden">Hire Me</span>
+                {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
             </div>
           </div>
+
+          {/* Mobile Navigation Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden absolute top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg">
+              <div className="px-4 py-4 space-y-3">
+                {navItems.map((item) => (
+                  <button
+                    key={item.href}
+                    onClick={() => {
+                      if (item.href === "/client/dashboard") {
+                        window.location.href = item.href;
+                      } else {
+                        scrollToSection(item.href);
+                      }
+                    }}
+                    className="block w-full text-left py-2 px-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md font-medium transition-colors duration-200"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -82,208 +124,199 @@ export default function ProjectDetails() {
         <div className="mb-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
-              {/* Mobile Title (hidden on desktop) */}
-              <div className="md:hidden mb-6">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{project.title}</h1>
-                <p className="text-gray-600">{project.category}</p>
-              </div>
-
-              {/* Desktop Title */}
-              <div className="hidden md:block">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">{project.title}</h1>
-                <p className="text-xl text-gray-600 mb-6">{project.description}</p>
-              </div>
+              <Link href="/#projects">
+                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-blue-600 mb-4">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Portfolio
+                </Button>
+              </Link>
+              
+              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                {project.title}
+              </h1>
+              <p className="text-xl text-gray-600 mb-6 leading-relaxed">
+                {project.description}
+              </p>
               
               {/* Tech Stack */}
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex flex-wrap gap-2 mb-8">
                 {project.technologies.map((tech) => (
-                  <Badge key={tech} variant="outline" className="border-blue-200 text-blue-800 bg-blue-50">
+                  <Badge key={tech} variant="outline" className="text-blue-600 border-blue-600">
                     {tech}
                   </Badge>
                 ))}
               </div>
               
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                {project.github && (
-                  <Button asChild className="bg-gray-800 hover:bg-gray-900 flex-1 sm:flex-none">
-                    <a href={project.github} target="_blank" rel="noopener noreferrer">
-                      <Github className="w-4 h-4 mr-2" />
+              {/* Mobile-Optimized Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                {project.githubUrl && (
+                  <Button 
+                    asChild 
+                    variant="outline" 
+                    className="w-full sm:w-auto min-h-[48px] touch-manipulation"
+                    style={{ fontSize: '16px' }}
+                  >
+                    <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
+                      <Github className="w-5 h-5 mr-2" />
                       View Source Code
                     </a>
                   </Button>
                 )}
-                {project.demo && (
-                  <Button asChild variant="outline" className="flex-1 sm:flex-none">
-                    <a href={project.demo} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-4 h-4 mr-2" />
+                {project.demoUrl && (
+                  <Button 
+                    asChild 
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 min-h-[48px] touch-manipulation"
+                    style={{ fontSize: '16px' }}
+                  >
+                    <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-5 h-5 mr-2" />
                       Live Demo
                     </a>
                   </Button>
                 )}
+                <Button 
+                  onClick={() => scrollToSection('booking')}
+                  className="w-full sm:w-auto bg-green-600 hover:bg-green-700 min-h-[48px] touch-manipulation"
+                  style={{ fontSize: '16px' }}
+                >
+                  <MessageSquare className="w-5 h-5 mr-2" />
+                  Start Similar Project
+                </Button>
               </div>
             </div>
             
             {/* Project Image */}
             <div className="order-first lg:order-last">
-              <div className="relative group">
-                <img 
-                  src={project.image} 
-                  alt={project.title}
-                  className="w-full h-auto rounded-2xl shadow-xl transition-transform duration-300 group-hover:scale-105"
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                <img
+                  src={project.image}
+                  alt={`${project.title} screenshot`}
+                  className="w-full h-auto"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Project Impact Metrics */}
+        {/* Project Metrics */}
         {project.metrics && (
-          <Card className="mb-8 border-0 shadow-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-            <CardContent className="p-8">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-2">Project Impact & Results</h2>
-                <p className="text-blue-100">Measurable outcomes and performance metrics</p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {project.metrics.map((metric, index) => (
-                  <div key={metric.label} className="text-center">
-                    <div className="flex items-center justify-center mb-3">
-                      {index === 0 && <TrendingUp className="w-8 h-8 text-blue-200" />}
-                      {index === 1 && <Zap className="w-8 h-8 text-blue-200" />}
-                      {index === 2 && <Star className="w-8 h-8 text-blue-200" />}
-                    </div>
-                    <div className="text-4xl font-bold mb-2">
-                      {metric.value}
-                    </div>
-                    <div className="text-blue-100 font-medium">{metric.label}</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            {project.metrics.map((metric, index) => (
+              <Card key={metric.label} className="text-center border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="text-4xl font-bold text-blue-600 mb-2">
+                    {metric.value}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="text-gray-600">{metric.label}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
-
-        {/* Strategic CTA Section */}
-        <div className="mb-12">
-          <Card className="border-0 shadow-xl bg-gradient-to-r from-green-50 to-blue-50 border-l-4 border-l-blue-600">
-            <CardContent className="p-8">
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-4">
-                  <div className="bg-blue-600 p-3 rounded-full">
-                    <CheckCircle className="w-8 h-8 text-white" />
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Need a Similar Solution for Your Business?
-                </h3>
-                <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-                  I can build a custom solution like this one, tailored specifically to your business needs and requirements.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button 
-                    onClick={() => scrollToSection('booking')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-semibold rounded-xl"
-                  >
-                    <MessageSquare className="w-5 h-5 mr-2" />
-                    Schedule Free Consultation
-                  </Button>
-                  <Button 
-                    onClick={() => scrollToSection('contact')}
-                    variant="outline" 
-                    className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg font-semibold rounded-xl"
-                  >
-                    Get Custom Quote
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Project Overview */}
             <Card className="border-0 shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="bg-blue-100 p-2 rounded-lg">
-                    <Target className="w-6 h-6 text-blue-600" />
-                  </div>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-6 h-6 text-blue-600" />
                   Project Overview
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="prose max-w-none text-gray-600">
-                  <p className="leading-relaxed mb-4">
-                    This project demonstrates advanced full-stack development capabilities, 
-                    showcasing modern web technologies and best practices in software engineering.
-                    The solution was carefully architected to address specific business challenges
-                    while maintaining scalability and performance.
+              <CardContent className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">About This Project</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {project.description}
                   </p>
-                  <p className="leading-relaxed mb-4">
-                    The solution was architected with scalability, performance, and user experience 
-                    as primary considerations, resulting in a robust application that meets both 
-                    technical and business requirements. Every component was designed with 
-                    maintainability and future growth in mind.
-                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Technologies Used</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {project.technologies.map((tech) => (
+                      <div key={tech} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium">{tech}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Key Features</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start gap-2">
+                      <Star className="w-4 h-4 text-yellow-500 mt-1 flex-shrink-0" />
+                      <span className="text-gray-600">Responsive design that works on all devices</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Star className="w-4 h-4 text-yellow-500 mt-1 flex-shrink-0" />
+                      <span className="text-gray-600">Modern, clean user interface</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Star className="w-4 h-4 text-yellow-500 mt-1 flex-shrink-0" />
+                      <span className="text-gray-600">Optimized for performance and SEO</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Star className="w-4 h-4 text-yellow-500 mt-1 flex-shrink-0" />
+                      <span className="text-gray-600">Secure and scalable architecture</span>
+                    </li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Project Process */}
             <Card className="border-0 shadow-xl">
               <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="bg-purple-100 p-2 rounded-lg">
-                    <Code className="w-6 h-6 text-purple-600" />
-                  </div>
-                  Technical Implementation
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-6 h-6 text-blue-600" />
+                  Development Process
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="border-l-4 border-blue-500 pl-4">
-                    <h3 className="font-semibold text-gray-900 mb-2">Frontend Architecture</h3>
-                    <p className="text-gray-600">
-                      Built with modern React patterns, TypeScript for type safety, and responsive 
-                      design principles to ensure optimal user experience across all devices.
-                    </p>
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                      1
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Planning & Design</h4>
+                      <p className="text-gray-600">Comprehensive analysis of requirements and creation of user-centric design mockups.</p>
+                    </div>
                   </div>
-                  <div className="border-l-4 border-green-500 pl-4">
-                    <h3 className="font-semibold text-gray-900 mb-2">Backend Infrastructure</h3>
-                    <p className="text-gray-600">
-                      Scalable server architecture with RESTful APIs, robust data validation, 
-                      and secure authentication mechanisms.
-                    </p>
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                      2
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Development</h4>
+                      <p className="text-gray-600">Building the application with modern technologies and best practices.</p>
+                    </div>
                   </div>
-                  <div className="border-l-4 border-orange-500 pl-4">
-                    <h3 className="font-semibold text-gray-900 mb-2">Performance Optimization</h3>
-                    <p className="text-gray-600">
-                      Implemented caching strategies, code splitting, and performance monitoring 
-                      to ensure fast load times and smooth user interactions.
-                    </p>
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                      3
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Testing & Optimization</h4>
+                      <p className="text-gray-600">Thorough testing and performance optimization for the best user experience.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                      4
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Launch & Support</h4>
+                      <p className="text-gray-600">Deployment and ongoing support to ensure everything runs smoothly.</p>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Additional CTA within content */}
-            <Card className="border-0 shadow-xl bg-gradient-to-r from-gray-50 to-blue-50">
-              <CardContent className="p-8 text-center">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Impressed by This Project?
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Let's discuss how I can create a similar solution for your business needs.
-                </p>
-                <Button 
-                  onClick={() => scrollToSection('booking')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3"
-                >
-                  Let's Talk About Your Project
-                </Button>
               </CardContent>
             </Card>
           </div>
@@ -312,52 +345,40 @@ export default function ProjectDetails() {
                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <Target className="w-5 h-5 text-purple-600" />
                   <div>
-                    <div className="text-sm font-medium">Category</div>
-                    <div className="text-sm text-gray-600">{project.category}</div>
+                    <div className="text-sm font-medium">Type</div>
+                    <div className="text-sm text-gray-600">Web Application</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Mobile-Optimized CTA Card */}
             <Card className="border-0 shadow-xl">
               <CardHeader>
-                <CardTitle>Key Features</CardTitle>
+                <CardTitle>Let's Work Together</CardTitle>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3">
-                  {[
-                    'Responsive Design',
-                    'Real-time Updates',
-                    'Secure Authentication',
-                    'Database Integration',
-                    'API Development',
-                    'Performance Optimized'
-                  ].map((feature, index) => (
-                    <li key={feature} className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                      <span className="text-sm text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Sidebar CTA */}
-            <Card className="border-0 shadow-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white">
-              <CardContent className="p-6 text-center">
-                <div className="bg-white/20 p-3 rounded-full w-fit mx-auto mb-4">
-                  <MessageSquare className="w-6 h-6" />
-                </div>
-                <h3 className="text-lg font-bold mb-3">Ready to Start?</h3>
-                <p className="text-blue-100 mb-4 text-sm">
-                  Let's build something amazing together
+              <CardContent className="space-y-4">
+                <p className="text-gray-600 text-sm">
+                  Interested in a similar project? Let's discuss how I can help bring your ideas to life.
                 </p>
-                <Button 
-                  onClick={() => scrollToSection('booking')}
-                  className="bg-white text-blue-600 hover:bg-blue-50 w-full font-semibold"
-                >
-                  Book Consultation
-                </Button>
+                <div className="space-y-3">
+                  <Button 
+                    onClick={() => scrollToSection('booking')}
+                    className="w-full bg-blue-600 hover:bg-blue-700 min-h-[48px] touch-manipulation"
+                    style={{ fontSize: '16px' }}
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Start Your Project
+                  </Button>
+                  <Button 
+                    onClick={() => scrollToSection('contact')}
+                    variant="outline" 
+                    className="w-full min-h-[48px] touch-manipulation"
+                    style={{ fontSize: '16px' }}
+                  >
+                    Get In Touch
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -369,7 +390,11 @@ export default function ProjectDetails() {
               <CardContent>
                 <div className="space-y-3">
                   <Link href="/#projects">
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start min-h-[48px] touch-manipulation"
+                      style={{ fontSize: '16px' }}
+                    >
                       <Target className="w-4 h-4 mr-2" />
                       View All Projects
                     </Button>
@@ -377,7 +402,8 @@ export default function ProjectDetails() {
                   <Button 
                     onClick={() => scrollToSection('services')}
                     variant="outline" 
-                    className="w-full justify-start"
+                    className="w-full justify-start min-h-[48px] touch-manipulation"
+                    style={{ fontSize: '16px' }}
                   >
                     <Code className="w-4 h-4 mr-2" />
                     My Services
@@ -388,35 +414,32 @@ export default function ProjectDetails() {
           </div>
         </div>
 
-        {/* Bottom CTA Section */}
-        <div className="mt-16">
-          <Card className="border-0 shadow-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 text-white overflow-hidden relative">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
-            <CardContent className="p-12 text-center relative z-10">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Ready to Build Your Next Project?
-              </h2>
-              <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-                From concept to deployment, I'll help you create a solution that drives results and grows your business.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button 
-                  onClick={() => scrollToSection('booking')}
-                  className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg font-semibold rounded-xl"
-                >
-                  <MessageSquare className="w-5 h-5 mr-2" />
-                  Start Your Project Today
-                </Button>
-                <Button 
-                  onClick={() => scrollToSection('services')}
-                  variant="outline" 
-                  className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 text-lg font-semibold rounded-xl"
-                >
-                  View My Services
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Call to Action Section */}
+        <div className="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-center text-white">
+          <h2 className="text-3xl font-bold mb-4">Ready to Start Your Project?</h2>
+          <p className="text-xl mb-6 text-blue-100">
+            Let's build something amazing together. Get in touch to discuss your ideas.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              onClick={() => scrollToSection('booking')}
+              size="lg"
+              className="bg-white text-blue-600 hover:bg-blue-50 min-h-[52px] px-8 touch-manipulation"
+              style={{ fontSize: '16px' }}
+            >
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Book Consultation
+            </Button>
+            <Button 
+              onClick={() => scrollToSection('contact')}
+              size="lg"
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-blue-600 min-h-[52px] px-8 touch-manipulation"
+              style={{ fontSize: '16px' }}
+            >
+              Get In Touch
+            </Button>
+          </div>
         </div>
       </div>
     </div>
