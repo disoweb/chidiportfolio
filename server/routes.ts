@@ -1551,7 +1551,7 @@ User question: ${message}`;
             service_name: serviceName,
             booking_id: bookingId
           },
-          callback_url: 'https://chidi.onrender.com/payment/callback'
+          callback_url: `${process.env.NEXT_PUBLIC_API_URL || 'https://chidi.onrender.com'}/payment/callback`
         },
         {
           headers: {
