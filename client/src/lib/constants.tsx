@@ -54,7 +54,7 @@ export const services: Service[] = [
   },
   {
     id: "ecommerce-platforms",
-    title: "E-commerce Platforms",
+    title: "E-commerce App",
     description:
       "Complete e-commerce solutions with payment processing, inventory management, and admin dashboards built for scalability.",
     icon: "ShoppingCart",
@@ -71,7 +71,7 @@ export const services: Service[] = [
   },
   {
     id: "saas-platforms",
-    title: "SaaS Platforms",
+    title: "SaaS Apps",
     description:
       "Software-as-a-Service platforms with subscription management, multi-tenancy, and scalable architecture.",
     icon: "Cloud",
