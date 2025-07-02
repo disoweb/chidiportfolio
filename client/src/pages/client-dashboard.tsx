@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
+import { ProjectBooking } from "@/components/booking/project-booking";
 
 // Type definitions
 interface User {
@@ -458,6 +459,9 @@ export default function ClientDashboard() {
         description: "You have been successfully logged out.",
         variant: "default",
       });
+
+      // Redirect to home page
+      window.location.href = "/";
     }
   }, [sessionToken, queryClient, toast]);
 
@@ -892,8 +896,9 @@ export default function ClientDashboard() {
         {/* Main Content Section */}
         <section>
           <Tabs defaultValue="projects" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="projects">Projects</TabsTrigger>
+              <TabsTrigger value="new-project">New Project</TabsTrigger>
               <TabsTrigger value="bookings">Bookings</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
               <TabsTrigger value="messages">Messages</TabsTrigger>
@@ -929,6 +934,11 @@ export default function ClientDashboard() {
                   }
                 />
               )}
+            </TabsContent>
+
+            {/* New Project Tab */}
+            <TabsContent value="new-project" className="space-y-6">
+              <ProjectBooking userEmail={dashboardData.user.email} />
             </TabsContent>
 
             {/* Bookings Tab */}

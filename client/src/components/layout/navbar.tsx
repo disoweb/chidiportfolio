@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Menu, X, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AuthDropdown } from "@/components/auth/auth-dropdown";
+import { AuthModal } from "@/components/auth/auth-modal";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
 
   const scrollToSection = (id: string) => {
     // Handle navigation to client portal
@@ -24,8 +28,17 @@ export function Navbar() {
     { href: "skills", label: "Skills" },
     { href: "projects", label: "Portfolio" },
     { href: "contact", label: "Contact" },
-    { href: "/client/dashboard", label: "Client Portal" }, 
   ];
+
+  const handleLoginClick = () => {
+    setAuthModalTab("login");
+    setIsAuthModalOpen(true);
+  };
+
+  const handleRegisterClick = () => {
+    setAuthModalTab("register");
+    setIsAuthModalOpen(true);
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
@@ -54,6 +67,10 @@ export function Navbar() {
                 {item.label}
               </button>
             ))}
+            <AuthDropdown 
+              onLoginClick={handleLoginClick}
+              onRegisterClick={handleRegisterClick}
+            />
           </div>
 
           {/* Desktop Actions */}
@@ -101,6 +118,12 @@ export function Navbar() {
                   {item.label}
                 </button>
               ))}
+              <div className="pt-4 border-t border-gray-200">
+                <AuthDropdown 
+                  onLoginClick={handleLoginClick}
+                  onRegisterClick={handleRegisterClick}
+                />
+              </div>
               <Button
                 onClick={() => scrollToSection("booking")}
                 className="bg-blue-600 hover:bg-blue-700 text-white w-full mt-4"
@@ -110,6 +133,13 @@ export function Navbar() {
             </div>
           </div>
         )}
+
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+          defaultTab={authModalTab}
+        />
       </div>
     </nav>
   );

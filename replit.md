@@ -116,6 +116,13 @@ Changelog:
   - Added hover effects and modern animations
   - Improved typography scaling for mobile devices
   - Optimized spacing and layout for better mobile experience
+- July 02, 2025. Navigation and authentication improvements:
+  - Replaced "Client Portal" with "Account" dropdown in navigation
+  - Added login/register functionality via modal dialogs
+  - Created AuthDropdown component for user authentication state
+  - Updated client dashboard with "New Project" tab for direct project booking
+  - Modified logout functionality to redirect users to home page
+  - Enhanced mobile navigation with authentication options
 
 ## User Preferences
 
