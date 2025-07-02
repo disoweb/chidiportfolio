@@ -81,8 +81,15 @@ export default function ProjectDetails() {
               ))}
             </div>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
+            {/* Mobile Hire Me Button and Menu */}
+            <div className="md:hidden flex items-center space-x-2">
+              <Button
+                onClick={() => scrollToSection('booking')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm min-h-[40px] touch-manipulation"
+                style={{ fontSize: '16px' }}
+              >
+                Hire Me
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -155,7 +162,7 @@ export default function ProjectDetails() {
                   style={{ fontSize: '16px' }}
                 >
                   <MessageSquare className="w-5 h-5 mr-2" />
-                  Start New Project
+                  Inspired by this project? Get Started
                 </Button>
                 <Button 
                   onClick={() => scrollToSection('contact')}
@@ -343,7 +350,7 @@ export default function ProjectDetails() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-gray-600 text-sm">
-                  Interested in a similar project? Let's discuss how I can help bring your ideas to life.
+                  Inspired by this project? Let's discuss how I can help bring your ideas to life.
                 </p>
                 <div className="space-y-3">
                   <Button 
@@ -352,7 +359,7 @@ export default function ProjectDetails() {
                     style={{ fontSize: '16px' }}
                   >
                     <MessageSquare className="w-4 h-4 mr-2" />
-                    Start New Project
+                    Get Started
                   </Button>
                   <Button 
                     onClick={() => scrollToSection('contact')}
@@ -412,7 +419,7 @@ export default function ProjectDetails() {
               style={{ fontSize: '16px' }}
             >
               <MessageSquare className="w-5 h-5 mr-2" />
-              Start New Project
+              Get Started
             </Button>
             <Button 
               onClick={() => scrollToSection('contact')}
