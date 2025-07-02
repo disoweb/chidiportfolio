@@ -328,7 +328,7 @@ export function Booking() {
             rows={4}
             value={formData.message}
             onChange={handleInputChange}
-            className="resize-vertical pl-10 pt-3 pb-3 text-base sm:text-sm min-h-[96px] rounded-xl"
+            className="resize-none pl-10 pt-3 pb-3 text-base sm:text-sm min-h-[96px] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Tell me about your project goals, requirements, and any specific features you need..."
           />
         </div>
