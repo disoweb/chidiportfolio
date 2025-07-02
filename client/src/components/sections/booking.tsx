@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calendar, Clock, DollarSign, Send, CheckCircle, User, Mail, Phone } from 'lucide-react';
+import { Calendar, Clock, DollarSign, Send, CheckCircle, User, Mail, Phone, ArrowRight, ArrowLeft, Briefcase, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,17 +14,17 @@ export function Booking() {
   const { elementRef, isIntersecting } = useIntersectionObserver();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-const [formData, setFormData] = useState<BookingForm>({
-  name: '',
-  email: '',
-  phone: '',
-  service: '',
-  projectType: '',
-  budget: '',
-  timeline: '',
-  message: ''
-});
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState<BookingForm>({
+    name: '',
+    email: '',
+    phone: '',
+    service: '',
+    projectType: '',
+    budget: '',
+    timeline: '',
+    message: ''
+  });
 
   const [submissionStatus, setSubmissionStatus] = useState<'' | 'success' | 'error'>('');
 
@@ -48,20 +48,17 @@ const [formData, setFormData] = useState<BookingForm>({
       timeline: '',
       message: ''
     });
+    setCurrentStep(1);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Simple validation
+  const validateStep1 = () => {
     if (!formData.name || !formData.email || !formData.service) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields (Name, Email, and Service).",
         variant: "destructive",
       });
-      setIsSubmitting(false);
-      return;
+      return false;
     }
 
     // Validate email format
@@ -72,9 +69,24 @@ const [formData, setFormData] = useState<BookingForm>({
         description: "Please enter a valid email address.",
         variant: "destructive",
       });
-      setIsSubmitting(false);
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (validateStep1()) {
+      setCurrentStep(2);
+    }
+  };
+
+  const handlePrevStep = () => {
+    setCurrentStep(1);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
     setIsSubmitting(true);
     setSubmissionStatus(''); // Reset status before submitting
@@ -130,6 +142,227 @@ const [formData, setFormData] = useState<BookingForm>({
     }
   };
 
+  const StepIndicator = () => (
+    <div className="flex items-center justify-center mb-8">
+      <div className="flex items-center space-x-4">
+        <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+          currentStep >= 1 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-300'
+        }`}>
+          <User className="w-5 h-5" />
+        </div>
+        <div className={`h-1 w-16 transition-all duration-300 ${
+          currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-300'
+        }`}></div>
+        <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+          currentStep >= 2 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-300'
+        }`}>
+          <Briefcase className="w-5 h-5" />
+        </div>
+      </div>
+    </div>
+  );
+
+  const Step1Form = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Let's Get Started</h3>
+        <p className="text-gray-600">Tell us about yourself and what service you need</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <Label htmlFor="name" className="block text-sm font-medium mb-2">
+            Full Name *
+          </Label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+              className="pl-10"
+              placeholder="John Doe"
+            />
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="email" className="block text-sm font-medium mb-2">
+            Email Address *
+          </Label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+              className="pl-10"
+              placeholder="john@example.com"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="phone" className="block text-sm font-medium mb-2">
+          Phone Number
+        </Label>
+        <div className="relative">
+          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <Input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleInputChange}
+            className="pl-10"
+            placeholder="+1 (555) 123-4567"
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="service" className="block text-sm font-medium mb-2">
+          Service Type *
+        </Label>
+        <Select onValueChange={(value) => handleSelectChange('service', value)} value={formData.service}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a service" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="web-app">Web Application</SelectItem>
+            <SelectItem value="ecommerce">E-commerce Platform</SelectItem>
+            <SelectItem value="saas">SaaS Platform</SelectItem>
+            <SelectItem value="api">API Development</SelectItem>
+            <SelectItem value="consultation">Consultation Only</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Button 
+        type="button"
+        onClick={handleNextStep}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
+      >
+        Continue to Project Details
+        <ArrowRight className="w-5 h-5 ml-2" />
+      </Button>
+    </div>
+  );
+
+  const Step2Form = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Project Details</h3>
+        <p className="text-gray-600">Help us understand your project requirements</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <Label htmlFor="projectType" className="block text-sm font-medium mb-2">
+            Project Type *
+          </Label>
+          <Select onValueChange={(value) => handleSelectChange('projectType', value)} value={formData.projectType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select project type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">New Project</SelectItem>
+              <SelectItem value="redesign">Website Redesign</SelectItem>
+              <SelectItem value="maintenance">Maintenance & Updates</SelectItem>
+              <SelectItem value="optimization">Performance Optimization</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="budget" className="block text-sm font-medium mb-2">
+            Budget Range
+          </Label>
+          <Select onValueChange={(value) => handleSelectChange('budget', value)} value={formData.budget}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select budget range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="under-5k">Under ₦150,000</SelectItem>
+              <SelectItem value="5k-10k">₦150,000 - ₦600,000</SelectItem>
+              <SelectItem value="10k-25k">₦600,000 - ₦1,500,000</SelectItem>
+              <SelectItem value="25k-plus">₦1,500,000+</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="timeline" className="block text-sm font-medium mb-2">
+          Timeline
+        </Label>
+        <Select onValueChange={(value) => handleSelectChange('timeline', value)} value={formData.timeline}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select timeline" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="asap">ASAP</SelectItem>
+            <SelectItem value="1-month">Within 1 month</SelectItem>
+            <SelectItem value="2-3-months">2-3 months</SelectItem>
+            <SelectItem value="flexible">Flexible</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="message" className="block text-sm font-medium mb-2">
+          Project Details
+        </Label>
+        <div className="relative">
+          <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+          <Textarea
+            id="message"
+            name="message"
+            rows={4}
+            value={formData.message}
+            onChange={handleInputChange}
+            className="resize-vertical pl-10 pt-3"
+            placeholder="Tell me about your project goals, requirements, and any specific features you need..."
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-4">
+        <Button 
+          type="button"
+          onClick={handlePrevStep}
+          variant="outline"
+          className="flex-1 py-4 rounded-2xl font-semibold text-lg transition-all duration-300"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back
+        </Button>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+              Submitting...
+            </>
+          ) : (
+            <>
+              <Send className="w-5 h-5 mr-2" />
+              Schedule Consultation
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <section 
       ref={elementRef}
@@ -149,172 +382,12 @@ const [formData, setFormData] = useState<BookingForm>({
           </p>
         </div>
 
-
-
         {/* Mobile Form - Shows immediately after heading */}
         <div className="lg:hidden mb-12">
           <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-50">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="name" className="block text-sm font-medium mb-2">
-                    Full Name *
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className="pl-10"
-                      placeholder="John Doe"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="email" className="block text-sm font-medium mb-2">
-                    Email Address *
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className="pl-10"
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="phone" className="block text-sm font-medium mb-2">
-                  Phone Number
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="pl-10"
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="service" className="block text-sm font-medium mb-2">
-                    Service Type *
-                  </Label>
-                  <Select onValueChange={(value) => handleSelectChange('service', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a service" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="web-app">Web Application</SelectItem>
-                      <SelectItem value="ecommerce">E-commerce Platform</SelectItem>
-                      <SelectItem value="saas">SaaS Platform</SelectItem>
-                      <SelectItem value="api">API Development</SelectItem>
-                      <SelectItem value="consultation">Consultation Only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="projectType" className="block text-sm font-medium mb-2">
-                    Project Type *
-                  </Label>
-                  <Select onValueChange={(value) => handleSelectChange('projectType', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">New Project</SelectItem>
-                      <SelectItem value="redesign">Website Redesign</SelectItem>
-                      <SelectItem value="maintenance">Maintenance & Updates</SelectItem>
-                      <SelectItem value="optimization">Performance Optimization</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="budget" className="block text-sm font-medium mb-2">
-                    Budget Range
-                  </Label>
-                  <Select onValueChange={(value) => handleSelectChange('budget', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select budget range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="under-5k">Under ₦150,000</SelectItem>
-                      <SelectItem value="5k-10k">₦150,000 - ₦600,000</SelectItem>
-                      <SelectItem value="10k-25k">₦600,000 - ₦1,500,000</SelectItem>
-                      <SelectItem value="25k-plus">₦1,500,000+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="timeline" className="block text-sm font-medium mb-2">
-                    Timeline
-                  </Label>
-                  <Select onValueChange={(value) => handleSelectChange('timeline', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timeline" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="asap">ASAP</SelectItem>
-                      <SelectItem value="1-month">Within 1 month</SelectItem>
-                      <SelectItem value="2-3-months">2-3 months</SelectItem>
-                      <SelectItem value="flexible">Flexible</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="message" className="block text-sm font-medium mb-2">
-                  Project Details
-                </Label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  rows={4}
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  className="resize-vertical"
-                  placeholder="Tell me about your project goals, requirements, and any specific features you need..."
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-6 h-6 mr-1" />
-                    Schedule Consultation
-                  </>
-                )}
-              </Button>
+            <StepIndicator />
+            <form onSubmit={handleSubmit}>
+              {currentStep === 1 ? <Step1Form /> : <Step2Form />}
             </form>
 
             {/* Success/Error Messages - Mobile */}
@@ -411,167 +484,9 @@ const [formData, setFormData] = useState<BookingForm>({
 
           {/* Desktop Form - Hidden on mobile, shown on large screens */}
           <div className="hidden lg:block bg-white rounded-3xl p-8 shadow-xl border border-blue-50 order-1 lg:order-2">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="name" className="block text-sm font-medium mb-2">
-                    Full Name *
-                  </Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      required
-                      className="pl-10"
-                      placeholder="John Doe"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="email" className="block text-sm font-medium mb-2">
-                    Email Address *
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <Input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      required
-                      className="pl-10"
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="phone" className="block text-sm font-medium mb-2">
-                  Phone Number
-                </Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <Input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="pl-10"
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="service" className="block text-sm font-medium mb-2">
-                    Service Type *
-                  </Label>
-                  <Select onValueChange={(value) => handleSelectChange('service', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a service" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="web-app">Custom App</SelectItem>
-                      <SelectItem value="ecommerce">E-commerce Platform</SelectItem>
-                      <SelectItem value="saas">SaaS Platform</SelectItem>
-                      <SelectItem value="api">API Development</SelectItem>
-                      <SelectItem value="consultation">Consultation Only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="projectType" className="block text-sm font-medium mb-2">
-                    Project Type *
-                  </Label>
-                  <Select onValueChange={(value) => handleSelectChange('projectType', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select project type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="new">New Project</SelectItem>
-                      <SelectItem value="redesign">Website Redesign</SelectItem>
-                      <SelectItem value="maintenance">Maintenance & Updates</SelectItem>
-                      <SelectItem value="optimization">Performance Optimization</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="budget" className="block text-sm font-medium mb-2">
-                    Budget Range
-                  </Label>
-                  <Select onValueChange={(value) => handleSelectChange('budget', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select budget range" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="under-5k">Under ₦200,000</SelectItem>
-                      <SelectItem value="5k-10k">₦200,000 - ₦300,000</SelectItem>
-                      <SelectItem value="10k-25k">₦300,000 - ₦500,000</SelectItem>
-                      <SelectItem value="25k-plus">₦500,000+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="timeline" className="block text-sm font-medium mb-2">
-                    Timeline
-                  </Label>
-                  <Select onValueChange={(value) => handleSelectChange('timeline', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timeline" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="asap">ASAP</SelectItem>
-                      <SelectItem value="1-month">Within 2 weeks</SelectItem>
-                      <SelectItem value="2-3-months">3-8 weeks</SelectItem>
-                      <SelectItem value="flexible">Flexible</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="message" className="block text-sm font-medium mb-2">
-                  Project Details
-                </Label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  rows={4}
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  className="resize-vertical"
-                  placeholder="Tell me about your project goals, requirements, and any specific features you need..."
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5 mr-3" />
-                    Schedule Free Consultation
-                  </>
-                )}
-              </Button>
+            <StepIndicator />
+            <form onSubmit={handleSubmit}>
+              {currentStep === 1 ? <Step1Form /> : <Step2Form />}
             </form>
 
             {/* Success/Error Messages - Desktop */}
