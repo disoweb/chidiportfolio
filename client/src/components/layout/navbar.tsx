@@ -81,7 +81,7 @@ export function Navbar() {
               onClick={() => scrollToSection("booking")}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium"
             >
-              Book Consultation
+              Book Private Consultation
             </Button>
           </div>
 
@@ -133,9 +133,9 @@ export function Navbar() {
                       scrollToSection("booking");
                       setIsOpen(false);
                     }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-xs"
                   >
-                    Book Now
+                    Book Private Consultation
                   </Button>
                 </div>
               </div>
