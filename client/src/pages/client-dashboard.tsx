@@ -45,6 +45,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import { ProjectBooking } from "@/components/booking/project-booking";
+import { ProjectBookingModal } from "@/components/booking/project-booking-modal";
+import { ServiceCheckout } from "@/components/checkout/service-checkout";
 
 // Type definitions
 interface User {
@@ -161,6 +163,8 @@ export default function ClientDashboard() {
   const [isLoginMode, setIsLoginMode] = useState<boolean>(true);
   const [projectTrackingId, setProjectTrackingId] = useState<string>("");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isProjectBookingModalOpen, setIsProjectBookingModalOpen] = useState<boolean>(false);
+  const [isServiceCheckoutOpen, setIsServiceCheckoutOpen] = useState<boolean>(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -866,6 +870,27 @@ export default function ClientDashboard() {
           </div>
         </header>
 
+        {/* Quick Actions Section - Mobile Optimized */}
+        <section className="mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Button
+              onClick={() => setIsProjectBookingModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 h-auto min-h-[48px] touch-manipulation flex-1 sm:flex-none sm:w-auto"
+            >
+              <Briefcase className="w-4 h-4 mr-2" />
+              Create New Project
+            </Button>
+            <Button
+              onClick={() => setIsServiceCheckoutOpen(true)}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-4 py-3 h-auto min-h-[48px] touch-manipulation flex-1 sm:flex-none sm:w-auto"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Order a Service
+            </Button>
+          </div>
+        </section>
+
         {/* Stats Overview Section */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
@@ -927,9 +952,9 @@ export default function ClientDashboard() {
                   description="You don't have any projects yet. Book a service to get started!"
                   action={
                     <Button
-                      onClick={() => (window.location.href = "/#booking")}
+                      onClick={() => setIsProjectBookingModalOpen(true)}
                     >
-                      Book a New Project
+                      Book Private Consultation
                     </Button>
                   }
                 />
@@ -1007,6 +1032,19 @@ export default function ClientDashboard() {
           </Tabs>
         </section>
       </div>
+
+      {/* Modals */}
+      <ProjectBookingModal
+        isOpen={isProjectBookingModalOpen}
+        onClose={() => setIsProjectBookingModalOpen(false)}
+        userEmail={dashboardData.user.email}
+      />
+
+      <ServiceCheckout
+        isOpen={isServiceCheckoutOpen}
+        onClose={() => setIsServiceCheckoutOpen(false)}
+        userEmail={dashboardData.user.email}
+      />
     </div>
   );
 }

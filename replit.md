@@ -123,6 +123,14 @@ Changelog:
   - Updated client dashboard with "New Project" tab for direct project booking
   - Modified logout functionality to redirect users to home page
   - Enhanced mobile navigation with authentication options
+- July 02, 2025. Advanced booking and service ordering features:
+  - Created 2-step ProjectBookingModal component for streamlined project requests
+  - Added ServiceCheckout component with 3-step process (selection, info, payment)
+  - Integrated Paystack payment gateway for service purchases
+  - Added strategic "Create New Project" and "Order a Service" buttons in dashboard
+  - Updated existing "Book a New Project" button to open modal instead of redirecting
+  - Mobile-optimized button placement with proper touch targets (48px+ height)
+  - Consistent "Book Private Consultation" terminology across all components
 
 ## User Preferences
 
