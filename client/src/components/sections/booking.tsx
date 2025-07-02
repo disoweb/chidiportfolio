@@ -321,15 +321,26 @@ export function Booking() {
           Project Details
         </Label>
         <div className="relative">
-          <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+          <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
           <Textarea
             id="message"
             name="message"
             rows={4}
             value={formData.message}
             onChange={handleInputChange}
-            className="resize-none pl-10 pt-3 pb-3 text-base sm:text-sm min-h-[96px] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="resize-none pl-10 pt-3 pb-3 text-base sm:text-sm min-h-[96px] max-h-[200px] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
             placeholder="Tell me about your project goals, requirements, and any specific features you need..."
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="sentences"
+            spellCheck="true"
+            onFocus={(e) => {
+              // Ensure keyboard stays open on mobile
+              e.target.style.transform = 'translateZ(0)';
+            }}
+            onBlur={(e) => {
+              e.target.style.transform = '';
+            }}
           />
         </div>
       </div>
