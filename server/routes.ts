@@ -1541,6 +1541,9 @@ User question: ${message}`;
         });
       }
 
+      const callbackUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://chidi.onrender.com'}/payment/callback`;
+      console.log('Paystack callback URL being used:', callbackUrl);
+      
       const paystackResponse = await axios.post(
         'https://api.paystack.co/transaction/initialize',
         {
@@ -1551,7 +1554,7 @@ User question: ${message}`;
             service_name: serviceName,
             booking_id: bookingId
           },
-          callback_url: `${process.env.NEXT_PUBLIC_API_URL || 'https://chidi.onrender.com'}/payment/callback`
+          callback_url: callbackUrl
         },
         {
           headers: {
