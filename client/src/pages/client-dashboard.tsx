@@ -662,6 +662,16 @@ export default function ClientDashboard() {
                 ? "Need an account? Sign up"
                 : "Already have an account? Login"}
             </Button>
+
+            <div className="pt-4 border-t border-gray-200">
+              <Button
+                variant="ghost"
+                className="w-full text-gray-600 hover:text-gray-800"
+                onClick={() => window.location.href = '/'}
+              >
+                ← Back to Homepage
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
