@@ -180,6 +180,7 @@ export default function ClientDashboard() {
     confirmPassword: '',
   });
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -585,6 +586,14 @@ export default function ClientDashboard() {
   }, [sessionToken, queryClient, toast]);
 
   /**
+   * Handle navigation and close mobile menu
+   */
+  const handleNavigation = useCallback((tab: string) => {
+    setActiveTab(tab);
+    setIsMobileNavOpen(false);
+  }, []);
+
+  /**
    * Get color class for project status
    */
   const getStatusColor = useCallback((status: string): string => {
@@ -941,13 +950,13 @@ export default function ClientDashboard() {
         <div className="container mx-auto px-4 py-4 max-w-7xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Sheet>
+              <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-2">
+                  <Button variant="ghost" size="sm" className="p-2 lg:hidden">
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-80">
+                <SheetContent side="left" className="w-80 z-50">
                   <SheetHeader>
                     <SheetTitle>Dashboard Navigation</SheetTitle>
                     <SheetDescription>
@@ -957,41 +966,46 @@ export default function ClientDashboard() {
                   <div className="mt-6 space-y-4">
                     <nav className="flex flex-col gap-2">
                       <Button
-                        variant="ghost"
-                        className="justify-start gap-3 text-left"
-                        onClick={() => setActiveTab("overview")}
+                        variant={activeTab === "overview" ? "default" : "ghost"}
+                        className="justify-start gap-3 text-left w-full"
+                        onClick={() => handleNavigation("overview")}
                       >
                         <Home className="h-4 w-4" />
                         Overview
                       </Button>
                       <Button
-                        variant="ghost"
-                        className="justify-start gap-3 text-left"
-                        onClick={() => setActiveTab("projects")}
+                        variant={activeTab === "projects" ? "default" : "ghost"}
+                        className="justify-start gap-3 text-left w-full"
+                        onClick={() => handleNavigation("projects")}
                       >
                         <Briefcase className="h-4 w-4" />
                         Projects
                       </Button>
                       <Button
-                        variant="ghost"
-                        className="justify-start gap-3 text-left"
-                        onClick={() => setActiveTab("bookings")}
+                        variant={activeTab === "bookings" ? "default" : "ghost"}
+                        className="justify-start gap-3 text-left w-full"
+                        onClick={() => handleNavigation("bookings")}
                       >
                         <CalendarDays className="h-4 w-4" />
                         Bookings
                       </Button>
                       <Button
-                        variant="ghost"
-                        className="justify-start gap-3 text-left"
-                        onClick={() => setActiveTab("messages")}
+                        variant={activeTab === "messages" ? "default" : "ghost"}
+                        className="justify-start gap-3 text-left w-full relative"
+                        onClick={() => handleNavigation("messages")}
                       >
                         <MessageSquare className="h-4 w-4" />
                         Messages
+                        {dashboardData.unreadMessages.length > 0 && (
+                          <span className="absolute right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {dashboardData.unreadMessages.length}
+                          </span>
+                        )}
                       </Button>
                       <Button
-                        variant="ghost"
-                        className="justify-start gap-3 text-left"
-                        onClick={() => setActiveTab("profile")}
+                        variant={activeTab === "profile" ? "default" : "ghost"}
+                        className="justify-start gap-3 text-left w-full"
+                        onClick={() => handleNavigation("profile")}
                       >
                         <User className="h-4 w-4" />
                         Profile
@@ -999,8 +1013,11 @@ export default function ClientDashboard() {
                       <Separator className="my-2" />
                       <Button
                         variant="ghost"
-                        className="justify-start gap-3 text-left text-red-600 hover:text-red-700"
-                        onClick={logout}
+                        className="justify-start gap-3 text-left text-red-600 hover:text-red-700 w-full"
+                        onClick={() => {
+                          setIsMobileNavOpen(false);
+                          logout();
+                        }}
                       >
                         <LogOut className="h-4 w-4" />
                         Logout
@@ -1010,13 +1027,60 @@ export default function ClientDashboard() {
                 </SheetContent>
               </Sheet>
               
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  Client Dashboard
-                </h1>
-                <p className="text-sm text-gray-600">
-                  Welcome back, {dashboardData.user.firstName}!
-                </p>
+              <div className="flex items-center gap-6">
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    Client Dashboard
+                  </h1>
+                  <p className="text-sm text-gray-600">
+                    Welcome back, {dashboardData.user.firstName}!
+                  </p>
+                </div>
+
+                {/* Desktop Navigation */}
+                <nav className="hidden lg:flex items-center gap-1">
+                  <Button
+                    variant={activeTab === "overview" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => handleNavigation("overview")}
+                    className="text-sm"
+                  >
+                    <Home className="h-4 w-4 mr-2" />
+                    Overview
+                  </Button>
+                  <Button
+                    variant={activeTab === "projects" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => handleNavigation("projects")}
+                    className="text-sm"
+                  >
+                    <Briefcase className="h-4 w-4 mr-2" />
+                    Projects
+                  </Button>
+                  <Button
+                    variant={activeTab === "bookings" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => handleNavigation("bookings")}
+                    className="text-sm"
+                  >
+                    <CalendarDays className="h-4 w-4 mr-2" />
+                    Bookings
+                  </Button>
+                  <Button
+                    variant={activeTab === "messages" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => handleNavigation("messages")}
+                    className="text-sm relative"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Messages
+                    {dashboardData.unreadMessages.length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                        {dashboardData.unreadMessages.length}
+                      </span>
+                    )}
+                  </Button>
+                </nav>
               </div>
             </div>
 
@@ -1026,7 +1090,7 @@ export default function ClientDashboard() {
                   variant="ghost" 
                   size="sm" 
                   className="relative p-2"
-                  onClick={() => setActiveTab("messages")}
+                  onClick={() => handleNavigation("messages")}
                 >
                   <Bell className="h-5 w-5 text-gray-500" />
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -1038,7 +1102,7 @@ export default function ClientDashboard() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setActiveTab("profile")}
+                onClick={() => handleNavigation("profile")}
                 className="flex items-center gap-2"
               >
                 <User className="h-4 w-4" />
