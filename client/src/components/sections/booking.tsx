@@ -183,8 +183,12 @@ export function Booking() {
               value={formData.name}
               onChange={handleInputChange}
               required
+              autoComplete="name"
+              autoCorrect="off"
+              autoCapitalize="words"
               className="pl-10 py-3 text-base sm:text-sm min-h-[48px] rounded-xl"
               placeholder="John Doe"
+              style={{ fontSize: '16px' }}
             />
           </div>
         </div>
@@ -201,8 +205,12 @@ export function Booking() {
               value={formData.email}
               onChange={handleInputChange}
               required
+              autoComplete="email"
+              autoCorrect="off"
+              autoCapitalize="none"
               className="pl-10 py-3 text-base sm:text-sm min-h-[48px] rounded-xl"
               placeholder="john@example.com"
+              style={{ fontSize: '16px' }}
             />
           </div>
         </div>
@@ -220,8 +228,12 @@ export function Booking() {
             name="phone"
             value={formData.phone}
             onChange={handleInputChange}
+            autoComplete="tel"
+            autoCorrect="off"
+            autoCapitalize="none"
             className="pl-10 py-3 text-base sm:text-sm min-h-[48px] rounded-xl"
             placeholder="+1 (555) 123-4567"
+            style={{ fontSize: '16px' }}
           />
         </div>
       </div>
@@ -330,8 +342,14 @@ export function Booking() {
             onChange={handleInputChange}
             className="w-full resize-none pl-10 pt-3 pb-3 pr-3 text-base sm:text-sm min-h-[96px] max-h-[200px] rounded-xl"
             placeholder="Tell me about your project goals, requirements, and any specific features you need..."
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="sentences"
+            spellCheck="true"
             style={{
-              fontSize: '16px' // Always use 16px to prevent zoom on mobile
+              fontSize: '16px', // Always use 16px to prevent zoom on mobile
+              WebkitAppearance: 'none',
+              appearance: 'none'
             }}
           />
         </div>

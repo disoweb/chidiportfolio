@@ -252,6 +252,12 @@ export default function ClientDashboard() {
         throw new Error("Email and password are required");
       }
 
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(credentials.email)) {
+        throw new Error("Please enter a valid email address");
+      }
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -261,7 +267,14 @@ export default function ClientDashboard() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || `Login failed: ${response.status}`);
+        if (response.status === 401) {
+          throw new Error("Invalid email or password. Please check your credentials and try again.");
+        } else if (response.status === 400) {
+          throw new Error(data.error || "Please fill in all required fields");
+        } else if (response.status >= 500) {
+          throw new Error("Server error. Please try again in a few moments.");
+        }
+        throw new Error(data.error || `Login failed with status ${response.status}`);
       }
 
       if (!data.success || !data.sessionToken) {
@@ -294,6 +307,17 @@ export default function ClientDashboard() {
     mutationFn: async (userData: RegisterData) => {
       if (!userData.email || !userData.password || !userData.firstName || !userData.lastName || !userData.phone) {
         throw new Error("All fields are required for registration: First Name, Last Name, Email, Phone, and Password");
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(userData.email)) {
+        throw new Error("Please enter a valid email address");
+      }
+
+      // Validate password strength
+      if (userData.password.length < 6) {
+        throw new Error("Password must be at least 6 characters long");
       }
 
       const response = await fetch("/api/auth/register", {
@@ -559,6 +583,10 @@ export default function ClientDashboard() {
                       }))
                     }
                     required
+                    autoComplete="email"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
 
@@ -577,6 +605,8 @@ export default function ClientDashboard() {
                     }
                     required
                     minLength={6}
+                    autoComplete="current-password"
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
 
@@ -610,6 +640,9 @@ export default function ClientDashboard() {
                         }))
                       }
                       required
+                      autoComplete="given-name"
+                      autoCapitalize="words"
+                      style={{ fontSize: '16px' }}
                     />
                   </div>
 
