@@ -40,6 +40,7 @@ import {
   Bell,
   Settings,
   Eye,
+  Info,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
@@ -178,20 +179,44 @@ export default function ClientDashboard() {
       });
 
       if (!response.ok) {
-        throw new Error("Session verification failed");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Session verification failed");
       }
 
-      setIsAuthenticated(true);
-      setSessionToken(token);
+      const data = await response.json();
+      if (data.success) {
+        setIsAuthenticated(true);
+        setSessionToken(token);
+      } else {
+        throw new Error("Invalid session response");
+      }
     } catch (error) {
-      handleAuthError(error);
+      console.error("Session verification error:", error);
       localStorage.removeItem("clientSessionToken");
       setIsAuthenticated(false);
+      setSessionToken("");
+      
+      // Only show toast for actual authentication errors, not silent re-auth failures
+      if (error instanceof Error && !error.message.includes("verification failed")) {
+        handleAuthError(error);
+      }
     }
   }, []);
 
-  // Check for existing session on component mount
+  // Check for existing session on component mount and handle URL parameters
   useEffect(() => {
+    // Check for email parameter in URL (from booking redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = urlParams.get('email');
+    
+    if (emailParam) {
+      // Pre-fill both login and register forms with email from booking
+      setLoginData(prev => ({ ...prev, email: emailParam }));
+      setRegisterData(prev => ({ ...prev, email: emailParam }));
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     const token = localStorage.getItem("clientSessionToken");
     if (token) {
       setSessionToken(token);
@@ -223,23 +248,33 @@ export default function ClientDashboard() {
    */
   const loginMutation = useMutation({
     mutationFn: async (credentials: AuthCredentials) => {
+      if (!credentials.email || !credentials.password) {
+        throw new Error("Email and password are required");
+      }
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData: ApiErrorResponse = await response.json();
-        throw new Error(errorData.error || "Login failed");
+        throw new Error(data.error || `Login failed: ${response.status}`);
       }
 
-      return response.json();
+      if (!data.success || !data.sessionToken) {
+        throw new Error("Invalid login response format");
+      }
+
+      return data;
     },
     onSuccess: (data) => {
       localStorage.setItem("clientSessionToken", data.sessionToken);
       setSessionToken(data.sessionToken);
       setIsAuthenticated(true);
+      setLoginData({ email: "", password: "" }); // Clear form
       toast({
         title: "Login Successful",
         description: `Welcome back, ${data.user.firstName}!`,
@@ -247,6 +282,7 @@ export default function ClientDashboard() {
       });
     },
     onError: (error: Error) => {
+      console.error("Login error:", error);
       handleAuthError(error);
     },
   });
@@ -256,30 +292,45 @@ export default function ClientDashboard() {
    */
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
+      if (!userData.email || !userData.password || !userData.firstName || !userData.lastName) {
+        throw new Error("All fields are required for registration");
+      }
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData: ApiErrorResponse = await response.json();
-        throw new Error(errorData.error || "Registration failed");
+        // If user already exists, suggest they login instead
+        if (response.status === 400 && data.error?.includes("already exists")) {
+          throw new Error("An account with this email already exists. Please try logging in instead, or contact support if you need help accessing your account.");
+        }
+        throw new Error(data.error || `Registration failed: ${response.status}`);
       }
 
-      return response.json();
+      if (!data.success || !data.sessionToken) {
+        throw new Error("Invalid registration response format");
+      }
+
+      return data;
     },
     onSuccess: (data) => {
       localStorage.setItem("clientSessionToken", data.sessionToken);
       setSessionToken(data.sessionToken);
       setIsAuthenticated(true);
+      setRegisterData({ email: "", password: "", firstName: "", lastName: "", phone: "" }); // Clear form
       toast({
         title: "Registration Successful",
-        description: `Welcome, ${data.user.firstName}!`,
+        description: `Welcome, ${data.user.firstName}! Your account has been created.`,
         variant: "default",
       });
     },
     onError: (error: Error) => {
+      console.error("Registration error:", error);
       handleAuthError(error);
     },
   });
@@ -473,6 +524,19 @@ export default function ClientDashboard() {
           </CardHeader>
 
           <CardContent className="space-y-4">
+            {/* Show helpful message for users from booking redirect */}
+            {loginData.email && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex items-start">
+                  <Info className="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" />
+                  <div className="text-sm text-blue-700">
+                    <p className="font-semibold mb-1">First time logging in?</p>
+                    <p>If you just submitted a booking, you'll need to create an account first. Click "Create Account" below to set up your password.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {isLoginMode ? (
               <form
                 onSubmit={(e) => {
@@ -532,6 +596,23 @@ export default function ClientDashboard() {
                 }}
                 className="space-y-4"
               >
+                <div>
+                  <Label htmlFor="register-email">Email</Label>
+                  <Input
+                    id="register-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={registerData.email}
+                    onChange={(e) =>
+                      setRegisterData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label htmlFor="firstName">First Name</Label>
@@ -812,6 +893,7 @@ export default function ClientDashboard() {
                       getStatusColor={getStatusColor}
                       getPriorityColor={getPriorityColor}
                       formatDate={formatDate}
+                      truncateText={truncateText}
                     />
                   ))}
                 </div>
@@ -931,6 +1013,7 @@ interface ProjectCardProps {
   getStatusColor: (status: string) => string;
   getPriorityColor: (priority: string) => string;
   formatDate: (dateString: string) => string;
+  truncateText: (text: string, maxLength: number) => string;
 }
 
 const ProjectCard = ({
@@ -939,6 +1022,7 @@ const ProjectCard = ({
   getStatusColor,
   getPriorityColor,
   formatDate,
+  truncateText,
 }: ProjectCardProps) => (
   <Card className="hover:shadow-lg transition-shadow">
     <CardHeader className="pb-4">
@@ -947,7 +1031,7 @@ const ProjectCard = ({
           <CardTitle className="text-lg mb-2">{project.name}</CardTitle>
           <div className="flex items-center gap-2 mb-2">
             <Badge
-              variant={getPriorityColor(project.priority)}
+              variant="default"
               className="text-xs"
             >
               {project.priority} priority
