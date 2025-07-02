@@ -1,21 +1,9 @@
-import { useState, useEffect } from "react";
-import { Menu, X, Code, Moon, Sun } from "lucide-react";
+import { useState } from "react";
+import { Menu, X, Code } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/ui/theme-provider";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
-    setTheme(savedTheme);
-    document.documentElement.classList.toggle("dark", savedTheme === "dark");
-  }, [setTheme]);
-
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
 
   const scrollToSection = (id: string) => {
     // Handle navigation to client portal
@@ -52,8 +40,7 @@ export function Navbar() {
             <span className="text-2xl font-bold text-green-600"> Chidi</span>
             <span className="text-4xl font-bold text-blue-600 transform translate-x-[-8px] translate-y-[-4px]">
               .
-            </span>{" "}
-            {/* Adjust both axes */}
+            </span>
           </div>
 
           {/* Desktop Navigation */}
@@ -71,19 +58,6 @@ export function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              {theme === "light" ? (
-                <Moon className="w-5 h-5" />
-              ) : (
-                <Sun className="w-5 h-5" />
-              )}
-            </Button>
-
             <Button
               onClick={() => scrollToSection("booking")}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium"
