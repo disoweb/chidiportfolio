@@ -2,8 +2,13 @@ import { Skill, Project, Experience, Service } from "./types";
 
 export const skills: Skill[] = [
   // Frontend
-  { name: "React", level: 95, icon: "React", category: "frontend" },
-  { name: "TypeScript", level: 90, icon: "TypeScript", category: "frontend" },
+  { name: "React", 
+   level: 95, 
+   icon: "React", 
+   category: "frontend" },
+  
+  { name: "TypeScript", 
+   level: 90, icon: "TypeScript", category: "frontend" },
   { name: "Next.js", level: 88, icon: "NextJs", category: "frontend" },
   { name: "JavaScript", level: 95, icon: "JavaScript", category: "frontend" },
   { name: "HTML/CSS", level: 98, icon: "Html5", category: "frontend" },
