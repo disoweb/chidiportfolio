@@ -44,7 +44,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
-import { ProjectBooking } from "@/components/booking/project-booking";
 import { ProjectBookingModal } from "@/components/booking/project-booking-modal";
 import { ServiceCheckout } from "@/components/checkout/service-checkout";
 
@@ -921,9 +920,8 @@ export default function ClientDashboard() {
         {/* Main Content Section */}
         <section>
           <Tabs defaultValue="projects" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="projects">Projects</TabsTrigger>
-              <TabsTrigger value="new-project">New Project</TabsTrigger>
               <TabsTrigger value="bookings">Bookings</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
               <TabsTrigger value="messages">Messages</TabsTrigger>
@@ -961,10 +959,7 @@ export default function ClientDashboard() {
               )}
             </TabsContent>
 
-            {/* New Project Tab */}
-            <TabsContent value="new-project" className="space-y-6">
-              <ProjectBooking userEmail={dashboardData.user.email} />
-            </TabsContent>
+
 
             {/* Bookings Tab */}
             <TabsContent value="bookings" className="space-y-4">

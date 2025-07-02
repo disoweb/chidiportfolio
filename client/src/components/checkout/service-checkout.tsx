@@ -109,10 +109,11 @@ export function ServiceCheckout({ isOpen, onClose, userEmail }: ServiceCheckoutP
       // Initialize Paystack payment
       const paymentData = {
         email: customerInfo.email,
-        amount: selectedService.price * 100, // Convert to kobo
+        amount: selectedService.price, // Amount in Naira (will be converted to kobo in backend)
+        serviceId: selectedService.id,
+        serviceName: selectedService.title,
         bookingId: booking.id,
         metadata: {
-          service: selectedService.title,
           customer_name: customerInfo.name,
           customer_phone: customerInfo.phone,
           company: customerInfo.company || 'Individual'
@@ -131,9 +132,9 @@ export function ServiceCheckout({ isOpen, onClose, userEmail }: ServiceCheckoutP
 
       const paymentResult = await paymentResponse.json();
 
-      if (paymentResult.success && paymentResult.authorizationUrl) {
+      if (paymentResult.success && paymentResult.data && paymentResult.data.authorization_url) {
         // Redirect to Paystack payment page
-        window.location.href = paymentResult.authorizationUrl;
+        window.location.href = paymentResult.data.authorization_url;
       } else {
         throw new Error('Payment initialization failed');
       }
@@ -191,48 +192,50 @@ export function ServiceCheckout({ isOpen, onClose, userEmail }: ServiceCheckoutP
         <p className="text-gray-600">Select the service that best fits your needs</p>
       </div>
 
-      <div className="grid gap-4 max-h-[400px] overflow-y-auto">
+      <div className="grid gap-6 max-h-[500px] overflow-y-auto">
         {services.map((service, index) => (
-          <Card 
-            key={index} 
-            className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-blue-200"
+          <div
+            key={index}
+            className="bg-gradient-to-br from-blue-50 to-white rounded-3xl p-6 shadow-xl border border-blue-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
             onClick={() => handleServiceSelect(service)}
           >
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{service.title}</CardTitle>
-                  <CardDescription className="text-sm mt-1">{service.description}</CardDescription>
-                </div>
-                <div className="text-right ml-4">
-                  <div className="text-2xl font-bold text-blue-600">{service.price}</div>
-                  <div className="text-xs text-gray-500">Starting from</div>
-                </div>
+            {/* Header with Title */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">{service.title}</h3>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-600">{service.price}</div>
+                <div className="text-xs text-gray-500">Starting from</div>
               </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                <div className="flex items-center gap-1">
+            </div>
+
+            {/* Service Content */}
+            <div className="space-y-4">
+              <p className="text-gray-600 leading-relaxed text-sm">
+                {service.description}
+              </p>
+
+              {/* Features List */}
+              <div className="space-y-2">
+                {(service.features || ['Custom Development', 'Quality Assurance', 'Support']).slice(0, 3).map((feature, idx) => (
+                  <div key={idx} className="flex items-start space-x-2">
+                    <Check className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-700 text-sm">{feature}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Duration and Action */}
+              <div className="flex items-center justify-between pt-4">
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Clock className="w-4 h-4" />
                   <span>{service.duration || '2-4 weeks'}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4" />
-                  <span>Premium Quality</span>
-                </div>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105">
+                  Select Service <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {(service.features || ['Custom Development', 'Quality Assurance', 'Support']).slice(0, 3).map((feature, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-xs">
-                    {feature}
-                  </Badge>
-                ))}
-              </div>
-              <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700">
-                Select This Service <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
     </div>
