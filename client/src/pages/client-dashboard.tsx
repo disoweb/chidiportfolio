@@ -23,6 +23,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import {
   CalendarDays,
   Clock,
@@ -38,6 +39,8 @@ import {
   Search,
   CreditCard,
   Bell,
+  Menu,
+  Home,
   Settings,
   Eye,
   Info,
@@ -176,6 +179,7 @@ export default function ClientDashboard() {
     newPassword: '',
     confirmPassword: '',
   });
+  const [activeTab, setActiveTab] = useState<string>("overview");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -932,54 +936,120 @@ export default function ClientDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
-        {/* Header Section */}
-        <header className="mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+      {/* Dashboard Header with Navigation */}
+      <header className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4 max-w-7xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-2">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80">
+                  <SheetHeader>
+                    <SheetTitle>Dashboard Navigation</SheetTitle>
+                    <SheetDescription>
+                      Navigate through your dashboard sections
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6 space-y-4">
+                    <nav className="flex flex-col gap-2">
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-3 text-left"
+                        onClick={() => setActiveTab("overview")}
+                      >
+                        <Home className="h-4 w-4" />
+                        Overview
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-3 text-left"
+                        onClick={() => setActiveTab("projects")}
+                      >
+                        <Briefcase className="h-4 w-4" />
+                        Projects
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-3 text-left"
+                        onClick={() => setActiveTab("bookings")}
+                      >
+                        <CalendarDays className="h-4 w-4" />
+                        Bookings
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-3 text-left"
+                        onClick={() => setActiveTab("messages")}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Messages
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-3 text-left"
+                        onClick={() => setActiveTab("profile")}
+                      >
+                        <User className="h-4 w-4" />
+                        Profile
+                      </Button>
+                      <Separator className="my-2" />
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-3 text-left text-red-600 hover:text-red-700"
+                        onClick={logout}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </Button>
+                    </nav>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  Welcome back, {dashboardData.user.firstName}!
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Client Dashboard
                 </h1>
-                <p className="text-gray-600">
-                  Here's an overview of your projects and activities.
+                <p className="text-sm text-gray-600">
+                  Welcome back, {dashboardData.user.firstName}!
                 </p>
               </div>
-
-              <div className="flex items-center gap-4">
-                {dashboardData.unreadMessages.length > 0 && (
-                  <Button variant="ghost" className="relative p-2">
-                    <Bell className="h-5 w-5 text-gray-500" />
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {dashboardData.unreadMessages.length}
-                    </span>
-                  </Button>
-                )}
-
-                <Button
-                  variant="outline"
-                  onClick={logout}
-                  className="flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </Button>
-              </div>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Mail className="h-4 w-4" />
-              <span>{dashboardData.user.email}</span>
-
-              {dashboardData.user.phone && (
-                <>
-                  <span>•</span>
-                  <span>{dashboardData.user.phone}</span>
-                </>
+            <div className="flex items-center gap-3">
+              {dashboardData.unreadMessages.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="relative p-2"
+                  onClick={() => setActiveTab("messages")}
+                >
+                  <Bell className="h-5 w-5 text-gray-500" />
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {dashboardData.unreadMessages.length}
+                  </span>
+                </Button>
               )}
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab("profile")}
+                className="flex items-center gap-2"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">Profile</span>
+              </Button>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 py-6 lg:py-8 max-w-7xl">
 
         {/* Quick Actions Section - Mobile Optimized */}
         <section className="mb-6">
@@ -1031,14 +1101,24 @@ export default function ClientDashboard() {
 
         {/* Main Content Section */}
         <section>
-          <Tabs defaultValue="projects" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="projects">Projects</TabsTrigger>
-              <TabsTrigger value="bookings">Bookings</TabsTrigger>
-              <TabsTrigger value="payments">Payments</TabsTrigger>
-              <TabsTrigger value="messages">Messages</TabsTrigger>
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-            </TabsList>
+          {/* Show different content based on activeTab */}
+          {activeTab === "overview" && (
+            <div className="space-y-6">
+              {/* This is the default view showing stats and quick actions */}
+              <div className="text-center py-4">
+                <p className="text-gray-600">Your projects and activities overview is displayed above.</p>
+              </div>
+            </div>
+          )}
+          
+          {activeTab !== "overview" && (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="projects">Projects</TabsTrigger>
+                <TabsTrigger value="bookings">Bookings</TabsTrigger>
+                <TabsTrigger value="messages">Messages</TabsTrigger>
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+              </TabsList>
 
             {/* Projects Tab */}
             <TabsContent value="projects" className="space-y-4">
@@ -1243,28 +1323,51 @@ export default function ClientDashboard() {
                         </div>
                       </form>
                     ) : (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label className="text-sm font-medium text-gray-600">First Name</Label>
-                            <p className="text-sm text-gray-900">{dashboardData.user.firstName}</p>
+                      <div className="space-y-6">
+                        {/* Contact Information */}
+                        <div className="bg-gray-50 rounded-lg p-4">
+                          <h4 className="text-sm font-medium text-gray-900 mb-3">Contact Information</h4>
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <Mail className="h-4 w-4 text-gray-500" />
+                              <div>
+                                <p className="text-sm font-medium text-gray-700">Email</p>
+                                <p className="text-sm text-gray-900">{dashboardData.user.email}</p>
+                              </div>
+                            </div>
+                            {dashboardData.user.phone && (
+                              <div className="flex items-center gap-3">
+                                <div className="h-4 w-4 flex items-center justify-center text-gray-500">
+                                  📞 
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-700">Phone</p>
+                                  <p className="text-sm text-gray-900">{dashboardData.user.phone}</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <div>
-                            <Label className="text-sm font-medium text-gray-600">Last Name</Label>
-                            <p className="text-sm text-gray-900">{dashboardData.user.lastName}</p>
+                        </div>
+
+                        {/* Personal Information */}
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900 mb-3">Personal Information</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-sm font-medium text-gray-600">First Name</Label>
+                              <p className="text-sm text-gray-900">{dashboardData.user.firstName}</p>
+                            </div>
+                            <div>
+                              <Label className="text-sm font-medium text-gray-600">Last Name</Label>
+                              <p className="text-sm text-gray-900">{dashboardData.user.lastName}</p>
+                            </div>
                           </div>
                         </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-600">Email Address</Label>
-                          <p className="text-sm text-gray-900">{dashboardData.user.email}</p>
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-600">Phone Number</Label>
-                          <p className="text-sm text-gray-900">{dashboardData.user.phone || 'Not provided'}</p>
-                        </div>
+
+                        {/* Account Status */}
                         <div>
                           <Label className="text-sm font-medium text-gray-600">Account Status</Label>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-sm text-gray-900 mt-1">
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               Active
                             </span>
@@ -1384,6 +1487,7 @@ export default function ClientDashboard() {
               </Card>
             </TabsContent>
           </Tabs>
+          )}
         </section>
       </div>
 

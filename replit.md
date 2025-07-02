@@ -143,6 +143,14 @@ Changelog:
   - Disabled contact fields for logged-in users to prevent confusion
   - Updated client dashboard to pass full user object instead of just email
   - Improved booking and service ordering flow for authenticated users
+- July 02, 2025. Dashboard header and navigation improvements:
+  - Added proper dashboard header with hamburger navigation menu
+  - Implemented Sheet component for mobile-friendly side navigation
+  - Moved contact details (email, phone) from header to Profile tab
+  - Removed standalone logout button from dashboard content area
+  - Enhanced Profile section with organized contact information display
+  - Added navigation shortcuts for messages, notifications, and profile access
+  - Improved mobile responsiveness with collapsible navigation menu
 
 ## User Preferences
 
