@@ -292,8 +292,8 @@ export default function ClientDashboard() {
    */
   const registerMutation = useMutation({
     mutationFn: async (userData: RegisterData) => {
-      if (!userData.email || !userData.password || !userData.firstName || !userData.lastName) {
-        throw new Error("All fields are required for registration");
+      if (!userData.email || !userData.password || !userData.firstName || !userData.lastName || !userData.phone) {
+        throw new Error("All fields are required for registration: First Name, Last Name, Email, Phone, and Password");
       }
 
       const response = await fetch("/api/auth/register", {
@@ -596,23 +596,6 @@ export default function ClientDashboard() {
                 }}
                 className="space-y-4"
               >
-                <div>
-                  <Label htmlFor="register-email">Email</Label>
-                  <Input
-                    id="register-email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={registerData.email}
-                    onChange={(e) =>
-                      setRegisterData((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
-                    required
-                  />
-                </div>
-
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <Label htmlFor="firstName">First Name</Label>
@@ -647,12 +630,28 @@ export default function ClientDashboard() {
                   </div>
                 </div>
 
-
+                <div>
+                  <Label htmlFor="register-email">Email</Label>
+                  <Input
+                    id="register-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={registerData.email}
+                    onChange={(e) =>
+                      setRegisterData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
 
                 <div>
-                  <Label htmlFor="phone">Phone (Optional)</Label>
+                  <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
+                    type="tel"
                     placeholder="+1234567890"
                     value={registerData.phone}
                     onChange={(e) =>
@@ -661,6 +660,7 @@ export default function ClientDashboard() {
                         phone: e.target.value,
                       }))
                     }
+                    required
                   />
                 </div>
 

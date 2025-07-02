@@ -59,8 +59,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { email, password, firstName, lastName, phone } = req.body;
 
-      if (!email || !password || !firstName || !lastName) {
-        return res.status(400).json({ error: 'Missing required fields' });
+      if (!email || !password || !firstName || !lastName || !phone || (typeof phone === 'string' && phone.trim() === '')) {
+        return res.status(400).json({ error: 'Missing required fields: firstName, lastName, email, phone, and password are all required' });
       }
 
       // Check if user already exists
