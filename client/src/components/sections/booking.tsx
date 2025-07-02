@@ -143,20 +143,20 @@ export function Booking() {
   };
 
   const StepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
-      <div className="flex items-center space-x-4">
-        <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+    <div className="flex items-center justify-center mb-6 sm:mb-8">
+      <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-300 ${
           currentStep >= 1 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-300'
         }`}>
-          <User className="w-5 h-5" />
+          <User className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
-        <div className={`h-1 w-16 transition-all duration-300 ${
+        <div className={`h-1 w-12 sm:w-16 transition-all duration-300 ${
           currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-300'
         }`}></div>
-        <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-300 ${
+        <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-300 ${
           currentStep >= 2 ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-300'
         }`}>
-          <Briefcase className="w-5 h-5" />
+          <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
       </div>
     </div>
@@ -169,7 +169,7 @@ export function Booking() {
         <p className="text-gray-600">Tell us about yourself and what service you need</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <div>
           <Label htmlFor="name" className="block text-sm font-medium mb-2">
             Full Name *
@@ -183,7 +183,7 @@ export function Booking() {
               value={formData.name}
               onChange={handleInputChange}
               required
-              className="pl-10"
+              className="pl-10 py-3 text-base sm:text-sm min-h-[48px] rounded-xl"
               placeholder="John Doe"
             />
           </div>
@@ -201,7 +201,7 @@ export function Booking() {
               value={formData.email}
               onChange={handleInputChange}
               required
-              className="pl-10"
+              className="pl-10 py-3 text-base sm:text-sm min-h-[48px] rounded-xl"
               placeholder="john@example.com"
             />
           </div>
@@ -220,7 +220,7 @@ export function Booking() {
             name="phone"
             value={formData.phone}
             onChange={handleInputChange}
-            className="pl-10"
+            className="pl-10 py-3 text-base sm:text-sm min-h-[48px] rounded-xl"
             placeholder="+1 (555) 123-4567"
           />
         </div>
@@ -231,7 +231,7 @@ export function Booking() {
           Service Type *
         </Label>
         <Select onValueChange={(value) => handleSelectChange('service', value)} value={formData.service}>
-          <SelectTrigger>
+          <SelectTrigger className="py-3 text-base sm:text-sm min-h-[48px] rounded-xl">
             <SelectValue placeholder="Select a service" />
           </SelectTrigger>
           <SelectContent>
@@ -247,10 +247,12 @@ export function Booking() {
       <Button 
         type="button"
         onClick={handleNextStep}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 sm:py-5 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] min-h-[56px] touch-manipulation"
       >
-        Continue to Project Details
-        <ArrowRight className="w-5 h-5 ml-2" />
+        <span className="flex items-center justify-center">
+          Continue to Project Details
+          <ArrowRight className="w-5 h-5 ml-2 flex-shrink-0" />
+        </span>
       </Button>
     </div>
   );
@@ -262,13 +264,13 @@ export function Booking() {
         <p className="text-gray-600">Help us understand your project requirements</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <div>
           <Label htmlFor="projectType" className="block text-sm font-medium mb-2">
             Project Type *
           </Label>
           <Select onValueChange={(value) => handleSelectChange('projectType', value)} value={formData.projectType}>
-            <SelectTrigger>
+            <SelectTrigger className="py-3 text-base sm:text-sm min-h-[48px] rounded-xl">
               <SelectValue placeholder="Select project type" />
             </SelectTrigger>
             <SelectContent>
@@ -284,7 +286,7 @@ export function Booking() {
             Budget Range
           </Label>
           <Select onValueChange={(value) => handleSelectChange('budget', value)} value={formData.budget}>
-            <SelectTrigger>
+            <SelectTrigger className="py-3 text-base sm:text-sm min-h-[48px] rounded-xl">
               <SelectValue placeholder="Select budget range" />
             </SelectTrigger>
             <SelectContent>
@@ -302,7 +304,7 @@ export function Booking() {
           Timeline
         </Label>
         <Select onValueChange={(value) => handleSelectChange('timeline', value)} value={formData.timeline}>
-          <SelectTrigger>
+          <SelectTrigger className="py-3 text-base sm:text-sm min-h-[48px] rounded-xl">
             <SelectValue placeholder="Select timeline" />
           </SelectTrigger>
           <SelectContent>
@@ -326,37 +328,40 @@ export function Booking() {
             rows={4}
             value={formData.message}
             onChange={handleInputChange}
-            className="resize-vertical pl-10 pt-3"
+            className="resize-vertical pl-10 pt-3 pb-3 text-base sm:text-sm min-h-[96px] rounded-xl"
             placeholder="Tell me about your project goals, requirements, and any specific features you need..."
           />
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <Button 
           type="button"
           onClick={handlePrevStep}
           variant="outline"
-          className="flex-1 py-4 rounded-2xl font-semibold text-lg transition-all duration-300"
+          className="flex-1 py-4 sm:py-5 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] min-h-[56px] touch-manipulation order-2 sm:order-1"
         >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Back
+          <span className="flex items-center justify-center">
+            <ArrowLeft className="w-5 h-5 mr-2 flex-shrink-0" />
+            Back
+          </span>
         </Button>
         <Button 
           type="submit" 
           disabled={isSubmitting}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:scale-105"
+          className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-4 sm:py-5 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] min-h-[56px] touch-manipulation order-1 sm:order-2"
         >
           {isSubmitting ? (
-            <>
+            <span className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
               Submitting...
-            </>
+            </span>
           ) : (
-            <>
-              <Send className="w-5 h-5 mr-2" />
-              Schedule Consultation
-            </>
+            <span className="flex items-center justify-center">
+              <Send className="w-5 h-5 mr-2 flex-shrink-0" />
+              <span className="hidden xs:inline">Schedule Consultation</span>
+              <span className="xs:hidden">Schedule</span>
+            </span>
           )}
         </Button>
       </div>
@@ -384,7 +389,7 @@ export function Booking() {
 
         {/* Mobile Form - Shows immediately after heading */}
         <div className="lg:hidden mb-12">
-          <div className="bg-white rounded-3xl p-8 shadow-xl border border-blue-50">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-blue-50">
             <StepIndicator />
             <form onSubmit={handleSubmit}>
               {currentStep === 1 ? <Step1Form /> : <Step2Form />}
