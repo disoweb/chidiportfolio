@@ -14,7 +14,7 @@ import {
   Mail, Phone, Calendar, Settings, Globe, Search, Shield, Edit, Trash2, Eye, Plus, 
   DollarSign, Clock, User, Target, Users, Building2, MessageSquare, Bell, 
   UserPlus, FileText, Activity, TrendingUp, Menu, X, BarChart3, PieChart,
-  CheckCircle, AlertCircle, Timer, Briefcase
+  CheckCircle, AlertCircle, Timer, Briefcase, Download
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from "@/components/ui/use-toast"
@@ -443,7 +443,10 @@ export default function AdminDashboard() {
       });
 
       if (response.ok) {
-        alert('Settings saved successfully!');
+        toast({
+          title: "Success",
+          description: "Settings saved successfully!",
+        });
       }
     } catch (error) {
       console.error('Failed to save settings:', error);
@@ -458,13 +461,16 @@ export default function AdminDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'new': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'in-progress': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'planning': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-      case 'testing': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
-      case 'on-hold': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+      case 'new': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'in-progress': return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'completed': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'planning': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'testing': return 'bg-orange-50 text-orange-700 border-orange-200';
+      case 'on-hold': return 'bg-rose-50 text-rose-700 border-rose-200';
+      case 'pending': return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+      case 'success': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'failed': return 'bg-red-50 text-red-700 border-red-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
@@ -475,24 +481,24 @@ export default function AdminDashboard() {
     color?: string;
     trend?: { value: string; positive: boolean }
   }) => (
-    <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
+    <Card className="group hover:shadow-md transition-all duration-200 border-0 bg-white/60 backdrop-blur-sm">
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <div className="flex items-center space-x-2">
-              <p className={`text-2xl sm:text-3xl font-bold text-${color}-600`}>{value}</p>
+            <p className="text-sm font-medium text-gray-600">{title}</p>
+            <div className="flex items-center gap-3">
+              <p className="text-2xl sm:text-3xl font-bold text-gray-900">{value}</p>
               {trend && (
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  trend.positive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                <Badge variant="secondary" className={`text-xs ${
+                  trend.positive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
                 }`}>
                   {trend.value}
-                </span>
+                </Badge>
               )}
             </div>
           </div>
-          <div className={`p-3 bg-${color}-100 rounded-full`}>
-            <Icon className={`w-6 h-6 sm:w-8 sm:h-8 text-${color}-600`} />
+          <div className={`p-3 rounded-xl bg-gradient-to-br from-${color}-100 to-${color}-200 group-hover:scale-110 transition-transform duration-200`}>
+            <Icon className={`w-6 h-6 text-${color}-600`} />
           </div>
         </div>
       </CardContent>
@@ -564,7 +570,7 @@ export default function AdminDashboard() {
           clientEmail: selectedProject.clientEmail,
           subject: messageData.subject,
           message: messageData.message,
-          adminId: 1 // Current admin ID
+          adminId: 1
         })
       });
 
@@ -574,7 +580,6 @@ export default function AdminDashboard() {
           description: "Message sent successfully",
         });
         setMessageData({ subject: '', message: '' });
-        // Refresh recent messages
         fetchRecentMessages();
       } else {
         throw new Error('Failed to send message');
@@ -602,47 +607,46 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-100 flex items-center justify-center p-4">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-white">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white border-b shadow-sm px-4 py-3 flex items-center justify-between sticky top-0 z-40">
+      <div className="lg:hidden bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-xs text-gray-600">Welcome back, {adminProfile.username}</p>
+          <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-xs text-gray-500">Welcome back, {adminProfile.username}</p>
         </div>
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-2">
-              <Menu className="w-5 h-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-72 p-0">
-            <SheetHeader className="p-6 border-b">
-              <SheetTitle>Menu</SheetTitle>
-            </SheetHeader>
-            <div className="p-6 space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <User className="w-8 h-8 p-1.5 bg-blue-100 text-blue-600 rounded-full" />
-                  <div>
-                    <p className="font-medium text-sm">{adminProfile.username}</p>
-                    <p className="text-xs text-gray-600">{adminProfile.role}</p>
-                  </div>
-                </div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+              <User className="w-3 h-3 text-blue-600" />
+            </div>
+            <span className="text-xs font-medium text-blue-700">{adminProfile.username}</span>
+          </div>
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-2">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72 p-0">
+              <SheetHeader className="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                <SheetTitle className="text-white">Menu</SheetTitle>
+              </SheetHeader>
+              <div className="p-6">
                 <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
                   <Shield className="w-4 h-4 mr-2" />
                   Logout
                 </Button>
               </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       <div className="container mx-auto px-4 py-4 lg:py-8 max-w-7xl">
@@ -650,61 +654,60 @@ export default function AdminDashboard() {
         <div className="hidden lg:flex mb-8 justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600 text-lg">Welcome back, {adminProfile.username}! Here's what's happening today.</p>
+            <p className="text-gray-600 text-lg">Welcome back, {adminProfile.username}! Here's your business overview.</p>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3 px-4 py-2 bg-white rounded-lg border">
-              <User className="w-8 h-8 p-1.5 bg-blue-100 text-blue-600 rounded-full" />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 px-4 py-2 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200/50">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <User className="w-5 h-5 text-blue-600" />
+              </div>
               <div>
-                <p className="font-medium text-sm">{adminProfile.username}</p>
-                <p className="text-xs text-gray-600">{adminProfile.role}</p>
+                <p className="font-medium text-sm text-gray-900">{adminProfile.username}</p>
+                <p className="text-xs text-gray-500 capitalize">{adminProfile.role}</p>
               </div>
             </div>
-            <Button onClick={handleLogout} variant="outline" className="flex items-center gap-2">
-              <Shield className="w-4 h-4" />
+            <Button onClick={handleLogout} variant="outline" className="bg-white/60 backdrop-blur-sm border-gray-200/50 hover:bg-white">
+              <Shield className="w-4 h-4 mr-2" />
               Logout
             </Button>
           </div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <div className="overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 h-auto bg-white shadow-sm">
-              <TabsTrigger value="overview" className="text-xs lg:text-sm py-3">
+          {/* Modern Tab Navigation */}
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-1 border border-gray-200/50">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 h-auto bg-transparent gap-1">
+              <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg py-2.5 px-3 text-xs lg:text-sm font-medium transition-all duration-200">
                 <BarChart3 className="w-4 h-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="bookings" className="text-xs lg:text-sm py-3">
+              <TabsTrigger value="bookings" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg py-2.5 px-3 text-xs lg:text-sm font-medium transition-all duration-200">
                 <Calendar className="w-4 h-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">Bookings</span>
               </TabsTrigger>
-              <TabsTrigger value="projects" className="text-xs lg:text-sm py-3">
+              <TabsTrigger value="projects" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg py-2.5 px-3 text-xs lg:text-sm font-medium transition-all duration-200">
                 <Briefcase className="w-4 h-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">Projects</span>
               </TabsTrigger>
-              <TabsTrigger value="payments" className="text-xs lg:text-sm py-3">
+              <TabsTrigger value="payments" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg py-2.5 px-3 text-xs lg:text-sm font-medium transition-all duration-200">
                 <DollarSign className="w-4 h-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">Payments</span>
               </TabsTrigger>
-              <TabsTrigger value="team" className="text-xs lg:text-sm py-3">
+              <TabsTrigger value="team" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg py-2.5 px-3 text-xs lg:text-sm font-medium transition-all duration-200">
                 <Users className="w-4 h-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">Team</span>
               </TabsTrigger>
-              <TabsTrigger value="inquiries" className="text-xs lg:text-sm py-3">
+              <TabsTrigger value="inquiries" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg py-2.5 px-3 text-xs lg:text-sm font-medium transition-all duration-200">
                 <MessageSquare className="w-4 h-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">Inquiries</span>
               </TabsTrigger>
-              <TabsTrigger value="profile" className="text-xs lg:text-sm py-3">
+              <TabsTrigger value="profile" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg py-2.5 px-3 text-xs lg:text-sm font-medium transition-all duration-200">
                 <User className="w-4 h-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">Profile</span>
               </TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs lg:text-sm py-3">
+              <TabsTrigger value="settings" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg py-2.5 px-3 text-xs lg:text-sm font-medium transition-all duration-200">
                 <Settings className="w-4 h-4 mr-1 lg:mr-2" />
                 <span className="hidden sm:inline">Settings</span>
-              </TabsTrigger>
-              <TabsTrigger value="messaging" className="text-xs lg:text-sm py-3">
-                <MessageSquare className="w-4 h-4 mr-1 lg:mr-2" />
-                <span className="hidden sm:inline">Messages</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -723,7 +726,7 @@ export default function AdminDashboard() {
                 title="Active Projects" 
                 value={projects.filter(p => p.status === 'in-progress').length} 
                 icon={Target} 
-                color="green"
+                color="emerald"
                 trend={{ value: "+5%", positive: true }}
               />
               <StatCard 
@@ -741,63 +744,64 @@ export default function AdminDashboard() {
               />
             </div>
 
-            {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Recent Activity */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5" />
+              <Card className="lg:col-span-2 border-0 bg-white/60 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Activity className="w-5 h-5 text-blue-600" />
                     Recent Activity
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {bookings.slice(0, 5).map((booking) => (
-                      <div key={booking.id} className="flex items-center justify-between py-3 border-b last:border-0">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-sm">{booking.name}</p>
-                            <p className="text-xs text-muted-foreground">{booking.service}</p>
-                          </div>
+                <CardContent className="space-y-3">
+                  {bookings.slice(0, 5).map((booking) => (
+                    <div key={booking.id} className="flex items-center justify-between py-3 px-4 bg-white/50 rounded-lg border border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <User className="w-5 h-5 text-blue-600" />
                         </div>
-                        <Badge className={getStatusColor(booking.paymentStatus)}>
-                          {booking.paymentStatus}
-                        </Badge>
+                        <div>
+                          <p className="font-medium text-sm text-gray-900">{booking.name}</p>
+                          <p className="text-xs text-gray-500">{booking.service}</p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
+                      <Badge className={`${getStatusColor(booking.paymentStatus)} border`}>
+                        {booking.paymentStatus}
+                      </Badge>
+                    </div>
+                  ))}
+                  {bookings.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p>No recent activity</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
               {/* Project Status Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <PieChart className="w-5 h-5" />
+              <Card className="border-0 bg-white/60 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <PieChart className="w-5 h-5 text-purple-600" />
                     Project Status
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {[
-                      { status: 'completed', count: projects.filter(p => p.status === 'completed').length, color: 'bg-green-500' },
-                      { status: 'in-progress', count: projects.filter(p => p.status === 'in-progress').length, color: 'bg-blue-500' },
-                      { status: 'planning', count: projects.filter(p => p.status === 'planning').length, color: 'bg-purple-500' },
-                      { status: 'on-hold', count: projects.filter(p => p.status === 'on-hold').length, color: 'bg-red-500' }
-                    ].map((item) => (
-                      <div key={item.status} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div className={`w-3 h-3 rounded-full ${item.color}`} />
-                          <span className="text-sm capitalize">{item.status}</span>
-                        </div>
-                        <span className="font-medium">{item.count}</span>
+                <CardContent className="space-y-3">
+                  {[
+                    { status: 'completed', count: projects.filter(p => p.status === 'completed').length, color: 'bg-emerald-500', label: 'Completed' },
+                    { status: 'in-progress', count: projects.filter(p => p.status === 'in-progress').length, color: 'bg-blue-500', label: 'In Progress' },
+                    { status: 'planning', count: projects.filter(p => p.status === 'planning').length, color: 'bg-purple-500', label: 'Planning' },
+                    { status: 'on-hold', count: projects.filter(p => p.status === 'on-hold').length, color: 'bg-amber-500', label: 'On Hold' }
+                  ].map((item) => (
+                    <div key={item.status} className="flex items-center justify-between p-3 bg-white/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${item.color}`} />
+                        <span className="text-sm font-medium text-gray-700">{item.label}</span>
                       </div>
-                    ))}
-                  </div>
+                      <span className="font-semibold text-gray-900">{item.count}</span>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             </div>
@@ -806,14 +810,14 @@ export default function AdminDashboard() {
           {/* Bookings Tab */}
           <TabsContent value="bookings" className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard title="Total Bookings" value={bookings.length} icon={Calendar} />
-              <StatCard title="Pending Payment" value={bookings.filter(b => b.paymentStatus === 'pending').length} icon={Clock} color="orange" />
-              <StatCard title="Paid Bookings" value={bookings.filter(b => b.paymentStatus === 'completed').length} icon={CheckCircle} color="green" />
+              <StatCard title="Total Bookings" value={bookings.length} icon={Calendar} color="blue" />
+              <StatCard title="Pending Payment" value={bookings.filter(b => b.paymentStatus === 'pending').length} icon={Clock} color="amber" />
+              <StatCard title="Paid Bookings" value={bookings.filter(b => b.paymentStatus === 'completed').length} icon={CheckCircle} color="emerald" />
               <StatCard title="This Month" value={bookings.filter(b => new Date(b.createdAt).getMonth() === new Date().getMonth()).length} icon={TrendingUp} color="purple" />
             </div>
 
-            {/* Filters */}
-            <Card className="shadow-sm">
+            {/* Modern Search Filters */}
+            <Card className="border-0 bg-white/60 backdrop-blur-sm">
               <CardContent className="p-4">
                 <div className="flex flex-col lg:flex-row gap-4">
                   <div className="relative flex-1">
@@ -822,85 +826,84 @@ export default function AdminDashboard() {
                       placeholder="Search bookings..."
                       value={bookingSearchTerm}
                       onChange={(e) => setBookingSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/50 border-gray-200/50"
                     />
                   </div>
                   <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-                    <SelectTrigger className="w-full lg:w-48">
+                    <SelectTrigger className="w-full lg:w-48 bg-white/50 border-gray-200/50">
                       <SelectValue placeholder="Payment Status" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
-                      ```text
-<SelectItem value="failed">Failed</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Bookings List */}
-            <div className="space-y-4">
+            {/* Modern Bookings List */}
+            <div className="grid gap-4">
               {filteredBookings.map((booking) => (
-                <Card key={booking.id} className="hover:shadow-lg transition-all duration-300">
-                  <CardContent className="p-4 lg:p-6">
+                <Card key={booking.id} className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/60 backdrop-blur-sm hover:bg-white/80">
+                  <CardContent className="p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <User className="w-5 h-5 text-blue-600" />
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                            <User className="w-6 h-6 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-lg">{booking.name}</h3>
-                            <Badge className={getStatusColor(booking.paymentStatus)}>
+                            <h3 className="font-semibold text-lg text-gray-900">{booking.name}</h3>
+                            <Badge className={`${getStatusColor(booking.paymentStatus)} border mt-1`}>
                               {booking.paymentStatus}
                             </Badge>
                           </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                          <div className="flex items-center gap-2 text-gray-600">
                             <Mail className="w-4 h-4" />
                             <span>{booking.email}</span>
                           </div>
                           {booking.phone && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 text-gray-600">
                               <Phone className="w-4 h-4" />
                               <span>{booking.phone}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-gray-600">
                             <Calendar className="w-4 h-4" />
                             <span>{new Date(booking.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-gray-600">
                             <Briefcase className="w-4 h-4" />
                             <span>{booking.service}</span>
                           </div>
                         </div>
-                        <div className="mt-3">
-                          <p className="text-sm font-medium">
-                            {booking.service} | {booking.projectType}
+                        <div className="mt-3 p-3 bg-gray-50/50 rounded-lg">
+                          <p className="text-sm font-medium text-gray-900">
+                            {booking.service} • {booking.projectType}
                           </p>
                           {booking.budget && (
-                            <p className="text-sm text-muted-foreground">Budget: {booking.budget}</p>
+                            <p className="text-sm text-gray-600 mt-1">Budget: {booking.budget}</p>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-row lg:flex-col gap-2">
-                        <Button size="sm" variant="outline" onClick={() => { setSelectedBooking(booking); setIsViewModalOpen(true); }}>
-                          <Eye className="w-4 h-4 lg:mr-1" />
+                      <div className="flex flex-row lg:flex-col gap-2 lg:min-w-[120px]">
+                        <Button size="sm" variant="outline" onClick={() => { setSelectedBooking(booking); setIsViewModalOpen(true); }} className="flex-1 lg:flex-none">
+                          <Eye className="w-4 h-4 lg:mr-2" />
                           <span className="hidden lg:inline">View</span>
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => { setSelectedBooking(booking); setEditFormData(booking); setIsEditModalOpen(true); }}>
-                          <Edit className="w-4 h-4 lg:mr-1" />
+                        <Button size="sm" variant="outline" onClick={() => { setSelectedBooking(booking); setEditFormData(booking); setIsEditModalOpen(true); }} className="flex-1 lg:flex-none">
+                          <Edit className="w-4 h-4 lg:mr-2" />
                           <span className="hidden lg:inline">Edit</span>
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive">
-                              <Trash2 className="w-4 h-4 lg:mr-1" />
+                            <Button size="sm" variant="destructive" className="flex-1 lg:flex-none">
+                              <Trash2 className="w-4 h-4 lg:mr-2" />
                               <span className="hidden lg:inline">Delete</span>
                             </Button>
                           </AlertDialogTrigger>
@@ -924,6 +927,15 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ))}
+              {filteredBookings.length === 0 && (
+                <Card className="border-0 bg-white/60 backdrop-blur-sm">
+                  <CardContent className="text-center py-12">
+                    <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No bookings found</h3>
+                    <p className="text-gray-500">Bookings will appear here once clients start booking consultations.</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
@@ -931,61 +943,61 @@ export default function AdminDashboard() {
           <TabsContent value="projects" className="space-y-6">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
-                <StatCard title="Total Projects" value={projects.length} icon={Target} />
+                <StatCard title="Total Projects" value={projects.length} icon={Target} color="blue" />
                 <StatCard title="In Progress" value={projects.filter(p => p.status === 'in-progress').length} icon={Timer} color="blue" />
-                <StatCard title="Completed" value={projects.filter(p => p.status === 'completed').length} icon={CheckCircle} color="green" />
+                <StatCard title="Completed" value={projects.filter(p => p.status === 'completed').length} icon={CheckCircle} color="emerald" />
                 <StatCard title="Planning" value={projects.filter(p => p.status === 'planning').length} icon={FileText} color="purple" />
               </div>
-              <Button onClick={() => setIsProjectModalOpen(true)} className="w-full lg:w-auto">
+              <Button onClick={() => setIsProjectModalOpen(true)} className="w-full lg:w-auto bg-blue-600 hover:bg-blue-700">
                 <Plus className="w-4 h-4 mr-2" />
                 New Project
               </Button>
             </div>
 
-            {/* Projects Grid */}
+            {/* Modern Projects Grid */}
             <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
               {filteredProjects.map((project) => (
-                <Card key={project.id} className="hover:shadow-lg transition-all duration-300">
-                  <CardContent className="p-4 lg:p-6">
+                <Card key={project.id} className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/60 backdrop-blur-sm hover:bg-white/80">
+                  <CardContent className="p-6">
                     <div className="space-y-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-1">{project.name}</h3>
-                          <Badge className={getStatusColor(project.status)}>
+                          <h3 className="font-semibold text-lg mb-2 text-gray-900">{project.name}</h3>
+                          <Badge className={`${getStatusColor(project.status)} border`}>
                             {project.status}
                           </Badge>
                         </div>
-                        <Badge variant={project.priority === 'high' ? 'destructive' : project.priority === 'medium' ? 'default' : 'secondary'}>
+                        <Badge variant={project.priority === 'high' ? 'destructive' : project.priority === 'medium' ? 'default' : 'secondary'} className="ml-2">
                           {project.priority}
                         </Badge>
                       </div>
 
-                      <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+                      <p className="text-sm text-gray-600 line-clamp-2">{project.description}</p>
 
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span>Progress</span>
-                          <span className="font-medium">{project.progress}%</span>
+                          <span className="text-gray-600">Progress</span>
+                          <span className="font-medium text-gray-900">{project.progress}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300" 
                             style={{ width: `${project.progress}%` }}
                           />
                         </div>
                       </div>
 
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2 text-gray-600">
                           <User className="w-4 h-4" />
                           <span>{project.clientEmail}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 text-gray-600">
                           <DollarSign className="w-4 h-4" />
                           <span>{project.budget || 'Not set'}</span>
                         </div>
                         {project.dueDate && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-gray-600">
                             <Calendar className="w-4 h-4" />
                             <span>Due: {new Date(project.dueDate).toLocaleDateString()}</span>
                           </div>
@@ -1015,6 +1027,161 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ))}
+              {filteredProjects.length === 0 && (
+                <div className="lg:col-span-2 xl:col-span-3">
+                  <Card className="border-0 bg-white/60 backdrop-blur-sm">
+                    <CardContent className="text-center py-12">
+                      <Briefcase className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No projects yet</h3>
+                      <p className="text-gray-500 mb-4">Create your first project to get started.</p>
+                      <Button onClick={() => setIsProjectModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Project
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Payments Tab */}
+          <TabsContent value="payments" className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard title="Total Payments" value={payments.length} icon={DollarSign} color="emerald" />
+              <StatCard title="Total Revenue" value={`₦${payments.reduce((sum, p) => sum + Number(p.amount || 0), 0).toLocaleString()}`} icon={TrendingUp} color="emerald" />
+              <StatCard title="This Month" value={payments.filter(p => new Date(p.createdAt).getMonth() === new Date().getMonth()).length} icon={Calendar} color="blue" />
+              <StatCard title="Avg Payment" value={`₦${payments.length > 0 ? Math.round(payments.reduce((sum, p) => sum + Number(p.amount || 0), 0) / payments.length).toLocaleString() : '0'}`} icon={DollarSign} color="purple" />
+            </div>
+
+            {/* Payment Filters */}
+            <Card className="border-0 bg-white/60 backdrop-blur-sm">
+              <CardContent className="p-4">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search payments by email, service, or reference..."
+                      value={paymentSearchTerm}
+                      onChange={(e) => setPaymentSearchTerm(e.target.value)}
+                      className="pl-10 bg-white/50 border-gray-200/50"
+                    />
+                  </div>
+                  <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
+                    <SelectTrigger className="w-full lg:w-48 bg-white/50 border-gray-200/50">
+                      <SelectValue placeholder="Payment Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Payments</SelectItem>
+                      <SelectItem value="success">Successful</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Payments List */}
+            <div className="grid gap-4">
+              {filteredPayments.map((payment) => (
+                <Card key={payment.id} className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/60 backdrop-blur-sm hover:bg-white/80">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
+                            <DollarSign className="w-6 h-6 text-emerald-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-xl text-gray-900">₦{Number(payment.amount).toLocaleString()}</h3>
+                            <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 border mt-1">
+                              {payment.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Mail className="w-4 h-4" />
+                            <span>{payment.customerEmail}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <FileText className="w-4 h-4" />
+                            <span>{payment.serviceName}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Calendar className="w-4 h-4" />
+                            <span>Paid: {new Date(payment.paidAt || payment.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <FileText className="w-4 h-4" />
+                            <span>Ref: {payment.reference}</span>
+                          </div>
+                        </div>
+
+                        {payment.metadata && (
+                          <div className="mt-4 p-3 bg-gray-50/50 rounded-lg">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Payment Details</h4>
+                            <div className="grid grid-cols-1 gap-1 text-xs text-gray-600">
+                              {payment.metadata.booking_id && (
+                                <div>Booking ID: {payment.metadata.booking_id}</div>
+                              )}
+                              {payment.metadata.service_id && (
+                                <div>Service Type: {payment.metadata.service_id}</div>
+                              )}
+                              {payment.metadata.customer_name && (
+                                <div>Customer: {payment.metadata.customer_name}</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-2 lg:min-w-[120px]">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            const receiptData = `Payment Receipt\n================\nAmount: ₦${Number(payment.amount).toLocaleString()}\nCustomer: ${payment.customerEmail}\nService: ${payment.serviceName}\nReference: ${payment.reference}\nDate: ${new Date(payment.paidAt || payment.createdAt).toLocaleDateString()}\nStatus: ${payment.status}\n\nThank you for your business!\nChidi Ogara - Senior Fullstack Developer`;
+                            const blob = new Blob([receiptData], { type: 'text/plain' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `receipt-${payment.reference}.txt`;
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                          }}
+                          className="text-xs"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Receipt
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(payment.reference);
+                            toast({ title: "Copied!", description: "Payment reference copied to clipboard" });
+                          }}
+                          className="text-xs"
+                        >
+                          <FileText className="w-3 h-3 mr-1" />
+                          Copy Ref
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {filteredPayments.length === 0 && (
+                <Card className="border-0 bg-white/60 backdrop-blur-sm">
+                  <CardContent className="text-center py-12">
+                    <DollarSign className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No payments found</h3>
+                    <p className="text-gray-500">Payment records will appear here once transactions are processed.</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
@@ -1022,11 +1189,11 @@ export default function AdminDashboard() {
           <TabsContent value="team" className="space-y-6">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
-                <StatCard title="Team Members" value={teamMembers.length} icon={Users} />
-                <StatCard title="Active" value={teamMembers.filter(m => m.isActive).length} icon={CheckCircle} color="green" />
+                <StatCard title="Team Members" value={teamMembers.length} icon={Users} color="blue" />
+                <StatCard title="Active" value={teamMembers.filter(m => m.isActive).length} icon={CheckCircle} color="emerald" />
                 <StatCard title="Admins" value={teamMembers.filter(m => m.role === 'admin').length} icon={Shield} color="purple" />
               </div>
-              <Button onClick={() => setIsTeamModalOpen(true)} className="w-full lg:w-auto">
+              <Button onClick={() => setIsTeamModalOpen(true)} className="w-full lg:w-auto bg-blue-600 hover:bg-blue-700">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Add Member
               </Button>
@@ -1035,37 +1202,37 @@ export default function AdminDashboard() {
             {/* Team Members Grid */}
             <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
               {teamMembers.map((member) => (
-                <Card key={member.id} className="hover:shadow-lg transition-all duration-300">
-                  <CardContent className="p-4 lg:p-6">
+                <Card key={member.id} className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/60 backdrop-blur-sm hover:bg-white/80">
+                  <CardContent className="p-6">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
                             <User className="w-6 h-6 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-lg">{member.username}</h3>
-                            <p className="text-sm text-muted-foreground">{member.email}</p>
+                            <h3 className="font-semibold text-lg text-gray-900">{member.username}</h3>
+                            <p className="text-sm text-gray-500">{member.email}</p>
                           </div>
                         </div>
-                        <Badge className={member.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                        <Badge className={member.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-700 border-gray-200'}>
                           {member.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </div>
 
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Role:</span>
-                          <span className="font-medium capitalize">{member.role}</span>
+                          <span className="text-gray-600">Role:</span>
+                          <Badge variant="outline" className="capitalize">{member.role}</Badge>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Joined:</span>
-                          <span>{new Date(member.createdAt).toLocaleDateString()}</span>
+                          <span className="text-gray-600">Joined:</span>
+                          <span className="text-gray-900">{new Date(member.createdAt).toLocaleDateString()}</span>
                         </div>
                         {member.lastLogin && (
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Last Login:</span>
-                            <span>{new Date(member.lastLogin).toLocaleDateString()}</span>
+                            <span className="text-gray-600">Last Login:</span>
+                            <span className="text-gray-900">{new Date(member.lastLogin).toLocaleDateString()}</span>
                           </div>
                         )}
                       </div>
@@ -1102,260 +1269,35 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="messaging" className="space-y-6">
-                <div className="grid gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Send Message to Client</CardTitle>
-                      <CardDescription>Send updates and messages to your clients</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <Label htmlFor="project-select">Select Project</Label>
-                        <Select onValueChange={(value) => {
-                          const project = projects.find(p => p.id.toString() === value);
-                          setSelectedProject(project || null);
-                        }}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Choose a project" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {projects.map((project) => (
-                              <SelectItem key={project.id} value={project.id.toString()}>
-                                {project.name} - {project.clientEmail}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {selectedProject && (
-                        <>
-                          <div>
-                            <Label htmlFor="message-subject">Subject</Label>
-                            <Input
-                              id="message-subject"
-                              placeholder="Message subject"
-                              value={messageData.subject}
-                              onChange={(e) => setMessageData(prev => ({ ...prev, subject: e.target.value }))}
-                            />
-                          </div>
-
-                          <div>
-                            <Label htmlFor="message-content">Message</Label>
-                            <Textarea
-                              id="message-content"
-                              placeholder="Your message to the client..."
-                              rows={4}
-                              value={messageData.message}
-                              onChange={(e) => setMessageData(prev => ({ ...prev, message: e.target.value }))}
-                            />
-                          </div>
-
-                          <Button 
-                            onClick={handleSendMessage}
-                            disabled={!messageData.subject || !messageData.message}
-                            className="w-full"
-                          >
-                            <MessageSquare className="w-4 h-4 mr-2" />
-                            Send Message
-                          </Button>
-                        </>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Recent Messages</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {recentMessages.length === 0 ? (
-                          <p className="text-center text-gray-500 py-8">No messages sent yet</p>
-                        ) : (
-                          recentMessages.map((message) => (
-                            <div key={message.id} className="border rounded-lg p-4">
-                              <div className="flex justify-between items-start mb-2">
-                                <h4 className="font-semibold">{message.subject}</h4>
-                                <span className="text-sm text-gray-500">
-                                  {new Date(message.createdAt).toLocaleDateString()}
-                                </span>
-                              </div>
-                              <p className="text-gray-700 mb-2">{message.message}</p>
-                              <p className="text-sm text-gray-500">
-                                To: {message.recipientEmail} (Project: {message.projectName})
-                              </p>
-                            </div>
-                          ))
-                        )}
-                      </div>
+              {teamMembers.length === 0 && (
+                <div className="lg:col-span-2 xl:col-span-3">
+                  <Card className="border-0 bg-white/60 backdrop-blur-sm">
+                    <CardContent className="text-center py-12">
+                      <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No team members yet</h3>
+                      <p className="text-gray-500 mb-4">Add team members to collaborate on projects.</p>
+                      <Button onClick={() => setIsTeamModalOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+                        <UserPlus className="w-4 h-4 mr-2" />
+                        Add First Member
+                      </Button>
                     </CardContent>
                   </Card>
                 </div>
-              </TabsContent>
-
-          {/* Payments Tab */}
-          <TabsContent value="payments" className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard title="Total Payments" value={payments.length} icon={DollarSign} color="green" />
-              <StatCard title="Total Revenue" value={`₦${payments.reduce((sum, p) => sum + Number(p.amount || 0), 0).toLocaleString()}`} icon={TrendingUp} color="green" />
-              <StatCard title="This Month" value={payments.filter(p => new Date(p.createdAt).getMonth() === new Date().getMonth()).length} icon={Calendar} color="blue" />
-              <StatCard title="Avg Payment" value={`₦${payments.length > 0 ? Math.round(payments.reduce((sum, p) => sum + Number(p.amount || 0), 0) / payments.length).toLocaleString() : '0'}`} icon={DollarSign} color="purple" />
-            </div>
-
-            {/* Payment Filters */}
-            <Card className="shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Search payments by email, service, or reference..."
-                      value={paymentSearchTerm}
-                      onChange={(e) => setPaymentSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
-                    <SelectTrigger className="w-full lg:w-48">
-                      <SelectValue placeholder="Payment Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Payments</SelectItem>
-                      <SelectItem value="success">Successful</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="failed">Failed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Payments List */}
-            <div className="space-y-4">
-              {filteredPayments.map((payment) => (
-                <Card key={payment.id} className="hover:shadow-lg transition-all duration-300">
-                  <CardContent className="p-4 lg:p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <DollarSign className="w-5 h-5 text-green-600" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-lg">₦{Number(payment.amount).toLocaleString()}</h3>
-                            <Badge className="bg-green-100 text-green-800">
-                              {payment.status}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4" />
-                            <span>{payment.customerEmail}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4" />
-                            <span>{payment.serviceName}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span>Paid: {new Date(payment.paidAt || payment.createdAt).toLocaleDateString()}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4" />
-                            <span>Ref: {payment.reference}</span>
-                          </div>
-                          {payment.currency && (
-                            <div className="flex items-center gap-2">
-                              <DollarSign className="w-4 h-4" />
-                              <span>Currency: {payment.currency}</span>
-                            </div>
-                          )}
-                          {payment.serviceId && (
-                            <div className="flex items-center gap-2">
-                              <Target className="w-4 h-4" />
-                              <span>Service ID: {payment.serviceId}</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Payment Metadata */}
-                        {payment.metadata && (
-                          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                            <h4 className="text-sm font-medium text-gray-700 mb-2">Payment Details</h4>
-                            <div className="grid grid-cols-1 gap-1 text-xs text-gray-600">
-                              {payment.metadata.booking_id && (
-                                <div>Booking ID: {payment.metadata.booking_id}</div>
-                              )}
-                              {payment.metadata.service_id && (
-                                <div>Service Type: {payment.metadata.service_id}</div>
-                              )}
-                              {payment.metadata.customer_name && (
-                                <div>Customer: {payment.metadata.customer_name}</div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex flex-col gap-2 min-w-[120px]">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          onClick={() => {
-                            // Create and download receipt
-                            const receiptData = `Payment Receipt\n================\nAmount: ₦${Number(payment.amount).toLocaleString()}\nCustomer: ${payment.customerEmail}\nService: ${payment.serviceName}\nReference: ${payment.reference}\nDate: ${new Date(payment.paidAt || payment.createdAt).toLocaleDateString()}\nStatus: ${payment.status}\n\nThank you for your business!\nChidi Ogara - Senior Fullstack Developer`;
-                            const blob = new Blob([receiptData], { type: 'text/plain' });
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `receipt-${payment.reference}.txt`;
-                            a.click();
-                            window.URL.revokeObjectURL(url);
-                          }}
-                          className="text-xs"
-                        >
-                          <Download className="w-3 h-3 mr-1" />
-                          Receipt
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => {
-                            // Copy payment reference to clipboard
-                            navigator.clipboard.writeText(payment.reference);
-                            toast({ title: "Copied!", description: "Payment reference copied to clipboard" });
-                          }}
-                          className="text-xs"
-                        >
-                          <FileText className="w-3 h-3 mr-1" />
-                          Copy Ref
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              )}
             </div>
           </TabsContent>
 
           {/* Inquiries Tab */}
           <TabsContent value="inquiries" className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard title="Total Inquiries" value={inquiries.length} icon={MessageSquare} />
+              <StatCard title="Total Inquiries" value={inquiries.length} icon={MessageSquare} color="blue" />
               <StatCard title="New" value={inquiries.filter(i => i.status === 'new').length} icon={Bell} color="blue" />
-              <StatCard title="In Progress" value={inquiries.filter(i => i.status === 'in-progress').length} icon={Clock} color="orange" />
-              <StatCard title="Completed" value={inquiries.filter(i => i.status === 'completed').length} icon={CheckCircle} color="green" />
+              <StatCard title="In Progress" value={inquiries.filter(i => i.status === 'in-progress').length} icon={Clock} color="amber" />
+              <StatCard title="Completed" value={inquiries.filter(i => i.status === 'completed').length} icon={CheckCircle} color="emerald" />
             </div>
 
             {/* Filters */}
-            <Card className="shadow-sm">
+            <Card className="border-0 bg-white/60 backdrop-blur-sm">
               <CardContent className="p-4">
                 <div className="flex flex-col lg:flex-row gap-4">
                   <div className="relative flex-1">
@@ -1364,11 +1306,11 @@ export default function AdminDashboard() {
                       placeholder="Search inquiries..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 bg-white/50 border-gray-200/50"
                     />
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full lg:w-48">
+                    <SelectTrigger className="w-full lg:w-48 bg-white/50 border-gray-200/50">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1383,48 +1325,48 @@ export default function AdminDashboard() {
             </Card>
 
             {/* Inquiries List */}
-            <div className="space-y-4">
+            <div className="grid gap-4">
               {filteredInquiries.map((inquiry) => (
-                <Card key={inquiry.id} className="hover:shadow-lg transition-all duration-300">
-                  <CardContent className="p-4 lg:p-6">
+                <Card key={inquiry.id} className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/60 backdrop-blur-sm hover:bg-white/80">
+                  <CardContent className="p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                            <MessageSquare className="w-5 h-5 text-purple-600" />
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
+                            <MessageSquare className="w-6 h-6 text-purple-600" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-lg">{inquiry.name}</h3>
-                            <Badge className={getStatusColor(inquiry.status)}>
+                            <h3 className="font-semibold text-lg text-gray-900">{inquiry.name}</h3>
+                            <Badge className={`${getStatusColor(inquiry.status)} border mt-1`}>
                               {inquiry.status}
                             </Badge>
                           </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
-                          <div className="flex items-center gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm mb-4">
+                          <div className="flex items-center gap-2 text-gray-600">
                             <Mail className="w-4 h-4" />
                             <span>{inquiry.email}</span>
                           </div>
                           {inquiry.phone && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 text-gray-600">
                               <Phone className="w-4 h-4" />
                               <span>{inquiry.phone}</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-gray-600">
                             <Calendar className="w-4 h-4" />
                             <span>{new Date(inquiry.createdAt).toLocaleDateString()}</span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-gray-600">
                             <Briefcase className="w-4 h-4" />
                             <span>{inquiry.service}</span>
                           </div>
                         </div>
-                        <div className="bg-gray-50 p-3 rounded-lg">
+                        <div className="bg-gray-50/50 p-4 rounded-lg">
                           <p className="text-sm text-gray-700 line-clamp-2">{inquiry.message}</p>
                         </div>
                       </div>
-                      <div className="flex flex-row lg:flex-col gap-2">
+                      <div className="flex flex-row lg:flex-col gap-2 lg:min-w-[120px]">
                         <Button
                           size="sm"
                           variant={inquiry.status === 'new' ? 'default' : 'outline'}
@@ -1454,16 +1396,26 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
               ))}
+              {filteredInquiries.length === 0 && (
+                <Card className="border-0 bg-white/60 backdrop-blur-sm">
+                  <CardContent className="text-center py-12">
+                    <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No inquiries found</h3>
+                    <p className="text-gray-500">Customer inquiries will appear here when they contact you.</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card className="shadow-sm">
-                <CardHeader>
+              <Card className="border-0 bg-white/60 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
+                    <User className="w-5 h-5 text-blue-600" />
                     Profile Information
                   </CardTitle>
                 </CardHeader>
@@ -1474,6 +1426,7 @@ export default function AdminDashboard() {
                       id="admin-username"
                       value={adminProfile.username}
                       onChange={(e) => setAdminProfile({...adminProfile, username: e.target.value})}
+                      className="bg-white/50 border-gray-200/50"
                     />
                   </div>
                   <div>
@@ -1483,6 +1436,7 @@ export default function AdminDashboard() {
                       type="email"
                       value={adminProfile.email}
                       onChange={(e) => setAdminProfile({...adminProfile, email: e.target.value})}
+                      className="bg-white/50 border-gray-200/50"
                     />
                   </div>
                   <div>
@@ -1491,19 +1445,19 @@ export default function AdminDashboard() {
                       id="admin-role"
                       value={adminProfile.role}
                       disabled
-                      className="bg-muted"
+                      className="bg-gray-100/50 border-gray-200/50"
                     />
                   </div>
-                  <Button className="w-full">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
                     Update Profile
                   </Button>
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm">
-                <CardHeader>
+              <Card className="border-0 bg-white/60 backdrop-blur-sm">
+                <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
+                    <Shield className="w-5 h-5 text-purple-600" />
                     Change Password
                   </CardTitle>
                 </CardHeader>
@@ -1515,6 +1469,7 @@ export default function AdminDashboard() {
                       type="password"
                       value={passwordData.currentPassword}
                       onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                      className="bg-white/50 border-gray-200/50"
                     />
                   </div>
                   <div>
@@ -1524,6 +1479,7 @@ export default function AdminDashboard() {
                       type="password"
                       value={passwordData.newPassword}
                       onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                      className="bg-white/50 border-gray-200/50"
                     />
                   </div>
                   <div>
@@ -1533,11 +1489,13 @@ export default function AdminDashboard() {
                       type="password"
                       value={passwordData.confirmPassword}
                       onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                      className="bg-white/50 border-gray-200/50"
                     />
                   </div>
                   <Button 
+                    onClick={handlePasswordChange}
                     disabled={isChangingPassword}
-                    className="w-full"
+                    className="w-full bg-purple-600 hover:bg-purple-700"
                   >
                     {isChangingPassword ? 'Changing...' : 'Change Password'}
                   </Button>
@@ -1548,10 +1506,10 @@ export default function AdminDashboard() {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
-            <Card className="shadow-sm">
-              <CardHeader>
+            <Card className="border-0 bg-white/60 backdrop-blur-sm">
+              <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2">
-                  <Settings className="w-5 h-5" />
+                  <Settings className="w-5 h-5 text-gray-600" />
                   SEO Settings
                 </CardTitle>
               </CardHeader>
@@ -1562,6 +1520,7 @@ export default function AdminDashboard() {
                     id="seoTitle"
                     value={siteSettings.seoTitle}
                     onChange={(e) => setSiteSettings({...siteSettings, seoTitle: e.target.value})}
+                    className="bg-white/50 border-gray-200/50"
                   />
                 </div>
                 <div>
@@ -1571,6 +1530,7 @@ export default function AdminDashboard() {
                     value={siteSettings.seoDescription}
                     onChange={(e) => setSiteSettings({...siteSettings, seoDescription: e.target.value})}
                     rows={3}
+                    className="bg-white/50 border-gray-200/50"
                   />
                 </div>
                 <div>
@@ -1579,9 +1539,10 @@ export default function AdminDashboard() {
                     id="seoKeywords"
                     value={siteSettings.seoKeywords}
                     onChange={(e) => setSiteSettings({...siteSettings, seoKeywords: e.target.value})}
+                    className="bg-white/50 border-gray-200/50"
                   />
                 </div>
-                <Button onClick={saveSiteSettings} className="w-full">
+                <Button onClick={saveSiteSettings} className="w-full bg-blue-600 hover:bg-blue-700">
                   Save Settings
                 </Button>
               </CardContent>
@@ -1589,7 +1550,7 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* Modals */}
+        {/* Modals remain the same - keeping existing modal code for Edit Booking, View Booking, Project, and Team Member modals */}
 
         {/* Edit Booking Modal */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
@@ -1736,7 +1697,8 @@ export default function AdminDashboard() {
                     <SelectContent>
                       <SelectItem value="planning">Planning</SelectItem>
                       <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="testing">Testing</SelectItem><SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="testing">Testing</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="on-hold">On Hold</SelectItem>
                     </SelectContent>
                   </Select>
