@@ -108,6 +108,7 @@ export default function AdminDashboard() {
   const [filteredPayments, setFilteredPayments] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [bookingSearchTerm, setBookingSearchTerm] = useState('');
+  const [paymentSearchTerm, setPaymentSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -202,6 +203,24 @@ export default function AdminDashboard() {
 
     setFilteredBookings(filtered);
   }, [bookings, bookingSearchTerm, paymentStatusFilter]);
+
+  useEffect(() => {
+    let filtered = payments;
+
+    if (paymentSearchTerm) {
+      filtered = filtered.filter(payment =>
+        payment.customerEmail?.toLowerCase().includes(paymentSearchTerm.toLowerCase()) ||
+        payment.serviceName?.toLowerCase().includes(paymentSearchTerm.toLowerCase()) ||
+        payment.reference?.toLowerCase().includes(paymentSearchTerm.toLowerCase())
+      );
+    }
+
+    if (paymentStatusFilter !== 'all') {
+      filtered = filtered.filter(payment => payment.status === paymentStatusFilter);
+    }
+
+    setFilteredPayments(filtered);
+  }, [payments, paymentSearchTerm, paymentStatusFilter]);
 
   const fetchInquiries = async () => {
     try {
@@ -1188,6 +1207,34 @@ export default function AdminDashboard() {
               <StatCard title="Avg Payment" value={`₦${payments.length > 0 ? Math.round(payments.reduce((sum, p) => sum + Number(p.amount || 0), 0) / payments.length).toLocaleString() : '0'}`} icon={DollarSign} color="purple" />
             </div>
 
+            {/* Payment Filters */}
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search payments by email, service, or reference..."
+                      value={paymentSearchTerm}
+                      onChange={(e) => setPaymentSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <Select value={paymentStatusFilter} onValueChange={setPaymentStatusFilter}>
+                    <SelectTrigger className="w-full lg:w-48">
+                      <SelectValue placeholder="Payment Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Payments</SelectItem>
+                      <SelectItem value="success">Successful</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Payments List */}
             <div className="space-y-4">
               {filteredPayments.map((payment) => (
@@ -1223,7 +1270,73 @@ export default function AdminDashboard() {
                             <FileText className="w-4 h-4" />
                             <span>Ref: {payment.reference}</span>
                           </div>
+                          {payment.currency && (
+                            <div className="flex items-center gap-2">
+                              <DollarSign className="w-4 h-4" />
+                              <span>Currency: {payment.currency}</span>
+                            </div>
+                          )}
+                          {payment.serviceId && (
+                            <div className="flex items-center gap-2">
+                              <Target className="w-4 h-4" />
+                              <span>Service ID: {payment.serviceId}</span>
+                            </div>
+                          )}
                         </div>
+                        
+                        {/* Payment Metadata */}
+                        {payment.metadata && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                            <h4 className="text-sm font-medium text-gray-700 mb-2">Payment Details</h4>
+                            <div className="grid grid-cols-1 gap-1 text-xs text-gray-600">
+                              {payment.metadata.booking_id && (
+                                <div>Booking ID: {payment.metadata.booking_id}</div>
+                              )}
+                              {payment.metadata.service_id && (
+                                <div>Service Type: {payment.metadata.service_id}</div>
+                              )}
+                              {payment.metadata.customer_name && (
+                                <div>Customer: {payment.metadata.customer_name}</div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex flex-col gap-2 min-w-[120px]">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            // Create and download receipt
+                            const receiptData = `Payment Receipt\n================\nAmount: ₦${Number(payment.amount).toLocaleString()}\nCustomer: ${payment.customerEmail}\nService: ${payment.serviceName}\nReference: ${payment.reference}\nDate: ${new Date(payment.paidAt || payment.createdAt).toLocaleDateString()}\nStatus: ${payment.status}\n\nThank you for your business!\nChidi Ogara - Senior Fullstack Developer`;
+                            const blob = new Blob([receiptData], { type: 'text/plain' });
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `receipt-${payment.reference}.txt`;
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                          }}
+                          className="text-xs"
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          Receipt
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            // Copy payment reference to clipboard
+                            navigator.clipboard.writeText(payment.reference);
+                            toast({ title: "Copied!", description: "Payment reference copied to clipboard" });
+                          }}
+                          className="text-xs"
+                        >
+                          <FileText className="w-3 h-3 mr-1" />
+                          Copy Ref
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
