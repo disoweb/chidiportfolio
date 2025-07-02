@@ -179,7 +179,7 @@ export default function ClientDashboard() {
     newPassword: '',
     confirmPassword: '',
   });
-  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [activeTab, setActiveTab] = useState<string>("projects");
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const { toast } = useToast();
@@ -956,71 +956,77 @@ export default function ClientDashboard() {
                     <Menu className="h-6 w-6" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-80 z-50">
+                <SheetContent side="left" className="w-64 sm:w-72 z-50">
                   <SheetHeader>
                     <SheetTitle>Dashboard Navigation</SheetTitle>
                     <SheetDescription>
                       Navigate through your dashboard sections
                     </SheetDescription>
                   </SheetHeader>
-                  <div className="mt-6 space-y-4">
-                    <nav className="flex flex-col gap-2">
+                  <div className="mt-4 space-y-3">
+                    <nav className="flex flex-col gap-1">
                       <Button
                         variant={activeTab === "overview" ? "default" : "ghost"}
-                        className="justify-start gap-3 text-left w-full"
+                        size="sm"
+                        className="justify-start gap-2 text-left w-full h-9"
                         onClick={() => handleNavigation("overview")}
                       >
                         <Home className="h-4 w-4" />
-                        Overview
+                        <span className="text-sm">Overview</span>
                       </Button>
                       <Button
                         variant={activeTab === "projects" ? "default" : "ghost"}
-                        className="justify-start gap-3 text-left w-full"
+                        size="sm"
+                        className="justify-start gap-2 text-left w-full h-9"
                         onClick={() => handleNavigation("projects")}
                       >
                         <Briefcase className="h-4 w-4" />
-                        Projects
+                        <span className="text-sm">Projects</span>
                       </Button>
                       <Button
                         variant={activeTab === "bookings" ? "default" : "ghost"}
-                        className="justify-start gap-3 text-left w-full"
+                        size="sm"
+                        className="justify-start gap-2 text-left w-full h-9"
                         onClick={() => handleNavigation("bookings")}
                       >
                         <CalendarDays className="h-4 w-4" />
-                        Bookings
+                        <span className="text-sm">Bookings</span>
                       </Button>
                       <Button
                         variant={activeTab === "messages" ? "default" : "ghost"}
-                        className="justify-start gap-3 text-left w-full relative"
+                        size="sm"
+                        className="justify-start gap-2 text-left w-full h-9 relative"
                         onClick={() => handleNavigation("messages")}
                       >
                         <MessageSquare className="h-4 w-4" />
-                        Messages
+                        <span className="text-sm">Messages</span>
                         {dashboardData.unreadMessages.length > 0 && (
-                          <span className="absolute right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          <span className="absolute right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
                             {dashboardData.unreadMessages.length}
                           </span>
                         )}
                       </Button>
                       <Button
                         variant={activeTab === "profile" ? "default" : "ghost"}
-                        className="justify-start gap-3 text-left w-full"
+                        size="sm"
+                        className="justify-start gap-2 text-left w-full h-9"
                         onClick={() => handleNavigation("profile")}
                       >
                         <User className="h-4 w-4" />
-                        Profile
+                        <span className="text-sm">Profile</span>
                       </Button>
-                      <Separator className="my-2" />
+                      <Separator className="my-1" />
                       <Button
                         variant="ghost"
-                        className="justify-start gap-3 text-left text-red-600 hover:text-red-700 w-full"
+                        size="sm"
+                        className="justify-start gap-2 text-left text-red-600 hover:text-red-700 w-full h-9"
                         onClick={() => {
                           setIsMobileNavOpen(false);
                           logout();
                         }}
                       >
                         <LogOut className="h-4 w-4" />
-                        Logout
+                        <span className="text-sm">Logout</span>
                       </Button>
                     </nav>
                   </div>
