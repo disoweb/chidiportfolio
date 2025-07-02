@@ -32,12 +32,21 @@ export default function ProjectDetails() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Project Not Found</h1>
-          <Link href="/#projects">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Projects
-            </Button>
-          </Link>
+          <Button 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => {
+              window.location.href = '/#projects';
+              setTimeout(() => {
+                const projectsSection = document.getElementById('projects');
+                if (projectsSection) {
+                  projectsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }, 100);
+            }}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Projects
+          </Button>
         </div>
       </div>
     );
@@ -132,12 +141,24 @@ export default function ProjectDetails() {
         <div className="mb-8 sm:mb-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-center">
             <div>
-              <Link href="/#projects">
-                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-blue-600 mb-4">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Portfolio
-                </Button>
-              </Link>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-600 hover:text-blue-600 mb-4"
+                onClick={() => {
+                  window.location.href = '/#projects';
+                  // Small delay to ensure navigation completes before scrolling
+                  setTimeout(() => {
+                    const projectsSection = document.getElementById('projects');
+                    if (projectsSection) {
+                      projectsSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }, 100);
+                }}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Portfolio
+              </Button>
               
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
                 {project.title}
@@ -365,16 +386,23 @@ export default function ProjectDetails() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <Link href="/#projects">
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start min-h-[48px] touch-manipulation"
-                      style={{ fontSize: '16px' }}
-                    >
-                      <Target className="w-4 h-4 mr-2" />
-                      View All Projects
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start min-h-[48px] touch-manipulation"
+                    style={{ fontSize: '16px' }}
+                    onClick={() => {
+                      window.location.href = '/#projects';
+                      setTimeout(() => {
+                        const projectsSection = document.getElementById('projects');
+                        if (projectsSection) {
+                          projectsSection.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }, 100);
+                    }}
+                  >
+                    <Target className="w-4 h-4 mr-2" />
+                    View All Projects
+                  </Button>
                   <Button 
                     onClick={() => scrollToSection('services')}
                     variant="outline" 
