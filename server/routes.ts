@@ -1448,7 +1448,7 @@ User question: ${message}`;
             service_name: serviceName,
             booking_id: bookingId
           },
-          callback_url: `https://chidi.onrender.com/payment/callback`
+          callback_url: `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'http://localhost:5000'}/payment/callback`
         },
         {
           headers: {
@@ -1476,6 +1476,92 @@ User question: ${message}`;
         success: false,
         message: error.message || 'Payment initiation failed'
       });
+    }
+  });
+
+  // Payment callback route (handles redirect from Paystack)
+  app.get('/payment/callback', async (req: Request, res: Response) => {
+    try {
+      const { reference, trxref } = req.query;
+      const paymentRef = reference || trxref;
+      
+      if (!paymentRef) {
+        return res.redirect('/?payment=failed&error=no-reference');
+      }
+
+      // Verify payment automatically
+      try {
+        const paystackResponse = await axios.get(
+          `https://api.paystack.co/transaction/verify/${paymentRef}`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+            },
+          }
+        );
+
+        const paystackTransactionDetails = paystackResponse.data.data;
+
+        if (paystackTransactionDetails && paystackTransactionDetails.status === 'success') {
+          // Process the payment
+          const bookingId = paystackTransactionDetails.metadata?.booking_id;
+          
+          if (bookingId) {
+            // Update booking payment status
+            await storage.updateBooking(parseInt(bookingId), { 
+              paymentStatus: 'completed' 
+            });
+
+            // Create or update project
+            const existingProject = await storage.getProjectByBookingId(parseInt(bookingId));
+            const booking = await storage.getBookingById(parseInt(bookingId));
+
+            if (!existingProject && booking) {
+              const newProject = await storage.createProject({
+                bookingId: parseInt(bookingId),
+                name: `${booking.service} - ${booking.projectType || 'Service'}`,
+                description: booking.message || `${booking.service} project for ${booking.name}`,
+                status: 'planning',
+                priority: 'medium',
+                clientEmail: booking.email,
+                budget: String(paystackTransactionDetails.amount / 100),
+                estimatedTime: 40,
+                notes: `Project created from booking #${bookingId}`
+              });
+              
+              console.log('Created new project:', newProject.id);
+            }
+
+            // Log payment
+            await storage.createPaymentLog({
+              bookingId: parseInt(bookingId),
+              projectId: existingProject?.id || null,
+              amount: String(paystackTransactionDetails.amount / 100),
+              status: 'completed',
+              reference: paystackTransactionDetails.reference,
+              customerEmail: paystackTransactionDetails.customer?.email || '',
+              serviceName: paystackTransactionDetails.metadata?.service_name || 'Service',
+              projectDetails: {
+                booking: booking,
+                paystack_data: paystackTransactionDetails
+              }
+            });
+
+            console.log('Payment processed successfully for booking:', bookingId);
+          }
+
+          // Redirect to success page
+          return res.redirect('/?payment=success&reference=' + String(paymentRef));
+        } else {
+          return res.redirect('/?payment=failed&error=payment-not-successful');
+        }
+      } catch (verifyError) {
+        console.error('Payment verification error:', verifyError);
+        return res.redirect('/?payment=failed&error=verification-failed');
+      }
+    } catch (error) {
+      console.error('Payment callback error:', error);
+      return res.redirect('/?payment=failed&error=callback-error');
     }
   });
 
