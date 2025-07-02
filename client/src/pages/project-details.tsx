@@ -119,10 +119,10 @@ export default function ProjectDetails() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Hero Section with Enhanced CTA */}
-        <div className="mb-12">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div className="mb-8 sm:mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-center">
             <div>
               <Link href="/#projects">
                 <Button variant="ghost" size="sm" className="text-gray-600 hover:text-blue-600 mb-4">
@@ -131,68 +131,52 @@ export default function ProjectDetails() {
                 </Button>
               </Link>
               
-              <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 leading-tight">
                 {project.title}
               </h1>
-              <p className="text-xl text-gray-600 mb-6 leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-600 mb-4 sm:mb-6 leading-relaxed">
                 {project.description}
               </p>
               
               {/* Tech Stack */}
-              <div className="flex flex-wrap gap-2 mb-8">
+              <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
                 {project.technologies.map((tech) => (
-                  <Badge key={tech} variant="outline" className="text-blue-600 border-blue-600">
+                  <Badge key={tech} variant="outline" className="text-blue-600 border-blue-600 text-sm py-1 px-2">
                     {tech}
                   </Badge>
                 ))}
               </div>
               
               {/* Mobile-Optimized Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                {project.githubUrl && (
-                  <Button 
-                    asChild 
-                    variant="outline" 
-                    className="w-full sm:w-auto min-h-[48px] touch-manipulation"
-                    style={{ fontSize: '16px' }}
-                  >
-                    <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
-                      <Github className="w-5 h-5 mr-2" />
-                      View Source Code
-                    </a>
-                  </Button>
-                )}
-                {project.demoUrl && (
-                  <Button 
-                    asChild 
-                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 min-h-[48px] touch-manipulation"
-                    style={{ fontSize: '16px' }}
-                  >
-                    <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="w-5 h-5 mr-2" />
-                      Live Demo
-                    </a>
-                  </Button>
-                )}
+              <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 max-w-md">
                 <Button 
                   onClick={() => scrollToSection('booking')}
-                  className="w-full sm:w-auto bg-green-600 hover:bg-green-700 min-h-[48px] touch-manipulation"
+                  className="w-auto bg-blue-600 hover:bg-blue-700 min-h-[48px] touch-manipulation px-8"
                   style={{ fontSize: '16px' }}
                 >
                   <MessageSquare className="w-5 h-5 mr-2" />
-                  Start Similar Project
+                  Start New Project
+                </Button>
+                <Button 
+                  onClick={() => scrollToSection('contact')}
+                  className="w-auto bg-green-600 hover:bg-green-700 min-h-[48px] touch-manipulation px-8"
+                  style={{ fontSize: '16px' }}
+                >
+                  <Users className="w-5 h-5 mr-2" />
+                  Hire Me
                 </Button>
               </div>
             </div>
             
             {/* Project Image */}
             <div className="order-first lg:order-last">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-shadow duration-300">
                 <img
                   src={project.image}
                   alt={`${project.title} screenshot`}
-                  className="w-full h-auto"
+                  className="w-full h-auto transform hover:scale-105 transition-transform duration-300"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
               </div>
             </div>
           </div>
@@ -200,14 +184,14 @@ export default function ProjectDetails() {
 
         {/* Project Metrics */}
         {project.metrics && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16">
             {project.metrics.map((metric, index) => (
-              <Card key={metric.label} className="text-center border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="text-4xl font-bold text-blue-600 mb-2">
+              <Card key={metric.label} className="text-center border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">
                     {metric.value}
                   </div>
-                  <div className="text-gray-600">{metric.label}</div>
+                  <div className="text-gray-600 text-sm sm:text-base">{metric.label}</div>
                 </CardContent>
               </Card>
             ))}
@@ -215,11 +199,11 @@ export default function ProjectDetails() {
         )}
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6 sm:space-y-8">
             {/* Project Overview */}
-            <Card className="border-0 shadow-xl">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Target className="w-6 h-6 text-blue-600" />
@@ -271,7 +255,7 @@ export default function ProjectDetails() {
             </Card>
 
             {/* Project Process */}
-            <Card className="border-0 shadow-xl">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow duration-300">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Zap className="w-6 h-6 text-blue-600" />
@@ -323,7 +307,7 @@ export default function ProjectDetails() {
 
           {/* Enhanced Sidebar */}
           <div className="space-y-6">
-            <Card className="border-0 shadow-xl">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow duration-300">
               <CardHeader>
                 <CardTitle>Project Details</CardTitle>
               </CardHeader>
@@ -353,7 +337,7 @@ export default function ProjectDetails() {
             </Card>
 
             {/* Mobile-Optimized CTA Card */}
-            <Card className="border-0 shadow-xl">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow duration-300">
               <CardHeader>
                 <CardTitle>Let's Work Together</CardTitle>
               </CardHeader>
@@ -368,22 +352,22 @@ export default function ProjectDetails() {
                     style={{ fontSize: '16px' }}
                   >
                     <MessageSquare className="w-4 h-4 mr-2" />
-                    Start Your Project
+                    Start New Project
                   </Button>
                   <Button 
                     onClick={() => scrollToSection('contact')}
-                    variant="outline" 
-                    className="w-full min-h-[48px] touch-manipulation"
+                    className="w-full bg-green-600 hover:bg-green-700 min-h-[48px] touch-manipulation"
                     style={{ fontSize: '16px' }}
                   >
-                    Get In Touch
+                    <Users className="w-4 h-4 mr-2" />
+                    Hire Me
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
             {/* Navigation to other projects */}
-            <Card className="border-0 shadow-xl">
+            <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow duration-300">
               <CardHeader>
                 <CardTitle>Explore More Work</CardTitle>
               </CardHeader>
@@ -428,7 +412,7 @@ export default function ProjectDetails() {
               style={{ fontSize: '16px' }}
             >
               <MessageSquare className="w-5 h-5 mr-2" />
-              Book Consultation
+              Start New Project
             </Button>
             <Button 
               onClick={() => scrollToSection('contact')}
@@ -437,7 +421,8 @@ export default function ProjectDetails() {
               className="border-white text-white hover:bg-white hover:text-blue-600 min-h-[52px] px-8 touch-manipulation"
               style={{ fontSize: '16px' }}
             >
-              Get In Touch
+              <Users className="w-5 h-5 mr-2" />
+              Hire Me
             </Button>
           </div>
         </div>
