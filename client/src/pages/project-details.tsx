@@ -3,6 +3,7 @@ import { ArrowLeft, ExternalLink, Github, Calendar, Users, Target, MessageSquare
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Footer } from '@/components/layout/footer';
 import { projects } from '@/lib/constants';
 import { useState } from 'react';
 
@@ -162,15 +163,7 @@ export default function ProjectDetails() {
                   style={{ fontSize: '16px' }}
                 >
                   <MessageSquare className="w-5 h-5 mr-2" />
-                  Inspired by this project? Get Started
-                </Button>
-                <Button 
-                  onClick={() => scrollToSection('contact')}
-                  className="w-auto bg-green-600 hover:bg-green-700 min-h-[48px] touch-manipulation px-8"
-                  style={{ fontSize: '16px' }}
-                >
-                  <Users className="w-5 h-5 mr-2" />
-                  Hire Me
+                  Get Started
                 </Button>
               </div>
             </div>
@@ -361,14 +354,6 @@ export default function ProjectDetails() {
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Get Started
                   </Button>
-                  <Button 
-                    onClick={() => scrollToSection('contact')}
-                    className="w-full bg-green-600 hover:bg-green-700 min-h-[48px] touch-manipulation"
-                    style={{ fontSize: '16px' }}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    Hire Me
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -421,19 +406,12 @@ export default function ProjectDetails() {
               <MessageSquare className="w-5 h-5 mr-2" />
               Get Started
             </Button>
-            <Button 
-              onClick={() => scrollToSection('contact')}
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-blue-600 min-h-[52px] px-8 touch-manipulation"
-              style={{ fontSize: '16px' }}
-            >
-              <Users className="w-5 h-5 mr-2" />
-              Hire Me
-            </Button>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
