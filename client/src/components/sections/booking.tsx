@@ -169,7 +169,7 @@ export function Booking() {
         <p className="text-gray-600">Tell us about yourself and what service you need</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-6">
         <div>
           <Label htmlFor="name" className="block text-sm font-medium mb-2">
             Full Name *
@@ -262,7 +262,7 @@ export function Booking() {
         <p className="text-gray-600">Help us understand your project requirements</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-6">
         <div>
           <Label htmlFor="projectType" className="block text-sm font-medium mb-2">
             Project Type *

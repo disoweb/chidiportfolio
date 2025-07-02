@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useIntersectionObserver } from '@/hooks/use-intersection-observer';
 import { services } from '@/lib/constants';
 import { useState } from 'react';
+import { ServiceSkeleton } from '@/components/ui/skeleton-loader';
 import { useLocation } from 'wouter';
 import { useToast } from '@/components/ui/use-toast';
 import { EmailModal } from '@/components/checkout/EmailModal';
