@@ -12,6 +12,7 @@ import NotFound from "@/pages/not-found";
 import CaseStudy from "@/pages/case-study";
 import ProjectDetails from "@/pages/project-details";
 import PaymentCallback from "@/pages/payment-callback";
+import PaymentSuccess from "@/pages/payment-success";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -36,6 +37,7 @@ function App() {
               <Route path="/admin/create" component={CreateAdmin} />
               <Route path="/client/dashboard" component={ClientDashboard} />
               <Route path="/payment/callback" component={PaymentCallback} />
+              <Route path="/payment/success" component={PaymentSuccess} />
               <Route path="/case-study/:id" component={CaseStudy} />
               <Route path="/project/:id" component={ProjectDetails} />
               <Route component={NotFound} />

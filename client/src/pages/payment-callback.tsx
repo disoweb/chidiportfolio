@@ -1,21 +1,21 @@
 
 import { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
 export default function PaymentCallback() {
-  const [searchParams] = useSearchParams();
+  const [, navigate] = useLocation();
   const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
   const [message, setMessage] = useState('');
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    const reference = searchParams.get('reference');
-    const trxref = searchParams.get('trxref');
+    const urlParams = new URLSearchParams(window.location.search);
+    const reference = urlParams.get('reference');
+    const trxref = urlParams.get('trxref');
     
     const paymentRef = reference || trxref;
     
@@ -26,7 +26,7 @@ export default function PaymentCallback() {
     }
 
     verifyPayment(paymentRef);
-  }, [searchParams]);
+  }, []);
 
   const verifyPayment = async (reference: string) => {
     try {
@@ -38,6 +38,15 @@ export default function PaymentCallback() {
         setStatus('success');
         setMessage('Payment verified successfully!');
         setPaymentDetails(response.data.data);
+        
+        // Redirect to success page with payment details
+        const paymentData = response.data.data;
+        const successUrl = `/payment/success?reference=${paymentData.reference}&service=${encodeURIComponent(paymentData.service || 'Service')}&amount=${paymentData.amount}&email=${encodeURIComponent(paymentData.email || '')}`;
+        
+        // Redirect after a short delay to show success message
+        setTimeout(() => {
+          navigate(successUrl);
+        }, 2000);
       } else {
         setStatus('failed');
         setMessage(response.data.message || 'Payment verification failed');
