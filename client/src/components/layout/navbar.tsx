@@ -18,6 +18,13 @@ export function Navbar() {
   };
 
   const scrollToSection = (id: string) => {
+    // Handle navigation to client portal
+    if (id === "/client/dashboard") {
+      window.location.href = "/client/dashboard";
+      setIsOpen(false);
+      return;
+    }
+    
     const element = document.getElementById(id);
     element?.scrollIntoView({ behavior: "smooth" });
     setIsOpen(false);
