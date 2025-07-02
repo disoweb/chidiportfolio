@@ -33,11 +33,13 @@ export function Navbar() {
   const handleLoginClick = () => {
     setAuthModalTab("login");
     setIsAuthModalOpen(true);
+    setIsOpen(false); // Close mobile menu when opening auth modal
   };
 
   const handleRegisterClick = () => {
     setAuthModalTab("register");
     setIsAuthModalOpen(true);
+    setIsOpen(false); // Close mobile menu when opening auth modal
   };
 
   return (
@@ -67,14 +69,14 @@ export function Navbar() {
                 {item.label}
               </button>
             ))}
-            <AuthDropdown 
-              onLoginClick={handleLoginClick}
-              onRegisterClick={handleRegisterClick}
-            />
           </div>
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            <AuthDropdown 
+              onLoginClick={handleLoginClick}
+              onRegisterClick={handleRegisterClick}
+            />
             <Button
               onClick={() => scrollToSection("booking")}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium"
@@ -82,6 +84,8 @@ export function Navbar() {
               Book Consultation
             </Button>
           </div>
+
+
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
@@ -118,18 +122,23 @@ export function Navbar() {
                   {item.label}
                 </button>
               ))}
-              <div className="pt-4 border-t border-gray-200">
-                <AuthDropdown 
-                  onLoginClick={handleLoginClick}
-                  onRegisterClick={handleRegisterClick}
-                />
+              <div className="pt-4 border-t border-gray-200 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <AuthDropdown 
+                    onLoginClick={handleLoginClick}
+                    onRegisterClick={handleRegisterClick}
+                  />
+                  <Button
+                    onClick={() => {
+                      scrollToSection("booking");
+                      setIsOpen(false);
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm"
+                  >
+                    Book Now
+                  </Button>
+                </div>
               </div>
-              <Button
-                onClick={() => scrollToSection("booking")}
-                className="bg-blue-600 hover:bg-blue-700 text-white w-full mt-4"
-              >
-                Book Private Consultation
-              </Button>
             </div>
           </div>
         )}

@@ -112,7 +112,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-sm max-w-[90vw]">
         <DialogHeader>
           <DialogTitle>Account Access</DialogTitle>
         </DialogHeader>
