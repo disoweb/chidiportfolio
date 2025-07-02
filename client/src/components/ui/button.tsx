@@ -44,16 +44,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, loading, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     
-    // If loading is false, don't pass the attribute
-    const buttonProps = {
-      ...props,
-      loading: loading ? String(loading) : undefined,  // Convert `loading` to a string if true, omit if false
-    }
+    // Remove loading from props that get passed to DOM element
+    const { ...buttonProps } = props;
 
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        disabled={!!loading || props.disabled}
         {...buttonProps}
       />
     )

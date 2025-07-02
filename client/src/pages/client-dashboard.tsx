@@ -520,7 +520,6 @@ export default function ClientDashboard() {
                   type="submit"
                   className="w-full"
                   disabled={loginMutation.isPending}
-                  loading={loginMutation.isPending}
                 >
                   {loginMutation.isPending ? "Logging in..." : "Login"}
                 </Button>
@@ -621,7 +620,7 @@ export default function ClientDashboard() {
                   type="submit"
                   className="w-full"
                   disabled={registerMutation.isPending}
-                  loading={registerMutation.isPending}
+
                 >
                   {registerMutation.isPending
                     ? "Creating Account..."
@@ -647,7 +646,7 @@ export default function ClientDashboard() {
                   disabled={
                     !projectTrackingId || trackProjectMutation.isPending
                   }
-                  loading={trackProjectMutation.isPending}
+
                 >
                   <Search className="w-4 h-4" />
                 </Button>
