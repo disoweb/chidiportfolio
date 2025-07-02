@@ -7,6 +7,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { seedDatabase, seedSampleData } from "./seed";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -191,6 +192,11 @@ app.use((req, res, next) => {
 (async () => {
 
   await runMigrations();
+  
+  // Wait a moment for migrations to fully complete, then seed users
+  setTimeout(async () => {
+    await seedDatabase();
+  }, 1000);
 
   const server = await registerRoutes(app); // Assuming registerRoutes returns the http.Server instance
 
