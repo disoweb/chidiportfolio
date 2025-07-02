@@ -267,11 +267,11 @@ export function Booking() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
         <div>
           <Label htmlFor="projectType" className="block text-sm font-medium mb-2">
-            Project Type *
+            Project Category *
           </Label>
           <Select onValueChange={(value) => handleSelectChange('projectType', value)} value={formData.projectType}>
             <SelectTrigger className="py-3 text-base sm:text-sm min-h-[48px] rounded-xl">
-              <SelectValue placeholder="Select project type" />
+              <SelectValue placeholder="Select project category" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="new">New Project</SelectItem>
@@ -322,36 +322,16 @@ export function Booking() {
         </Label>
         <div className="relative">
           <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400 pointer-events-none z-10" />
-          <textarea
+          <Textarea
             id="message"
             name="message"
             rows={4}
             value={formData.message}
             onChange={handleInputChange}
-            className="w-full resize-none pl-10 pt-3 pb-3 pr-3 text-base sm:text-sm min-h-[96px] max-h-[200px] rounded-xl border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full resize-none pl-10 pt-3 pb-3 pr-3 text-base sm:text-sm min-h-[96px] max-h-[200px] rounded-xl"
             placeholder="Tell me about your project goals, requirements, and any specific features you need..."
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="sentences"
-            spellCheck="false"
-            inputMode="text"
-            enterKeyHint="enter"
             style={{
-              WebkitAppearance: 'none',
-              appearance: 'none',
-              fontSize: window.innerWidth < 768 ? '16px' : '14px'
-            }}
-            onInput={handleInputChange}
-            onFocus={(e) => {
-              e.target.style.position = 'relative';
-              e.target.style.zIndex = '1000';
-              // Prevent zoom on iOS
-              e.target.style.fontSize = '16px';
-            }}
-            onBlur={(e) => {
-              e.target.style.position = '';
-              e.target.style.zIndex = '';
-              e.target.style.fontSize = window.innerWidth < 768 ? '16px' : '14px';
+              fontSize: '16px' // Always use 16px to prevent zoom on mobile
             }}
           />
         </div>

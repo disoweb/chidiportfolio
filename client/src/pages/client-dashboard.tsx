@@ -647,22 +647,7 @@ export default function ClientDashboard() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your.email@example.com"
-                    value={registerData.email}
-                    onChange={(e) =>
-                      setRegisterData((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
-                    required
-                  />
-                </div>
+
 
                 <div>
                   <Label htmlFor="phone">Phone (Optional)</Label>
