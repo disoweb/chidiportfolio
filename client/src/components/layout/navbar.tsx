@@ -88,6 +88,12 @@ export function Navbar() {
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
             <Button
+              onClick={() => scrollToSection("booking")}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm"
+            >
+              Hire Me
+            </Button>
+            <Button
               variant="ghost"
               onClick={() => setIsOpen(!isOpen)}
               className="text-gray-700"
