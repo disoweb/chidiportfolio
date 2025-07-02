@@ -10,10 +10,18 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { services } from '@/lib/constants';
 
+interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+}
+
 interface ServiceCheckoutProps {
   isOpen: boolean;
   onClose: () => void;
-  userEmail?: string;
+  user?: User;
 }
 
 interface SelectedService {
@@ -25,15 +33,15 @@ interface SelectedService {
   features: string[];
 }
 
-export function ServiceCheckout({ isOpen, onClose, userEmail }: ServiceCheckoutProps) {
+export function ServiceCheckout({ isOpen, onClose, user }: ServiceCheckoutProps) {
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedService, setSelectedService] = useState<SelectedService | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
-    name: '',
-    email: userEmail || '',
-    phone: '',
+    name: user ? `${user.firstName} ${user.lastName}` : '',
+    email: user?.email || '',
+    phone: user?.phone || '',
     company: '',
     notes: ''
   });
@@ -155,9 +163,9 @@ export function ServiceCheckout({ isOpen, onClose, userEmail }: ServiceCheckoutP
     setCurrentStep(1);
     setSelectedService(null);
     setCustomerInfo({
-      name: '',
-      email: userEmail || '',
-      phone: '',
+      name: user ? `${user.firstName} ${user.lastName}` : '',
+      email: user?.email || '',
+      phone: user?.phone || '',
       company: '',
       notes: ''
     });
@@ -266,7 +274,10 @@ export function ServiceCheckout({ isOpen, onClose, userEmail }: ServiceCheckoutP
 
       <div className="grid gap-4">
         <div>
-          <Label htmlFor="name" className="text-sm font-medium">Full Name *</Label>
+          <Label htmlFor="name" className="text-sm font-medium flex items-center justify-between">
+            Full Name *
+            {user && <span className="text-xs text-green-600">✓ From your profile</span>}
+          </Label>
           <Input
             id="name"
             name="name"
@@ -274,11 +285,15 @@ export function ServiceCheckout({ isOpen, onClose, userEmail }: ServiceCheckoutP
             onChange={handleInputChange}
             placeholder="Your full name"
             className="mt-1"
+            disabled={!!user}
           />
         </div>
 
         <div>
-          <Label htmlFor="email" className="text-sm font-medium">Email Address *</Label>
+          <Label htmlFor="email" className="text-sm font-medium flex items-center justify-between">
+            Email Address *
+            {user && <span className="text-xs text-green-600">✓ From your profile</span>}
+          </Label>
           <Input
             id="email"
             name="email"
@@ -287,11 +302,15 @@ export function ServiceCheckout({ isOpen, onClose, userEmail }: ServiceCheckoutP
             onChange={handleInputChange}
             placeholder="your.email@example.com"
             className="mt-1"
+            disabled={!!user}
           />
         </div>
 
         <div>
-          <Label htmlFor="phone" className="text-sm font-medium">Phone Number *</Label>
+          <Label htmlFor="phone" className="text-sm font-medium flex items-center justify-between">
+            Phone Number *
+            {user && customerInfo.phone && <span className="text-xs text-green-600">✓ From your profile</span>}
+          </Label>
           <Input
             id="phone"
             name="phone"
@@ -299,6 +318,7 @@ export function ServiceCheckout({ isOpen, onClose, userEmail }: ServiceCheckoutP
             onChange={handleInputChange}
             placeholder="+1 (555) 123-4567"
             className="mt-1"
+            disabled={!!user && !!customerInfo.phone}
           />
         </div>
 

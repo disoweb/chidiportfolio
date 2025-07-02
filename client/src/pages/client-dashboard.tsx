@@ -1032,13 +1032,13 @@ export default function ClientDashboard() {
       <ProjectBookingModal
         isOpen={isProjectBookingModalOpen}
         onClose={() => setIsProjectBookingModalOpen(false)}
-        userEmail={dashboardData.user.email}
+        user={dashboardData.user}
       />
 
       <ServiceCheckout
         isOpen={isServiceCheckoutOpen}
         onClose={() => setIsServiceCheckoutOpen(false)}
-        userEmail={dashboardData.user.email}
+        user={dashboardData.user}
       />
     </div>
   );

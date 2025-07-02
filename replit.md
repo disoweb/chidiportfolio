@@ -137,6 +137,12 @@ Changelog:
   - Configured Paystack payment integration with proper API credentials
   - All core features fully functional: authentication, booking, payments, admin dashboard
   - Project successfully running in Replit with proper security practices
+- July 02, 2025. Enhanced user experience for logged-in users:
+  - Modified ProjectBookingModal and ServiceCheckout to auto-populate contact details from user profile
+  - Added visual indicators showing fields are pre-filled from profile
+  - Disabled contact fields for logged-in users to prevent confusion
+  - Updated client dashboard to pass full user object instead of just email
+  - Improved booking and service ordering flow for authenticated users
 
 ## User Preferences
 

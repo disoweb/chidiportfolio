@@ -10,20 +10,28 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { BookingForm } from '@/lib/types';
 
+interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+}
+
 interface ProjectBookingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userEmail?: string;
+  user?: User;
 }
 
-export function ProjectBookingModal({ isOpen, onClose, userEmail }: ProjectBookingModalProps) {
+export function ProjectBookingModal({ isOpen, onClose, user }: ProjectBookingModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<BookingForm>({
-    name: '',
-    email: userEmail || '',
-    phone: '',
+    name: user ? `${user.firstName} ${user.lastName}` : '',
+    email: user?.email || '',
+    phone: user?.phone || '',
     service: '',
     projectType: '',
     budget: '',
@@ -103,9 +111,9 @@ export function ProjectBookingModal({ isOpen, onClose, userEmail }: ProjectBooki
       // Reset form and close modal
       setTimeout(() => {
         setFormData({
-          name: '',
-          email: userEmail || '',
-          phone: '',
+          name: user ? `${user.firstName} ${user.lastName}` : '',
+          email: user?.email || '',
+          phone: user?.phone || '',
           service: '',
           projectType: '',
           budget: '',
@@ -133,9 +141,9 @@ export function ProjectBookingModal({ isOpen, onClose, userEmail }: ProjectBooki
     setCurrentStep(1);
     setSubmissionStatus('');
     setFormData({
-      name: '',
-      email: userEmail || '',
-      phone: '',
+      name: user ? `${user.firstName} ${user.lastName}` : '',
+      email: user?.email || '',
+      phone: user?.phone || '',
       service: '',
       projectType: '',
       budget: '',
@@ -177,6 +185,7 @@ export function ProjectBookingModal({ isOpen, onClose, userEmail }: ProjectBooki
           <Label htmlFor="name" className="flex items-center gap-2 text-sm">
             <User className="w-4 h-4" />
             Full Name *
+            {user && <span className="text-xs text-green-600 ml-auto">✓ From your profile</span>}
           </Label>
           <Input
             id="name"
@@ -185,6 +194,7 @@ export function ProjectBookingModal({ isOpen, onClose, userEmail }: ProjectBooki
             onChange={handleInputChange}
             placeholder="Your full name"
             className="h-10"
+            disabled={!!user}
           />
         </div>
 
@@ -192,6 +202,7 @@ export function ProjectBookingModal({ isOpen, onClose, userEmail }: ProjectBooki
           <Label htmlFor="email" className="flex items-center gap-2 text-sm">
             <Mail className="w-4 h-4" />
             Email Address *
+            {user && <span className="text-xs text-green-600 ml-auto">✓ From your profile</span>}
           </Label>
           <Input
             id="email"
@@ -201,6 +212,7 @@ export function ProjectBookingModal({ isOpen, onClose, userEmail }: ProjectBooki
             onChange={handleInputChange}
             placeholder="your.email@example.com"
             className="h-10"
+            disabled={!!user}
           />
         </div>
 
@@ -208,6 +220,7 @@ export function ProjectBookingModal({ isOpen, onClose, userEmail }: ProjectBooki
           <Label htmlFor="phone" className="flex items-center gap-2 text-sm">
             <Phone className="w-4 h-4" />
             Phone Number *
+            {user && formData.phone && <span className="text-xs text-green-600 ml-auto">✓ From your profile</span>}
           </Label>
           <Input
             id="phone"
@@ -216,6 +229,7 @@ export function ProjectBookingModal({ isOpen, onClose, userEmail }: ProjectBooki
             onChange={handleInputChange}
             placeholder="+1 (555) 123-4567"
             className="h-10"
+            disabled={!!user && !!formData.phone}
           />
         </div>
 
