@@ -269,6 +269,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update User Profile
+  app.put('/api/user/profile', async (req: Request, res: Response) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No authorization token provided' });
+      }
+
+      const sessionToken = authHeader.substring(7);
+      const session = await storage.getClientSession(sessionToken);
+      if (!session || !session.isActive || new Date() > new Date(session.expiresAt)) {
+        return res.status(401).json({ error: 'Invalid or expired session' });
+      }
+
+      const { firstName, lastName, email, phone } = req.body;
+
+      if (!firstName || !lastName || !email) {
+        return res.status(400).json({ error: 'First name, last name, and email are required' });
+      }
+
+      // Check if email is already taken by another user
+      if (email !== session.userEmail) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser && existingUser.id !== session.userId) {
+          return res.status(400).json({ error: 'Email is already taken by another user' });
+        }
+      }
+
+      // Update user profile
+      const updatedUser = await storage.updateUser(session.userId, {
+        firstName,
+        lastName,
+        email,
+        phone
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const { password: _, ...safeUser } = updatedUser;
+      res.json({ success: true, user: safeUser });
+    } catch (error) {
+      console.error('Update profile error:', error);
+      res.status(500).json({ error: 'Failed to update profile' });
+    }
+  });
+
+  // Change User Password
+  app.put('/api/user/change-password', async (req: Request, res: Response) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader?.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'No authorization token provided' });
+      }
+
+      const sessionToken = authHeader.substring(7);
+      const session = await storage.getClientSession(sessionToken);
+      if (!session || !session.isActive || new Date() > new Date(session.expiresAt)) {
+        return res.status(401).json({ error: 'Invalid or expired session' });
+      }
+
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ error: 'Current password and new password are required' });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+      }
+
+      // Get current user
+      const user = await storage.getUserById(session.userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+      // Update password
+      const updatedUser = await storage.updateUser(session.userId, {
+        password: hashedNewPassword
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: 'Failed to update password' });
+      }
+
+      res.json({ success: true, message: 'Password updated successfully' });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ error: 'Failed to change password' });
+    }
+  });
+
   // Send Message from Admin to Client
   app.post('/api/admin/send-message', async (req: Request, res: Response) => {
     try {

@@ -164,6 +164,18 @@ export default function ClientDashboard() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isProjectBookingModalOpen, setIsProjectBookingModalOpen] = useState<boolean>(false);
   const [isServiceCheckoutOpen, setIsServiceCheckoutOpen] = useState<boolean>(false);
+  const [isEditingProfile, setIsEditingProfile] = useState<boolean>(false);
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -392,6 +404,18 @@ export default function ClientDashboard() {
     staleTime: 10000,
   });
 
+  // Effect to populate profile data when dashboard loads
+  useEffect(() => {
+    if (dashboardData?.user) {
+      setProfileData({
+        firstName: dashboardData.user.firstName || '',
+        lastName: dashboardData.user.lastName || '',
+        email: dashboardData.user.email || '',
+        phone: dashboardData.user.phone || '',
+      });
+    }
+  }, [dashboardData]);
+
   /**
    * Project tracking mutation
    */
@@ -421,6 +445,94 @@ export default function ClientDashboard() {
     onError: (error: Error) => {
       toast({
         title: "Project Not Found",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  /**
+   * Profile update mutation
+   */
+  const updateProfileMutation = useMutation({
+    mutationFn: async (data: typeof profileData) => {
+      const response = await fetch(`/api/user/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionToken}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', sessionToken] });
+      setIsEditingProfile(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+        variant: "default",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  /**
+   * Password change mutation
+   */
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: typeof passwordData) => {
+      if (data.newPassword !== data.confirmPassword) {
+        throw new Error('New passwords do not match');
+      }
+
+      const response = await fetch(`/api/user/change-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionToken}`,
+        },
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to change password');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      toast({
+        title: "Password Changed",
+        description: "Your password has been successfully updated.",
+        variant: "default",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Password Change Failed",
         description: error.message,
         variant: "destructive",
       });
@@ -920,11 +1032,12 @@ export default function ClientDashboard() {
         {/* Main Content Section */}
         <section>
           <Tabs defaultValue="projects" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="bookings">Bookings</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
               <TabsTrigger value="messages">Messages</TabsTrigger>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
             </TabsList>
 
             {/* Projects Tab */}
@@ -1023,6 +1136,252 @@ export default function ClientDashboard() {
                   description="Messages from your project team will appear here."
                 />
               )}
+            </TabsContent>
+
+            {/* Profile Tab */}
+            <TabsContent value="profile" className="space-y-6">
+              <div className="grid gap-6 lg:grid-cols-2">
+                {/* Profile Information Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      Profile Information
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditingProfile(!isEditingProfile)}
+                      >
+                        {isEditingProfile ? 'Cancel' : 'Edit'}
+                      </Button>
+                    </CardTitle>
+                    <CardDescription>
+                      Manage your personal information and contact details
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {isEditingProfile ? (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          updateProfileMutation.mutate(profileData);
+                        }}
+                        className="space-y-4"
+                      >
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input
+                              id="firstName"
+                              value={profileData.firstName}
+                              onChange={(e) =>
+                                setProfileData(prev => ({
+                                  ...prev,
+                                  firstName: e.target.value,
+                                }))
+                              }
+                              placeholder="Enter first name"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input
+                              id="lastName"
+                              value={profileData.lastName}
+                              onChange={(e) =>
+                                setProfileData(prev => ({
+                                  ...prev,
+                                  lastName: e.target.value,
+                                }))
+                              }
+                              placeholder="Enter last name"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="email">Email Address</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={profileData.email}
+                            onChange={(e) =>
+                              setProfileData(prev => ({
+                                ...prev,
+                                email: e.target.value,
+                              }))
+                            }
+                            placeholder="Enter email address"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone Number</Label>
+                          <Input
+                            id="phone"
+                            value={profileData.phone}
+                            onChange={(e) =>
+                              setProfileData(prev => ({
+                                ...prev,
+                                phone: e.target.value,
+                              }))
+                            }
+                            placeholder="Enter phone number"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            type="submit"
+                            disabled={updateProfileMutation.isPending}
+                          >
+                            {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsEditingProfile(false)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-sm font-medium text-gray-600">First Name</Label>
+                            <p className="text-sm text-gray-900">{dashboardData.user.firstName}</p>
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-600">Last Name</Label>
+                            <p className="text-sm text-gray-900">{dashboardData.user.lastName}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Email Address</Label>
+                          <p className="text-sm text-gray-900">{dashboardData.user.email}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Phone Number</Label>
+                          <p className="text-sm text-gray-900">{dashboardData.user.phone || 'Not provided'}</p>
+                        </div>
+                        <div>
+                          <Label className="text-sm font-medium text-gray-600">Account Status</Label>
+                          <p className="text-sm text-gray-900">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Active
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Security Settings Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Security Settings</CardTitle>
+                    <CardDescription>
+                      Change your password and manage account security
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        changePasswordMutation.mutate(passwordData);
+                      }}
+                      className="space-y-4"
+                    >
+                      <div>
+                        <Label htmlFor="currentPassword">Current Password</Label>
+                        <Input
+                          id="currentPassword"
+                          type="password"
+                          value={passwordData.currentPassword}
+                          onChange={(e) =>
+                            setPasswordData(prev => ({
+                              ...prev,
+                              currentPassword: e.target.value,
+                            }))
+                          }
+                          placeholder="Enter current password"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="newPassword">New Password</Label>
+                        <Input
+                          id="newPassword"
+                          type="password"
+                          value={passwordData.newPassword}
+                          onChange={(e) =>
+                            setPasswordData(prev => ({
+                              ...prev,
+                              newPassword: e.target.value,
+                            }))
+                          }
+                          placeholder="Enter new password"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          value={passwordData.confirmPassword}
+                          onChange={(e) =>
+                            setPasswordData(prev => ({
+                              ...prev,
+                              confirmPassword: e.target.value,
+                            }))
+                          }
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        disabled={changePasswordMutation.isPending}
+                        className="w-full"
+                      >
+                        {changePasswordMutation.isPending ? 'Changing Password...' : 'Change Password'}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Account Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-red-600">Danger Zone</CardTitle>
+                  <CardDescription>
+                    Actions that cannot be undone
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
+                    <div>
+                      <h4 className="text-sm font-medium text-red-800">Delete Account</h4>
+                      <p className="text-xs text-red-600">
+                        Permanently delete your account and all associated data
+                      </p>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+                          toast({
+                            title: "Account Deletion",
+                            description: "Please contact support to delete your account.",
+                            variant: "default",
+                          });
+                        }
+                      }}
+                    >
+                      Delete Account
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </section>

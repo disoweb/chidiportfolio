@@ -364,6 +364,21 @@ class DatabaseStorage {
     }
   }
 
+  async updateUser(id: number, data: Partial<any>): Promise<any | null> {
+    try {
+      const [updatedUser] = await db
+        .update(users)
+        .set(data)
+        .where(eq(users.id, id))
+        .returning();
+
+      return updatedUser || null;
+    } catch (error) {
+      console.error('Update user error:', error);
+      return null;
+    }
+  }
+
   // Client session methods
   async createClientSession(sessionData: any): Promise<any> {
     try {
