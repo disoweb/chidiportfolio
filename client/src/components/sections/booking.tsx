@@ -321,25 +321,37 @@ export function Booking() {
           Project Details
         </Label>
         <div className="relative">
-          <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
-          <Textarea
+          <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+          <textarea
             id="message"
             name="message"
             rows={4}
             value={formData.message}
             onChange={handleInputChange}
-            className="resize-none pl-10 pt-3 pb-3 text-base sm:text-sm min-h-[96px] max-h-[200px] rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+            className="w-full resize-none pl-10 pt-3 pb-3 pr-3 text-base sm:text-sm min-h-[96px] max-h-[200px] rounded-xl border border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
             placeholder="Tell me about your project goals, requirements, and any specific features you need..."
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="sentences"
-            spellCheck="true"
+            spellCheck="false"
+            inputMode="text"
+            enterKeyHint="enter"
+            style={{
+              WebkitAppearance: 'none',
+              appearance: 'none',
+              fontSize: window.innerWidth < 768 ? '16px' : '14px'
+            }}
+            onInput={handleInputChange}
             onFocus={(e) => {
-              // Ensure keyboard stays open on mobile
-              e.target.style.transform = 'translateZ(0)';
+              e.target.style.position = 'relative';
+              e.target.style.zIndex = '1000';
+              // Prevent zoom on iOS
+              e.target.style.fontSize = '16px';
             }}
             onBlur={(e) => {
-              e.target.style.transform = '';
+              e.target.style.position = '';
+              e.target.style.zIndex = '';
+              e.target.style.fontSize = window.innerWidth < 768 ? '16px' : '14px';
             }}
           />
         </div>
