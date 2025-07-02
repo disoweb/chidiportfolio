@@ -1551,7 +1551,7 @@ User question: ${message}`;
             service_name: serviceName,
             booking_id: bookingId
           },
-          callback_url: `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : 'http://localhost:5000'}/payment/callback`
+          callback_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://chidi.onrender.com'}/api/payment/callback`
         },
         {
           headers: {
