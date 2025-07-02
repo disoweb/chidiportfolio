@@ -947,7 +947,7 @@ class DatabaseStorage {
       console.log('Database tables exist, initializing default settings...');
 
       const defaultSettings = [
-        { key: 'seo_title', value: 'Chidi Ogara - Senior Fullstack Developer', category: 'seo', description: 'Main site title for SEO' },
+        { key: 'seo_title', value: 'Digital Chidi - Software Engineer', category: 'seo', description: 'Main site title for SEO' },
         { key: 'seo_description', value: 'Professional fullstack web developer specializing in React, Node.js, and modern web technologies. Building scalable solutions for businesses.', category: 'seo', description: 'Meta description for SEO' },
         { key: 'seo_keywords', value: 'fullstack developer, web development, React, Node.js, TypeScript, JavaScript, web applications', category: 'seo', description: 'Keywords for SEO' },
         { key: 'og_image', value: '/og-image.jpg', category: 'seo', description: 'Open Graph image URL' },
