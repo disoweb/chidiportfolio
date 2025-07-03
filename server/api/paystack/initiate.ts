@@ -38,9 +38,18 @@ export async function POST(req: Request) {
           service_name: serviceName,
           booking_id: bookingId // Ensure bookingId is included if it exists
         },
-        callback_url: `${process.env.REPLIT_DOMAINS 
-          ? `https://${process.env.REPLIT_DOMAINS}` 
-          : (process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'https://chidi.onrender.com')}/payment/callback`
+        callback_url: (() => {
+          // Use NEXT_PUBLIC_API_URL for deployed environments, fallback to Replit domain for development
+          let baseUrl;
+          if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes('chidi.onrender.com')) {
+            baseUrl = process.env.NEXT_PUBLIC_API_URL.replace('/api', '');
+          } else if (process.env.REPLIT_DOMAINS) {
+            baseUrl = `https://${process.env.REPLIT_DOMAINS}`;
+          } else {
+            baseUrl = 'https://chidi.onrender.com';
+          }
+          return `${baseUrl}/payment/callback`;
+        })()
       },
       {
         headers: {

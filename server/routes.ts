@@ -1541,10 +1541,18 @@ User question: ${message}`;
         });
       }
 
-      // Use Replit domain or fallback to configured URL
-      const baseUrl = process.env.REPLIT_DOMAINS 
-        ? `https://${process.env.REPLIT_DOMAINS}` 
-        : (process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'https://chidi.onrender.com');
+      // Use NEXT_PUBLIC_API_URL for deployed environments, fallback to Replit domain for development
+      let baseUrl;
+      if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes('chidi.onrender.com')) {
+        // Use the configured API URL (remove /api suffix if present)
+        baseUrl = process.env.NEXT_PUBLIC_API_URL.replace('/api', '');
+      } else if (process.env.REPLIT_DOMAINS) {
+        // Development environment - use Replit domain
+        baseUrl = `https://${process.env.REPLIT_DOMAINS}`;
+      } else {
+        // Fallback
+        baseUrl = 'https://chidi.onrender.com';
+      }
       const callbackUrl = `${baseUrl}/payment/callback`;
       console.log('Paystack callback URL being used:', callbackUrl);
       
