@@ -1541,7 +1541,11 @@ User question: ${message}`;
         });
       }
 
-      const callbackUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://chidi.onrender.com'}/payment/callback`;
+      // Use Replit domain or fallback to configured URL
+      const baseUrl = process.env.REPLIT_DOMAINS 
+        ? `https://${process.env.REPLIT_DOMAINS}` 
+        : (process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'https://chidi.onrender.com');
+      const callbackUrl = `${baseUrl}/payment/callback`;
       console.log('Paystack callback URL being used:', callbackUrl);
       
       const paystackResponse = await axios.post(

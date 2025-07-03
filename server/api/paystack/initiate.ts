@@ -38,7 +38,9 @@ export async function POST(req: Request) {
           service_name: serviceName,
           booking_id: bookingId // Ensure bookingId is included if it exists
         },
-        callback_url: `${process.env.NEXT_PUBLIC_API_URL || 'https://chidi.onrender.com'}/payment/callback`
+        callback_url: `${process.env.REPLIT_DOMAINS 
+          ? `https://${process.env.REPLIT_DOMAINS}` 
+          : (process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'https://chidi.onrender.com')}/payment/callback`
       },
       {
         headers: {

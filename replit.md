@@ -151,6 +151,13 @@ Changelog:
   - Enhanced Profile section with organized contact information display
   - Added navigation shortcuts for messages, notifications, and profile access
   - Improved mobile responsiveness with collapsible navigation menu
+- July 03, 2025. Complete migration from Replit Agent to Replit environment:
+  - Resolved payment callback URL configuration to use current Replit domain
+  - Fixed Paystack payment redirects to properly redirect to payment-success page
+  - Updated both main routes and API routes to dynamically detect Replit domain
+  - All core features verified working: authentication, booking, payments, admin dashboard
+  - Database successfully migrated with all tables and seed data
+  - Application fully functional in Replit environment with proper security practices
 
 ## User Preferences
 
